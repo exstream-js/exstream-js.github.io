@@ -566,7 +566,11 @@ await Promise.all([
                   {#each destination.values as value, index}
                     <li>
                       <span>{destination.count - destination.values.length + index + 1}</span>
-                      <pre>{formatValue(value)}</pre>
+                      <details class="destination-row">
+                        <summary title="Expand row">
+                          <pre>{formatValue(value)}</pre>
+                        </summary>
+                      </details>
                     </li>
                   {:else}
                     <li class="empty-row">
@@ -1117,14 +1121,50 @@ await Promise.all([
     font: 0.55rem/1.45 var(--font-mono);
   }
 
+  .destination-row {
+    min-width: 0;
+  }
+
+  .destination-row summary {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) 1.2rem;
+    align-items: start;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .destination-row summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .destination-row summary::after {
+    color: #617068;
+    padding-top: 0.42rem;
+    content: '›';
+    font: 0.7rem/1 var(--font-mono);
+    text-align: center;
+    transition: transform 120ms ease;
+  }
+
+  .destination-row[open] summary::after {
+    transform: rotate(90deg);
+  }
+
   .destination-card pre {
-    overflow: hidden;
+    min-width: 0;
+    overflow-x: auto;
     margin: 0;
     padding: 0.42rem 0.55rem;
     color: #bdc9c2;
-    text-overflow: ellipsis;
     white-space: nowrap;
+    scrollbar-width: thin;
     font: 0.58rem/1.45 var(--font-mono);
+  }
+
+  .destination-row[open] pre {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
 
   .destination-card .empty-row {
