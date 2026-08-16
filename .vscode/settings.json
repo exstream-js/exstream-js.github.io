@@ -17,5 +17,10 @@
   },
   "[jsonc]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
-  }
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "svelte.config.js, vite.config.ts, go.work*, .env.op, knip.json, vitest*, .dockerignore, .gitignore, AGENTS.md, SKILLS.md,.editorconfig, .node-version, .npmrc, oxlint.config.ts, oxfmt.config.ts, turbo.json, package-lock.json, tsconfig.json, tsconfig.*.json, yarn.lock, pnpm-lock.yaml, bun.lockb, bun.lock, pnpm*"
+  },
+  "explorer.fileNesting.expand": false
 }
