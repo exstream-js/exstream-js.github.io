@@ -1,10 +1,11 @@
 export const docsNavigation = [
   {
     label: 'Start here',
-    items: [
-      { href: '/docs/', label: 'Documentation' },
-      { href: '/docs/quick-start/', label: 'Quick start' },
-    ],
+    items: [{ href: '/docs/', label: 'Documentation' }],
+  },
+  {
+    label: 'Examples',
+    items: [{ href: '/docs/examples/browser-csv/', label: 'Browser CSV demo' }],
   },
   {
     label: 'Core concepts',

@@ -1,23 +1,23 @@
 <script lang="ts">
-  const heroCode = `const orders = exstream(response.body)
-  .json({ path: '$.orders[*]' })
-  .mapAsync(enrich, {
-    concurrency: 16,
-    ordered: true,
-  })
-  .filter(isActive)`
+  const heroCode = `<span class="token keyword">const</span> orders <span class="token operator">=</span> <span class="token function">exstream</span>(response.body)
+  .<span class="token function">json</span>(<span class="token punctuation">{</span> path<span class="token operator">:</span> <span class="token string">'$.orders[*]'</span> <span class="token punctuation">}</span>)
+  .<span class="token function">mapAsync</span>(enrich<span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    concurrency<span class="token operator">:</span> <span class="token number">16</span><span class="token punctuation">,</span>
+    ordered<span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+  <span class="token punctuation">}</span>)
+  .<span class="token function">filter</span>(isActive)`
 
-  const recipeCode = `import exstream from 'exstream.js'
+  const recipeCode = `<span class="token keyword">import</span> exstream <span class="token keyword">from</span> <span class="token string">'exstream.js'</span>
 
-await exstream(csvChunks)
-  .csv({ header: true })
-  .mapAsync(loadCustomer, {
-    concurrency: 8,
-    ordered: true,
-  })
-  .filter(({ customer }) => customer.active)
-  .jsonlStringify()
-  .pipeTo(output)`
+<span class="token keyword">await</span> <span class="token function">exstream</span>(csvChunks)
+  .<span class="token function">csv</span>(<span class="token punctuation">{</span> header<span class="token operator">:</span> <span class="token boolean">true</span> <span class="token punctuation">}</span>)
+  .<span class="token function">mapAsync</span>(loadCustomer<span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    concurrency<span class="token operator">:</span> <span class="token number">8</span><span class="token punctuation">,</span>
+    ordered<span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+  <span class="token punctuation">}</span>)
+  .<span class="token function">filter</span>((<span class="token punctuation">{</span> customer <span class="token punctuation">}</span>) <span class="token operator">=&gt;</span> customer.active)
+  .<span class="token function">jsonlStringify</span>()
+  .<span class="token function">pipeTo</span>(output)`
 </script>
 
 <svelte:head>
@@ -25,7 +25,7 @@ await exstream(csvChunks)
   <link rel="canonical" href="https://exstream-js.github.io/" />
 </svelte:head>
 
-<div data-pagefind-body>
+<div class="page-frame" data-pagefind-body>
   <section class="hero">
     <div class="hero-inner">
       <div class="hero-copy">
@@ -36,7 +36,7 @@ await exstream(csvChunks)
           cancellation, and cleanup every time.
         </p>
         <div class="hero-actions">
-          <a class="button" href="/docs/quick-start/">Build your first pipeline</a>
+          <a class="button" href="/quick-start/">Build your first pipeline</a>
           <a class="button secondary" href="https://github.com/micheletriaca/exstream"
             >View on GitHub</a
           >
@@ -53,7 +53,7 @@ await exstream(csvChunks)
           <span>orders.pipeline.js</span>
           <span class="live-dot">bounded flow</span>
         </div>
-        <pre class="pipeline-code"><code>{heroCode}</code></pre>
+        <pre class="pipeline-code"><code>{@html heroCode}</code></pre>
         <div
           class="flow-graph"
           aria-label="Source flows through map and asynchronous enrichment, then forks to database and audit outputs"
@@ -124,7 +124,7 @@ await exstream(csvChunks)
 
       <div class="recipe-grid">
         <div class="code-card">
-          <pre><code>{recipeCode}</code></pre>
+          <pre><code>{@html recipeCode}</code></pre>
         </div>
         <aside class="truth-card">
           <p class="eyebrow">Operator contract</p>
@@ -166,7 +166,7 @@ await exstream(csvChunks)
         </div>
         <div>
           <div class="install-command"><span>$</span> npm install exstream.js</div>
-          <a class="button mt-3 w-full" href="/docs/quick-start/">Open quick start →</a>
+          <a class="button mt-3 w-full" href="/quick-start/">Open quick start →</a>
         </div>
       </div>
     </div>

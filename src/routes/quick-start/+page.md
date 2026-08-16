@@ -1,7 +1,7 @@
 <svelte:head>
   <title>Quick start — Exstream</title>
   <meta name="description" content="Install Exstream and build a bounded JavaScript ETL pipeline in five minutes." />
-  <link rel="canonical" href="https://exstream-js.github.io/docs/quick-start/" />
+  <link rel="canonical" href="https://exstream-js.github.io/quick-start/" />
 </svelte:head>
 
 <p class="eyebrow">Start here · 5 minutes</p>

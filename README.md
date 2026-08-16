@@ -2,7 +2,7 @@
 
 The documentation portal for [Exstream](https://github.com/micheletriaca/exstream), composable streaming ETL for JavaScript.
 
-The site is deliberately static, code-first, and light on client-side JavaScript. It uses Svelte 5, SvelteKit, mdsvex, Pagefind, and Tailwind CSS.
+The site is deliberately static, code-first, and light on client-side JavaScript. It uses Svelte 5, SvelteKit, mdsvex, build-time syntax highlighting, Pagefind, and Tailwind CSS. Exstream itself is bundled only on interactive example pages.
 
 ## Local development
 
@@ -11,6 +11,12 @@ Node.js 22 or newer is required.
 ```shell
 npm install
 npm run dev
+```
+
+Pagefind indexes the generated HTML, so search is intentionally unavailable in the normal Vite development server. To build the index and serve a searchable preview:
+
+```shell
+npm run preview:search
 ```
 
 The main quality gate is:

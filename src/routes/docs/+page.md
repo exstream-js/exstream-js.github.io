@@ -14,7 +14,7 @@
 
 ### I need a working pipeline
 
-The [quick start](/docs/quick-start/) installs Exstream, transforms records, runs bounded asynchronous work, and writes to a destination that can push back.
+The [quick start](/quick-start/) installs Exstream, transforms records, runs bounded asynchronous work, and writes to a destination that can push back.
 
 ### I need to understand the behavior
 
@@ -38,8 +38,8 @@ Nothing runs merely because the chain exists. A terminal consumer starts pulling
 
 - Node.js 22 or newer
 - ESM and CommonJS entry points
-- portable core for modern browsers
-- zero runtime dependencies
+- Portable core for modern browsers
+- Zero runtime dependencies
 - TypeScript declarations included
 
 The default import selects the Node.js or browser implementation through package exports. Use `exstream.js/node`, `exstream.js/core`, or `exstream.js/web` when the runtime boundary should be explicit.

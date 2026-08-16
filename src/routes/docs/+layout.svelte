@@ -29,6 +29,10 @@
     </nav>
   </aside>
   <article class="docs-content prose" data-pagefind-body>
-    {@render children()}
+    {#key page.url.pathname}
+      <div class="page-frame">
+        {@render children()}
+      </div>
+    {/key}
   </article>
 </div>

@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { page } from '$app/state'
   import '../app.css'
   import Brand from '$lib/components/Brand.svelte'
+  import CopyCode from '$lib/components/CopyCode.svelte'
+  import PageTransitions from '$lib/components/PageTransitions.svelte'
   import Search from '$lib/components/Search.svelte'
   import ThemeToggle from '$lib/components/ThemeToggle.svelte'
 
@@ -23,13 +26,25 @@
 </svelte:head>
 
 <a class="skip-link" href="#main-content">Skip to content</a>
+<CopyCode />
+<PageTransitions />
 <header class="site-header">
   <div class="site-header-inner">
     <Brand />
     <nav class="primary-nav" aria-label="Primary navigation">
-      <a href="/docs/">Docs</a>
-      <a href="/docs/quick-start/">Quick start</a>
-      <a href="https://github.com/micheletriaca/exstream">GitHub</a>
+      <a
+        href="/quick-start/"
+        aria-current={page.url.pathname.startsWith('/quick-start/') ? 'page' : undefined}
+        >Quick start</a
+      >
+      <a href="/docs/" aria-current={page.url.pathname.startsWith('/docs/') ? 'page' : undefined}
+        >Docs</a
+      >
+      <a
+        href="/examples/"
+        aria-current={page.url.pathname.startsWith('/examples/') ? 'page' : undefined}>Examples</a
+      >
+      <a class="nav-external" href="https://github.com/micheletriaca/exstream">GitHub</a>
     </nav>
     <div class="header-actions">
       <Search />

@@ -22,13 +22,14 @@ Do not turn roadmap proposals into statements of shipped behavior.
 
 - Svelte 5 and SvelteKit for components, routing, prerendering, and static output;
 - mdsvex for versioned Markdown documentation;
+- mdsvex's build-time highlighter for fenced code blocks;
 - Pagefind for a build-time, local search index;
 - Tailwind CSS 4 through the Vite plugin for design tokens and utilities;
 - TypeScript in strict mode;
 - Oxlint and Oxfmt for linting and formatting;
 - `@sveltejs/adapter-static` for deployment-independent static assets.
 
-The production build is written to `build/`. `npm run build` runs Pagefind after SvelteKit so the search index describes the final HTML.
+The production build is written to `build/`. `npm run build` runs Pagefind after SvelteKit so the search index describes the final HTML. Search does not work under `npm run dev`; use `npm run preview:search` for a production-like searchable preview.
 
 ## Editorial rules
 
@@ -50,6 +51,7 @@ Public content is in English unless a page is explicitly localized.
 - Keep documentation usable without JavaScript. Interactive components must be isolated and progressively enhanced.
 - Respect keyboard navigation, screen readers, `prefers-reduced-motion`, and system color preference.
 - Avoid dependencies for effects that CSS can express clearly.
+- Bundle `exstream.js` on interactive example routes instead of loading it from a third-party CDN. Prefer versioned public datasets with CORS and no credentials; document their ownership and failure modes.
 - Target less than 100 KB of compressed initial JavaScript and Lighthouse scores of at least 95 on primary pages.
 
 ## Commands
@@ -61,6 +63,7 @@ npm run lint         # lint scripts and components
 npm run format       # format the repository
 npm run format:check # verify formatting
 npm run build        # static build and Pagefind index
+npm run preview:search # build, index, and serve working search
 npm test             # complete local quality gate
 ```
 

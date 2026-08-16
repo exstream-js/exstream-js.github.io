@@ -1,4 +1,7 @@
 <script lang="ts">
+  import SearchIcon from '@lucide/svelte/icons/search'
+  import X from '@lucide/svelte/icons/x'
+
   type PagefindResult = {
     data: () => Promise<{
       excerpt: string
@@ -87,12 +90,17 @@
       status = 'Search is available in the production build.'
     }
   }
+
+  function resultHref(url: string) {
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}q=${encodeURIComponent(query.trim())}`
+  }
 </script>
 
 <svelte:window onkeydown={handleShortcut} />
 
 <button class="search-trigger" type="button" onclick={show} aria-haspopup="dialog">
-  <span aria-hidden="true">⌕</span>
+  <SearchIcon size={18} strokeWidth={2} aria-hidden="true" />
   <span>Search</span>
   <kbd>/</kbd>
 </button>
@@ -101,7 +109,9 @@
   <dialog bind:this={dialog} class="search-dialog" aria-labelledby="search-title" onclose={hide}>
     <div class="search-heading">
       <h2 id="search-title">Search the docs</h2>
-      <button class="icon-button" type="button" onclick={hide} aria-label="Close search">×</button>
+      <button class="icon-button" type="button" onclick={hide} aria-label="Close search">
+        <X size={19} strokeWidth={2} aria-hidden="true" />
+      </button>
     </div>
     <label class="sr-only" for="site-search">Search query</label>
     <input
@@ -118,7 +128,7 @@
       <ul class="search-results">
         {#each results as result (result.url)}
           <li>
-            <a href={result.url} onclick={hide}>
+            <a href={resultHref(result.url)} onclick={hide}>
               <strong>{result.title}</strong>
               <span>{@html result.excerpt}</span>
             </a>
