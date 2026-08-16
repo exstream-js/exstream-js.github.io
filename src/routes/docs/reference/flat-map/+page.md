@@ -54,13 +54,15 @@ exstream(['Ada'])
 
 The operator is equivalent to mapping and then synchronously flattening one level. It does not flatten nested iterables recursively, await promises, or merge returned Exstreams.
 
+When the callback requests a context, it receives `context.input`, the branch `context.signal`, and custom upstream fields. Flattening gives every emitted member its own shallow context copy, preserving those fields while preventing sibling members from sharing later mutations.
+
 ## Order and pressure
 
 Inputs remain ordered, and every member of one returned iterable is emitted before the next input is processed. The iterable is consumed synchronously under downstream demand. Very large or infinite iterables can therefore monopolize the pipeline; return bounded iterables or model asynchronous sources as streams.
 
 ## Errors
 
-A callback failure becomes a record error for its input. Existing record errors pass through. Errors thrown while consuming a returned iterable also fail processing of that record. Fatal failures abort the branch.
+A callback failure becomes a record error for its input, and existing record errors pass through. Iteration itself is synchronous and is not wrapped by the callback's error boundary: if a returned iterator throws from `next()`, that exception escapes the synchronous processing turn rather than becoming a contextual record error. Return well-behaved iterables and perform fallible generation inside the callback when record-level recovery is required.
 
 ## Forms
 

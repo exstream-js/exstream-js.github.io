@@ -118,9 +118,13 @@ const profiles = exstream(userIds).mapAsync(fetchProfile, {
 
 Passing `null` or `undefined` for `options` applies every default. Other non-object values and arrays are rejected when the operator is created.
 
+The JavaScript runtime normalizes numeric policy fields with `Number()`, so any coercible value is accepted when it produces the required integer or finite value. The TypeScript API deliberately exposes these fields as numbers; use actual numbers for portable, explicit configuration. `ordered` is strictly boolean.
+
 ## Order and pressure
 
 At most `concurrency` callbacks are active. Upstream demand pauses when all slots are occupied. In ordered mode, completed results may wait in memory behind a slower earlier input; unordered mode avoids that head-of-line delay and emits completion order.
+
+The callback context exposes `context.input`, `context.signal`, and custom upstream fields. It is created lazily when `fn` declares its second parameter, `retry.when` declares its third, or a dynamic `retry.delay` declares its fourth. Declare those positional parameters rather than retrieving them through rest arguments when a materialized context is required. The context remains the same object across attempts and continues with the emitted result. During a timed attempt, only its `signal` is temporarily replaced with an attempt-specific signal and restored afterward.
 
 ## Retries
 

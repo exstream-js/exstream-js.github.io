@@ -1,3 +1,7 @@
+<script>
+  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
+</script>
+
 <svelte:head>
   <title>Pipeline model — Exstream</title>
   <meta name="description" content="Understand sources, operators, terminal consumers, laziness, and demand in an Exstream pipeline." />
@@ -37,6 +41,8 @@ for await (const order of activeOrders.toAsyncIterator()) {
   await saveOrder(order)
 }
 ```
+
+<PlaygroundLink example="pipeline-model" />
 
 That distinction matters for files, network responses, and generators with side effects. Constructing a pipeline is not the same as running it.
 

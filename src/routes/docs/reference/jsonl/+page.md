@@ -44,15 +44,34 @@ for await (const event of exstream(response.body).jsonl().toAsyncIterator()) {
 
 Passing `null` or `undefined` applies all defaults. Other non-object values and arrays are rejected.
 
+Both numeric limits are normalized with `Number()` at runtime, so any value coercing to a positive integer is accepted. TypeScript intentionally requires numbers. A root object or array has depth one; each nested container increases the depth by one.
+
 ## Records
 
 LF, CRLF, and CR delimiters are accepted and may cross chunks. The final non-empty record needs no delimiter. Empty source and trailing delimiters emit nothing. Each complete record is parsed and emitted before later input is required.
 
+Skipped blank lines do not increment the JSONL record number. Non-skipped valid and invalid records do. Output order matches line order, and a parsed value retains the context active on the chunk that completes its record.
+
 ## Errors
 
-Malformed JSON, an empty line when not skipped, a reviver throw, and a per-record depth violation become located record errors containing line, column, offset, and record information. Handle them with [`errors()`](/docs/reference/errors/) or `skipErrors()` to continue with later delimited records.
+Malformed JSON, an empty line when not skipped, a reviver throw, and a per-record depth violation become located record errors containing one-based `line`, `column`, and `record`, plus zero-based `offset`. General syntax uses `EXSTREAM_JSON_PARSE`, depth uses `EXSTREAM_JSON_MAX_DEPTH`, and a retained blank line uses `EXSTREAM_JSONL_EMPTY_RECORD`. Handle them with [`errors()`](/docs/reference/errors/) or `skipErrors()` to continue with later delimited records.
 
 A decoder failure or `maxRecordBytes` violation before a record boundary is structural and aborts the branch because the next boundary cannot be trusted. Upstream record errors pass through without changing parser state.
+
+## Forms
+
+`jsonl()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream and the curried form composes with `through()`:
+
+```javascript
+stream.jsonl(options)
+exstream.pipeline().jsonl(options)
+exstream.jsonl(options, stream)
+stream.through(exstream.jsonl(options))
+```
+
+Pass `null` in the direct standalone form to apply defaults. Supply an output generic such as `stream.jsonl<Event>()` when the record shape is known.
+
+The generic is a compile-time assertion only. Each line is checked as JSON, not validated against a TypeScript interface or application schema.
 
 ## Related
 

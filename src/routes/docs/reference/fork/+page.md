@@ -35,7 +35,7 @@ Create all branches synchronously, before the source starts.
     <dt><code>disableAutostart</code></dt>
     <dd>
       <p class="parameter-meta"><span><strong>Type</strong> <code>boolean</code></span><span><strong>Default</strong> <code>false</code></span></p>
-      <p>By default, Exstream schedules the shared source to start after the current synchronous setup turn. Pass <code>true</code> to wire branches without that scheduled start, then call <code>source.start()</code> explicitly.</p>
+      <p>By default, Exstream schedules the shared source to start after the current synchronous setup turn. Pass <code>true</code> to wire branches without that scheduled start, then call <code>source.start()</code> explicitly. The runtime uses truthiness; the public TypeScript API accepts booleans.</p>
     </dd>
   </div>
 </dl>
@@ -49,6 +49,8 @@ Contexts are copied at the branch boundary. Mutating one branch's context does n
 ## Lifecycle
 
 Calling `fork()` after the source has started throws. A branch that is destroyed detaches from the shared source. A failure in one terminal destination cancels that fork; reliable siblings may continue, so application code awaiting several branches decides whether to abort them together.
+
+With `disableAutostart: true`, terminal consumers may be attached to every fork first, but no source work begins until `source.start()` is called. `start()` releases the source and resolves after startup is scheduled; it is not a completion promise. Await the branch terminal operations for completion.
 
 Use [`observe()`](/docs/reference/observe/) when observation must never slow the reliable flow and data loss is acceptable.
 

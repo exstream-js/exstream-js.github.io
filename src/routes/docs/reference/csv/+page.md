@@ -120,6 +120,8 @@ The parser does not convert cell values. Numbers, booleans, dates, empty fields,
   </div>
 </dl>
 
+All numeric limits are normalized with `Number()` at runtime, so any value coercing to a positive integer is accepted. TypeScript intentionally exposes them as numbers; use numeric values rather than relying on coercion.
+
 ## Header modes
 
 ### No header
@@ -183,11 +185,15 @@ The input may contain strings, `Buffer` values in Node.js, `Uint8Array`, `ArrayB
 
 Records may end with LF, CRLF, or CR, and the last record does not need a trailing delimiter. Spaces are never trimmed. An empty source emits no rows.
 
+`quote` and `escape` are validated only as single Unicode characters, so CR or LF technically satisfy the option contract and redefine how those characters are tokenized. Prefer non-newline dialect characters unless interoperability with such a format is intentional.
+
 With quote parsing enabled, a quote may only begin at the start of a field. After its closing quote, only a separator or record delimiter is valid. Quoted fields may span physical lines; those line breaks become part of the cell string.
 
 ## Streaming and limits
 
 `csv()` is synchronous and preserves record order. It follows downstream demand and emits complete records as soon as they are parsed; it does not collect the full input. It must retain the current incomplete field and record, so memory can still grow with one unusually large record.
+
+The output type retains the stream context type. When source chunks carry materialized contexts, a completed row inherits the context active on the chunk that completes it; contexts from all contributing chunks are not aggregated.
 
 Set finite `maxRecordBytes` and `maxColumns` at untrusted boundaries. They default to `Infinity` because Exstream cannot infer an application-safe limit. Cancelling or destroying the branch stops further source consumption through the normal Exstream lifecycle.
 
@@ -205,6 +211,19 @@ Malformed input is a structural format failure: the parser emits a `CsvParseErro
 `exstream.errorInfo(error)` also reports `{ origin: 'format', stage: 'csv' }`.
 
 Record errors already present upstream pass through unchanged. If they are handled downstream, parsing can continue because they do not alter the CSV decoder state.
+
+## Forms
+
+`csv()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream; the curried form is useful with `through()`:
+
+```javascript
+stream.csv(options)
+exstream.pipeline().csv(options)
+exstream.csv(options, stream)
+stream.through(exstream.csv(options))
+```
+
+Pass `null` in the direct standalone form to apply defaults.
 
 ## Related
 

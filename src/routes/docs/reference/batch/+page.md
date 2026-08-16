@@ -32,7 +32,7 @@ await exstream(records)
     <dt><code>size</code></dt>
     <dd>
       <p class="parameter-meta"><span><strong>Type</strong> <code>positive integer</code></span><span><strong>Required</strong></span></p>
-      <p>The maximum number of successful values in one batch. Zero, negative values, fractions, <code>NaN</code>, and <code>Infinity</code> are rejected when the operator is created. The JavaScript runtime also coerces numeric strings, although TypeScript intentionally accepts only numbers.</p>
+      <p>The maximum number of successful values in one batch. Zero, negative values, fractions, <code>NaN</code>, and <code>Infinity</code> are rejected when the operator is created. The JavaScript runtime applies <code>Number()</code>, so any value coercing to a positive integer is accepted; TypeScript intentionally accepts only numbers. Use an actual number rather than relying on coercion.</p>
     </dd>
   </div>
 </dl>

@@ -42,11 +42,13 @@ const valid = pipeline.skipErrors((error, input) => {
 
 The predicate is synchronous and is never called for successful values. Those values pass through unchanged and in order. A returned promise is truthy and is not awaited, so asynchronous selection must be modeled with another operator.
 
+Callback arity is preserved deliberately: a unary predicate is called with only `error`; declaring a second parameter adds the failing `input`; declaring a third adds the lazily materialized `context`. This allows existing unary handlers to keep their historical argument list.
+
 Dropping is irreversible. Use [`routeErrors()`](/docs/reference/route-errors/) when rejected records need an audit trail, retry queue, or dead-letter destination.
 
 ## Errors
 
-If the predicate throws, its failure becomes a new contextual record error for the same input. Fatal graph failures are never suppressed and abort the branch.
+If the predicate throws, its failure becomes a new contextual record error for the same input. Fatal graph failures are never suppressed. A structural CSV or single-document JSON error may pass through the predicate, but dropping it does not prevent its format operator from aborting the branch.
 
 ## Forms
 

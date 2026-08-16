@@ -44,6 +44,8 @@ const paid = exstream(orders).filter((order) => order.status === 'paid')
 
 Kept values are emitted unchanged and in input order. Dropped values do not consume an output slot: the operator continues requesting upstream records until downstream receives a kept value or the source ends. It has no separate buffer.
 
+When requested, `context.input` identifies the value that created the context, `context.signal` follows branch cancellation, and custom fields added upstream are preserved. Kept values retain that same context object.
+
 The predicate is not awaited. A returned promise is an object and therefore truthy, so it keeps the value regardless of its eventual result. Use [`mapAsync()`](/docs/reference/map-async/) followed by `filter()` when the decision requires asynchronous work.
 
 Existing record errors pass through without invoking the predicate.

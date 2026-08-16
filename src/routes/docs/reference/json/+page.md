@@ -46,6 +46,10 @@ const events = exstream(response.body).json({
 
 Passing `null` or `undefined` applies all defaults. Other non-object values and arrays are rejected.
 
+Both numeric limits are normalized with `Number()` at runtime, so any value coercing to a positive integer is accepted. TypeScript intentionally requires numbers.
+
+A root object or array has depth one and each nested container adds one. Scalars have no container depth, but `maxDepth` itself must still be a positive integer or `Infinity`.
+
 ## Paths
 
 ```javascript
@@ -56,17 +60,38 @@ exstream(chunks).json({ path: '$.groups[*].items[*]' })
 
 Dot properties must be JavaScript-style identifiers. Bracket properties accept single or double quotes and JSON-like escapes. Array indexes must be safe non-negative integers without leading zeroes. Wildcards work on arrays and object property values. Recursive descent, filters, slices, unions, negative indexes, and expressions are rejected.
 
-A missing path emits no values. The default `$` emits the complete document once.
+A missing path emits no values. The default `$` emits the complete document once. A wildcard over an object emits property values in JSON document order.
 
 ## Streaming
 
 Strings, Node buffers, typed arrays, array buffers, and views may be mixed as chunks. The parser preserves document order and follows downstream demand. Wildcard paths allow completed selected values to be emitted before the full document arrives; the parser retains structural state plus the selected value currently being built.
 
+The complete input must contain exactly one JSON value followed only by JSON whitespace. Empty input, a second top-level value, or trailing non-whitespace is invalid. A selected value may already have been emitted when invalid syntax is discovered later; the terminal operation still fails, so those partial outputs must not be treated as a valid document result.
+
+Selected outputs retain the stream context type. With contextual chunks, a value inherits the context active when that selected value completes rather than aggregating every chunk context.
+
 ## Errors
 
-Invalid options and unsupported paths throw when attached. Invalid JSON, incomplete input, decoder failures, depth violations, and selected-value size violations are located structural failures. They emit `JsonParseError`, annotate `{ origin: 'format', stage: 'json' }`, and abort the branch because the single document can no longer be trusted.
+Invalid options and unsupported paths throw when attached. Invalid JSON, incomplete input, decoder failures, depth violations, and selected-value size violations are located structural failures. They emit `JsonParseError`, annotate `{ origin: 'format', stage: 'json' }`, and abort the branch because the single document can no longer be trusted. The error exposes `code`, one-based `line` and `column`, and zero-based `offset`; limit codes are `EXSTREAM_JSON_MAX_DEPTH` and `EXSTREAM_JSON_MAX_VALUE_BYTES`, while general syntax uses `EXSTREAM_JSON_PARSE`.
+
+`maxValueBytes` counts the selected value's UTF-8 JSON representation after input decoding, independently of the source encoding. Ignored document regions are not subject to that value limit but remain subject to `maxDepth` and full syntax validation.
 
 Upstream record errors pass through without altering parser state. Cancellation stops further parsing.
+
+## Forms
+
+`json()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream and the curried form composes with `through()`:
+
+```javascript
+stream.json(options)
+exstream.pipeline().json(options)
+exstream.json(options, stream)
+stream.through(exstream.json(options))
+```
+
+Pass `null` in the direct standalone form to apply defaults. Supply the output generic when the selected JSON shape is known: `stream.json<Event>(options)`.
+
+The generic is a compile-time assertion only. `json()` parses JSON syntax but does not validate the result against a TypeScript interface or application schema.
 
 ## Related
 

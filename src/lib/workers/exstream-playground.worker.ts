@@ -1,0 +1,858 @@
+import realExstream from 'exstream.js'
+
+const firstNames = [
+  'Ada',
+  'Amara',
+  'Ari',
+  'Bruno',
+  'Camila',
+  'Chloe',
+  'Dario',
+  'Elena',
+  'Elliot',
+  'Fatima',
+  'Felix',
+  'Giulia',
+  'Hana',
+  'Hugo',
+  'Iris',
+  'Jonas',
+  'Kai',
+  'Leila',
+  'Leo',
+  'Marta',
+  'Mateo',
+  'Mina',
+  'Nadia',
+  'Noah',
+  'Omar',
+  'Priya',
+  'Ravi',
+  'Sofia',
+  'Theo',
+  'Zoe',
+] as const
+
+const lastNames = [
+  'Bianchi',
+  'Brown',
+  'Chen',
+  'Costa',
+  'Dubois',
+  'Esposito',
+  'Fischer',
+  'Garcia',
+  'Gupta',
+  'Haddad',
+  'Ivanov',
+  'Johnson',
+  'Khan',
+  'Kim',
+  'Kowalski',
+  'Lopez',
+  'Martin',
+  'Meyer',
+  'Moretti',
+  'Nakamura',
+  'Novak',
+  'Okafor',
+  'Patel',
+  'Rossi',
+  'Silva',
+  'Singh',
+  'Smith',
+  'Tanaka',
+  'Taylor',
+  'Wilson',
+] as const
+
+const products = [
+  'Analytics Pro',
+  'API Credits',
+  'Archive Storage',
+  'Audit Log',
+  'Backup Vault',
+  'Batch Compute',
+  'Cloud Workspace',
+  'Data Connector',
+  'Data Export',
+  'Edge Functions',
+  'Email Relay',
+  'Enterprise Support',
+  'Event Stream',
+  'Fraud Monitor',
+  'Identity Plus',
+  'Invoice Automation',
+  'Log Retention',
+  'Managed Database',
+  'Metrics Pack',
+  'Mobile SDK',
+  'Observability Suite',
+  'Payment Gateway',
+  'Realtime Sync',
+  'Report Builder',
+  'Search Index',
+  'Security Scan',
+  'Team Seats',
+  'Usage Insights',
+  'Video Processing',
+  'Webhook Delivery',
+] as const
+
+const instrumentedOperators = new Set([
+  'batch',
+  'compact',
+  'errors',
+  'failOnError',
+  'filter',
+  'flatMap',
+  'flatten',
+  'map',
+  'mapAsync',
+  'omit',
+  'pick',
+  'pluck',
+  'reject',
+  'resolve',
+  'skipErrors',
+  'stopWhen',
+  'take',
+  'tap',
+  'uniq',
+  'uniqBy',
+])
+
+const recordDroppingOperators = new Set(['compact', 'filter', 'reject', 'uniq', 'uniqBy'])
+const recordErrorOperators = new Set(['map', 'mapAsync'])
+
+type DestinationConfig = {
+  name: string
+  delay: number
+  bufferSize: number
+}
+
+type RunMessage = {
+  type: 'run'
+  code: string
+  destinations: DestinationConfig[]
+}
+
+type ConfigureDestinationMessage = {
+  type: 'destination:configure'
+  name: string
+  delay: number
+}
+
+type PlaygroundMessage = RunMessage | ConfigureDestinationMessage
+
+type GraphNode = {
+  id: string
+  type: 'source' | 'transform' | 'fork' | 'destination'
+  label: string
+  depth: number
+  input: number
+  output: number
+  active: number
+  status: 'open' | 'closed' | 'aborted'
+  metric?: 'dropped' | 'errors'
+}
+
+type GraphEdge = {
+  id: string
+  from: string
+  to: string
+  flowed?: number
+  produced?: number
+}
+
+type MergeInput = {
+  target: StreamTarget
+  nodeId: string
+}
+
+type ConsoleLevel = 'log' | 'info' | 'warn' | 'error'
+
+type ConsoleEntry = {
+  level: ConsoleLevel
+  message: string
+  elapsed: number
+}
+
+type DestinationRuntime = DestinationConfig & {
+  nodeId?: string
+  count: number
+  values: unknown[]
+  state: 'idle' | 'open' | 'closed' | 'aborted'
+  snapshotTimer?: ReturnType<typeof setTimeout>
+  wakeDelay?: () => void
+}
+
+type AsyncFunction = (...arguments_: unknown[]) => Promise<unknown>
+type AsyncFunctionConstructor = new (...arguments_: string[]) => AsyncFunction
+type StreamTarget = object
+
+const AsyncFunction = Object.getPrototypeOf(async function () {})
+  .constructor as AsyncFunctionConstructor
+const StreamConstructor = realExstream([]).constructor as new (...arguments_: unknown[]) => object
+
+let graphNodes = new Map<string, GraphNode>()
+let graphEdges: GraphEdge[] = []
+let destinations = new Map<string, DestinationRuntime>()
+let forkStates = new WeakMap<StreamTarget, { stream: StreamTarget; nodeId: string }>()
+let proxyTargets = new WeakMap<object, StreamTarget>()
+let proxyNodeIds = new WeakMap<object, string>()
+let writableDestinations = new WeakMap<object, DestinationRuntime>()
+let nextNodeId = 1
+let nextEdgeId = 1
+let telemetryTimer: ReturnType<typeof setTimeout> | undefined
+let consoleTimer: ReturnType<typeof setTimeout> | undefined
+let consoleEntries: ConsoleEntry[] = []
+let runStartedAt = 0
+
+function send(message: Record<string, unknown>) {
+  self.postMessage(message)
+}
+
+function sleep(milliseconds: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
+}
+
+async function waitForDestination(runtime: DestinationRuntime) {
+  const startedAt = performance.now()
+
+  while (true) {
+    const remaining = runtime.delay - (performance.now() - startedAt)
+    if (remaining <= 0) return
+
+    await new Promise<void>((resolve) => {
+      let settled = false
+      const finish = () => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        if (runtime.wakeDelay === finish) runtime.wakeDelay = undefined
+        resolve()
+      }
+      const timer = setTimeout(finish, remaining)
+      runtime.wakeDelay = finish
+    })
+  }
+}
+
+function randomGenerator(seed = 0x5eed1234) {
+  let value = seed >>> 0
+
+  return () => {
+    value ^= value << 13
+    value ^= value >>> 17
+    value ^= value << 5
+    return (value >>> 0) / 4_294_967_296
+  }
+}
+
+async function* transactionSource() {
+  const random = randomGenerator()
+  const startedAt = Date.UTC(2026, 0, 1, 0, 0, 0)
+  let sequence = 0
+
+  while (true) {
+    const firstName = firstNames[Math.floor(random() * firstNames.length)]!
+    const lastName = lastNames[Math.floor(random() * lastNames.length)]!
+    const product = products[Math.floor(random() * products.length)]!
+    const amount = Math.round((10 + random() * 9_990) * 100) / 100
+
+    yield {
+      id: `txn_${String(sequence + 1).padStart(8, '0')}`,
+      customer: `${firstName} ${lastName}`,
+      product,
+      amount,
+      timestamp: new Date(startedAt + sequence * 1_000).toISOString(),
+    }
+
+    sequence += 1
+    if (sequence % 250 === 0) await sleep(0)
+  }
+}
+
+function source(name: string) {
+  if (name !== 'transactions') {
+    throw new Error(`Unknown source "${name}". Available sources: transactions.`)
+  }
+
+  return transactionSource()
+}
+
+function destination(name: string) {
+  let runtime = destinations.get(name)
+  if (!runtime) {
+    runtime = {
+      name,
+      delay: 100,
+      bufferSize: 10,
+      count: 0,
+      values: [],
+      state: 'idle',
+    }
+    destinations.set(name, runtime)
+  }
+  if (runtime.state === 'open') {
+    throw new Error(`Destination "${name}" is already connected.`)
+  }
+
+  send({
+    type: 'destination:registered',
+    name: runtime.name,
+    delay: runtime.delay,
+    bufferSize: runtime.bufferSize,
+  })
+  runtime.nodeId ??= addNode('destination', name, 0)
+  graphNodes.get(runtime.nodeId)!.status = 'open'
+  runtime.state = 'open'
+  runtime.count = 0
+  runtime.values = []
+  sendDestinationSnapshot(runtime)
+
+  const writable = new WritableStream({
+    async write(value) {
+      if (runtime.delay > 0) await waitForDestination(runtime)
+      runtime.count += 1
+      runtime.values.push(value)
+      if (runtime.values.length > runtime.bufferSize) runtime.values.shift()
+
+      const node = graphNodes.get(runtime.nodeId!)!
+      node.input = runtime.count
+      node.output = runtime.count
+
+      if (runtime.delay === 0 && runtime.count % 250 === 0) await sleep(0)
+      scheduleDestinationSnapshot(runtime)
+      scheduleTelemetry()
+    },
+    close() {
+      runtime.state = 'closed'
+      graphNodes.get(runtime.nodeId!)!.status = 'closed'
+      sendDestinationSnapshot(runtime)
+      flushTelemetry()
+    },
+    abort(reason) {
+      runtime.state = 'aborted'
+      graphNodes.get(runtime.nodeId!)!.status = 'aborted'
+      sendDestinationSnapshot(runtime, formatArgument(reason))
+      flushTelemetry()
+    },
+  })
+  writableDestinations.set(writable, runtime)
+  return writable
+}
+
+function scheduleDestinationSnapshot(runtime: DestinationRuntime) {
+  if (runtime.snapshotTimer) return
+  runtime.snapshotTimer = setTimeout(() => {
+    runtime.snapshotTimer = undefined
+    sendDestinationSnapshot(runtime)
+  }, 50)
+}
+
+function sendDestinationSnapshot(runtime: DestinationRuntime, reason?: string) {
+  if (runtime.snapshotTimer) {
+    clearTimeout(runtime.snapshotTimer)
+    runtime.snapshotTimer = undefined
+  }
+  send({
+    type: 'destination:snapshot',
+    name: runtime.name,
+    values: runtime.values,
+    count: runtime.count,
+    state: runtime.state,
+    reason,
+  })
+}
+
+function instrumentedExstream(input: unknown) {
+  const mergeInputs = extractMergeInputs(input)
+  if (mergeInputs) {
+    return wrapStream(realExstream([]) as StreamTarget, undefined, mergeInputs)
+  }
+
+  const sourceNodeId = addNode('source', 'transactions ∞', 0)
+  const node = graphNodes.get(sourceNodeId)!
+
+  async function* observedInput() {
+    for await (const value of input as AsyncIterable<unknown>) {
+      node.output += 1
+      scheduleTelemetry()
+      yield value
+    }
+  }
+
+  const stream = realExstream(observedInput()) as StreamTarget
+  watchNodeLifecycle(stream, sourceNodeId)
+  return wrapStream(stream, sourceNodeId)
+}
+
+function extractMergeInputs(input: unknown): MergeInput[] | undefined {
+  if (!Array.isArray(input) || input.length === 0) return undefined
+
+  const inputs = input.flatMap((candidate) => {
+    if (!candidate || typeof candidate !== 'object') return []
+    const target = proxyTargets.get(candidate)
+    const nodeId = proxyNodeIds.get(candidate)
+    return target && nodeId ? [{ target, nodeId }] : []
+  })
+
+  return inputs.length === input.length ? inputs : undefined
+}
+
+function wrapStream(
+  target: StreamTarget,
+  nodeId: string | undefined,
+  mergeInputs?: MergeInput[],
+): object {
+  const proxy = new Proxy(target, {
+    get(stream, property) {
+      const value = Reflect.get(stream, property, stream)
+      if (typeof value !== 'function') return value
+
+      return (...arguments_: unknown[]) =>
+        callStreamMethod(stream, nodeId, String(property), value, arguments_, mergeInputs)
+    },
+  })
+
+  proxyTargets.set(proxy, target)
+  if (nodeId) proxyNodeIds.set(proxy, nodeId)
+  return proxy
+}
+
+function callStreamMethod(
+  target: StreamTarget,
+  parentNodeId: string | undefined,
+  methodName: string,
+  method: (...arguments_: unknown[]) => unknown,
+  arguments_: unknown[],
+  mergeInputs?: MergeInput[],
+) {
+  const unwrappedArguments = arguments_.map(
+    (argument) => proxyTargets.get(argument as object) ?? argument,
+  )
+
+  if (methodName === 'merge' && mergeInputs) {
+    return instrumentMerge(mergeInputs, unwrappedArguments)
+  }
+  if (!parentNodeId) {
+    throw new Error('A stream collection must be consumed with merge() before other operators.')
+  }
+
+  if (methodName === 'fork') return instrumentFork(target, parentNodeId, unwrappedArguments)
+  if (methodName === 'routeErrors') {
+    return instrumentRouteErrors(target, parentNodeId, method, unwrappedArguments)
+  }
+  if (methodName === 'pipe') {
+    return instrumentPipe(target, parentNodeId, method, unwrappedArguments)
+  }
+
+  if (!instrumentedOperators.has(methodName)) {
+    const result = Reflect.apply(method, target, unwrappedArguments)
+    return isStream(result) ? wrapStream(result, parentNodeId) : result
+  }
+
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode(
+    'transform',
+    formatOperator(methodName, arguments_),
+    parent.depth + 1,
+    recordDroppingOperators.has(methodName)
+      ? 'dropped'
+      : recordErrorOperators.has(methodName)
+        ? 'errors'
+        : undefined,
+  )
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+
+  if (methodName === 'mapAsync' && typeof unwrappedArguments[0] === 'function') {
+    const operation = unwrappedArguments[0] as (...values: unknown[]) => unknown
+    unwrappedArguments[0] = async (...values: unknown[]) => {
+      node.active += 1
+      scheduleTelemetry()
+      try {
+        return await operation(...values)
+      } finally {
+        node.active -= 1
+        scheduleTelemetry()
+      }
+    }
+  }
+
+  const countedInput = callTargetMethod(target, 'tap', () => {
+    node.input += 1
+    scheduleTelemetry()
+  })
+  const result = Reflect.apply(method, countedInput, unwrappedArguments)
+  if (!isStream(result)) return result
+
+  const countedOutput = callTargetMethod(result, 'tap', () => {
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(countedOutput, nodeId)
+  return wrapStream(countedOutput, nodeId)
+}
+
+function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
+  const parentNodes = inputs.map((input) => graphNodes.get(input.nodeId)!).filter(Boolean)
+  const depth = Math.max(...parentNodes.map((node) => node.depth)) + 1
+  const nodeId = addNode('transform', formatOperator('merge', arguments_), depth)
+  const node = graphNodes.get(nodeId)!
+
+  const countedInputs = inputs.map((input) => {
+    const edge = addEdge(input.nodeId, nodeId, true)
+    return callTargetMethod(input.target, 'tap', () => {
+      node.input += 1
+      edge.flowed = (edge.flowed ?? 0) + 1
+      scheduleTelemetry()
+    })
+  })
+  const carrier = realExstream(countedInputs) as StreamTarget
+  const merge = Reflect.get(carrier, 'merge', carrier) as (...values: unknown[]) => unknown
+  const result = Reflect.apply(merge, carrier, arguments_)
+  if (!isStream(result)) return result
+
+  const countedOutput = callTargetMethod(result, 'tap', () => {
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(countedOutput, nodeId)
+  return wrapStream(countedOutput, nodeId)
+}
+
+function instrumentFork(target: StreamTarget, parentNodeId: string, arguments_: unknown[]) {
+  let fork = forkStates.get(target)
+
+  if (!fork) {
+    const parent = graphNodes.get(parentNodeId)!
+    const nodeId = addNode('fork', 'fork', parent.depth + 1)
+    const node = graphNodes.get(nodeId)!
+    addEdge(parentNodeId, nodeId)
+    const counted = callTargetMethod(target, 'tap', () => {
+      node.input += 1
+      node.output += 1
+      scheduleTelemetry()
+    })
+    watchNodeLifecycle(counted, nodeId)
+    fork = { stream: counted, nodeId }
+    forkStates.set(target, fork)
+  }
+
+  const branchMethod = Reflect.get(fork.stream, 'fork', fork.stream) as (
+    ...values: unknown[]
+  ) => unknown
+  const branch = Reflect.apply(branchMethod, fork.stream, arguments_)
+  if (!isStream(branch)) return branch
+  return wrapStream(branch, fork.nodeId)
+}
+
+function instrumentRouteErrors(
+  target: StreamTarget,
+  parentNodeId: string,
+  method: (...arguments_: unknown[]) => unknown,
+  arguments_: unknown[],
+) {
+  const routed = Reflect.apply(method, target, arguments_) as {
+    output?: unknown
+    deadLetters?: unknown
+  }
+  if (!isStream(routed.output) || !isStream(routed.deadLetters)) return routed
+
+  const parent = graphNodes.get(parentNodeId)!
+  const routeNodeId = addNode('fork', 'routeErrors', parent.depth + 1)
+  const routeNode = graphNodes.get(routeNodeId)!
+  addEdge(parentNodeId, routeNodeId)
+
+  function observeBranch(stream: StreamTarget, label: string) {
+    const nodeId = addNode('transform', label, routeNode.depth + 1)
+    const node = graphNodes.get(nodeId)!
+    const edge = addEdge(routeNodeId, nodeId, true)
+    edge.produced = 0
+
+    const counted = callTargetMethod(stream, 'tap', () => {
+      routeNode.input += 1
+      routeNode.output += 1
+      node.input += 1
+      node.output += 1
+      edge.produced = (edge.produced ?? 0) + 1
+      edge.flowed = (edge.flowed ?? 0) + 1
+      scheduleTelemetry()
+    })
+    watchNodeLifecycle(counted, nodeId)
+    return { nodeId, stream: counted }
+  }
+
+  const output = observeBranch(routed.output, 'output')
+  const deadLetters = observeBranch(routed.deadLetters, 'dead letters')
+  watchCombinedLifecycle([output.stream, deadLetters.stream], routeNodeId)
+
+  return {
+    output: wrapStream(output.stream, output.nodeId),
+    deadLetters: wrapStream(deadLetters.stream, deadLetters.nodeId),
+  }
+}
+
+function instrumentPipe(
+  target: StreamTarget,
+  parentNodeId: string,
+  method: (...arguments_: unknown[]) => unknown,
+  arguments_: unknown[],
+) {
+  const writable = arguments_[0]
+  const runtime =
+    writable && typeof writable === 'object' ? writableDestinations.get(writable) : undefined
+
+  if (runtime?.nodeId && writable && typeof (writable as WritableStream).getWriter === 'function') {
+    const parent = graphNodes.get(parentNodeId)!
+    const destinationNode = graphNodes.get(runtime.nodeId)!
+    destinationNode.depth = Math.max(destinationNode.depth, parent.depth + 1)
+    addEdge(parentNodeId, runtime.nodeId)
+  }
+
+  flushTelemetry()
+  return Reflect.apply(method, target, arguments_)
+}
+
+function callTargetMethod(target: StreamTarget, name: string, ...arguments_: unknown[]) {
+  const method = Reflect.get(target, name, target) as (...values: unknown[]) => object
+  return Reflect.apply(method, target, arguments_)
+}
+
+function watchNodeLifecycle(target: StreamTarget, nodeId: string) {
+  const once = Reflect.get(target, 'once', target)
+  if (typeof once !== 'function') return
+
+  Reflect.apply(once, target, [
+    'end',
+    () => {
+      const node = graphNodes.get(nodeId)
+      if (!node || node.status !== 'open') return
+      node.status = 'closed'
+      flushTelemetry()
+    },
+  ])
+  Reflect.apply(once, target, [
+    'abort',
+    () => {
+      const node = graphNodes.get(nodeId)
+      if (!node) return
+      node.status = 'aborted'
+      flushTelemetry()
+    },
+  ])
+}
+
+function watchCombinedLifecycle(targets: StreamTarget[], nodeId: string) {
+  let remaining = targets.length
+  let aborted = false
+
+  for (const target of targets) {
+    const once = Reflect.get(target, 'once', target)
+    if (typeof once !== 'function') continue
+    let settled = false
+
+    const finish = (wasAborted: boolean) => {
+      if (settled) return
+      settled = true
+      aborted ||= wasAborted
+      remaining -= 1
+      if (remaining > 0) return
+
+      const node = graphNodes.get(nodeId)
+      if (!node) return
+      node.status = aborted ? 'aborted' : 'closed'
+      flushTelemetry()
+    }
+
+    Reflect.apply(once, target, ['end', () => finish(false)])
+    Reflect.apply(once, target, ['abort', () => finish(true)])
+  }
+}
+
+function isStream(value: unknown): value is StreamTarget {
+  return value instanceof StreamConstructor
+}
+
+function formatOperator(name: string, arguments_: unknown[]) {
+  if (name === 'take') return `take(${String(arguments_[0] ?? '')})`
+  if (name === 'batch') return `batch(${String(arguments_[0] ?? '')})`
+  if (name === 'merge') return `merge(${arguments_.map(String).join(', ')})`
+  return name
+}
+
+function addNode(
+  type: GraphNode['type'],
+  label: string,
+  depth: number,
+  metric?: GraphNode['metric'],
+) {
+  const id = `node-${nextNodeId++}`
+  graphNodes.set(id, {
+    id,
+    type,
+    label,
+    depth,
+    input: 0,
+    output: 0,
+    active: 0,
+    status: 'open',
+    metric,
+  })
+  flushTelemetry()
+  return id
+}
+
+function addEdge(from: string, to: string, trackFlow = false) {
+  const existing = graphEdges.find((edge) => edge.from === from && edge.to === to)
+  if (existing) return existing
+
+  const edge: GraphEdge = {
+    id: `edge-${nextEdgeId++}`,
+    from,
+    to,
+    ...(trackFlow ? { flowed: 0 } : {}),
+  }
+  graphEdges.push(edge)
+  flushTelemetry()
+  return edge
+}
+
+function scheduleTelemetry() {
+  if (telemetryTimer) return
+  telemetryTimer = setTimeout(flushTelemetry, 100)
+}
+
+function flushTelemetry() {
+  if (telemetryTimer) {
+    clearTimeout(telemetryTimer)
+    telemetryTimer = undefined
+  }
+
+  send({
+    type: 'graph',
+    nodes: Array.from(graphNodes.values()),
+    edges: graphEdges.map((edge) => {
+      const from = graphNodes.get(edge.from)
+      const to = graphNodes.get(edge.to)
+      const flowed = edge.flowed ?? to?.input ?? 0
+      const produced = edge.produced ?? from?.output ?? 0
+      const queued = Math.max(0, produced - flowed)
+      const closed = to?.status !== 'open' || (from?.status !== 'open' && queued === 0)
+      return {
+        ...edge,
+        flowed,
+        queued: closed ? 0 : queued,
+        closed,
+      }
+    }),
+  })
+}
+
+function resetRuntime(configurations: DestinationConfig[]) {
+  if (telemetryTimer) clearTimeout(telemetryTimer)
+  if (consoleTimer) clearTimeout(consoleTimer)
+  graphNodes = new Map()
+  graphEdges = []
+  destinations = new Map(
+    configurations.map((configuration) => [
+      configuration.name,
+      { ...configuration, count: 0, values: [], state: 'idle' as const },
+    ]),
+  )
+  forkStates = new WeakMap()
+  proxyTargets = new WeakMap()
+  proxyNodeIds = new WeakMap()
+  writableDestinations = new WeakMap()
+  nextNodeId = 1
+  nextEdgeId = 1
+  telemetryTimer = undefined
+  consoleTimer = undefined
+  consoleEntries = []
+  runStartedAt = performance.now()
+}
+
+function configureDestination(message: ConfigureDestinationMessage) {
+  const runtime = destinations.get(message.name)
+  if (!runtime) return
+
+  runtime.delay = Math.min(10_000, Math.max(0, Math.round(message.delay)))
+  runtime.wakeDelay?.()
+}
+
+function formatArgument(value: unknown) {
+  if (value instanceof Error) return `${value.name}: ${value.message}`
+  if (typeof value === 'string') return value
+  if (value === undefined || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+
+  try {
+    return JSON.stringify(value) ?? String(value)
+  } catch {
+    return String(value)
+  }
+}
+
+const playgroundConsole = {
+  log: (...arguments_: unknown[]) => sendConsole('log', arguments_),
+  info: (...arguments_: unknown[]) => sendConsole('info', arguments_),
+  warn: (...arguments_: unknown[]) => sendConsole('warn', arguments_),
+  error: (...arguments_: unknown[]) => sendConsole('error', arguments_),
+}
+
+function sendConsole(level: ConsoleLevel, arguments_: unknown[]) {
+  consoleEntries.push({
+    level,
+    message: arguments_.map(formatArgument).join(' '),
+    elapsed: performance.now() - runStartedAt,
+  })
+  if (consoleEntries.length > 500) consoleEntries.shift()
+  if (consoleTimer) return
+  consoleTimer = setTimeout(flushConsole, 100)
+}
+
+function flushConsole() {
+  if (consoleTimer) clearTimeout(consoleTimer)
+  consoleTimer = undefined
+  if (consoleEntries.length === 0) return
+  send({ type: 'console', entries: consoleEntries })
+  consoleEntries = []
+}
+
+self.addEventListener('message', async (event: MessageEvent<PlaygroundMessage>) => {
+  if (event.data.type === 'destination:configure') {
+    configureDestination(event.data)
+    return
+  }
+
+  if (event.data.type !== 'run') return
+
+  resetRuntime(event.data.destinations)
+  send({ type: 'started' })
+
+  try {
+    const execute = new AsyncFunction(
+      'exstream',
+      'source',
+      'destination',
+      'console',
+      `"use strict";\n${event.data.code}\n//# sourceURL=exstream-playground.js`,
+    )
+
+    await execute(instrumentedExstream, source, destination, playgroundConsole)
+    for (const runtime of destinations.values()) sendDestinationSnapshot(runtime)
+    flushConsole()
+    flushTelemetry()
+    send({ type: 'complete' })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    const stack = error instanceof Error ? error.stack : undefined
+    flushConsole()
+    flushTelemetry()
+    send({ type: 'error', message, stack })
+  }
+})

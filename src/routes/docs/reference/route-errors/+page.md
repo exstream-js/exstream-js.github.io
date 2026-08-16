@@ -37,9 +37,11 @@ An `Error` intentionally wrapped with `exstream.data(error)` is ordinary data an
 
 Both outputs are reliable forks. Consume them concurrently: the source advances only when both active branches can accept their next relevant record. Leaving either output without demand can stop the graph.
 
+Call `routeErrors()` before the source starts because it creates both forks synchronously. Like `fork()`, it throws if reliable branches can no longer be added.
+
 ## Errors
 
-Fatal source, sink, lifecycle, cancellation, and structural format failures bypass dead-letter routing and abort both branches. Failures inside one downstream destination affect that branch according to normal fork lifecycle; coordinate sibling cancellation at the application boundary when required.
+Fatal source, sink, lifecycle, and cancellation failures bypass dead-letter routing and abort both branches. A structural CSV or single-document JSON failure may be emitted briefly as a dead letter before its format operator aborts the graph; routing it cannot make a partial document recoverable. Failures inside one downstream destination affect that branch according to normal fork lifecycle; coordinate sibling cancellation at the application boundary when required.
 
 ## Forms
 

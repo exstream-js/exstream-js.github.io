@@ -1,3 +1,7 @@
+<script>
+  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
+</script>
+
 <svelte:head>
   <title>Consume a pipeline — Exstream</title>
   <meta name="description" content="Choose pipeTo, async iteration, drain, or collection as the terminal Exstream operation." />
@@ -15,6 +19,8 @@
 ```javascript
 await pipeline.pipeTo(destination)
 ```
+
+<PlaygroundLink example="consume" />
 
 Use `pipeTo()` for a Node-style writable or Web `WritableStream`. Its promise settles only when the transfer completes. It rejects on an unhandled record error, source or destination failure, structural format error, or cancellation.
 

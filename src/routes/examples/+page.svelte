@@ -13,84 +13,82 @@
       <p class="eyebrow">Learn by running</p>
       <h1>See the pipeline make decisions.</h1>
       <p class="lead">
-        Examples will be guided browser labs, not a wall of snippets. Each lesson starts with a
+        Examples are guided browser labs, not a wall of snippets. Each lesson starts with a
         problem, runs real Exstream code, and makes flow, buffering, and output visible.
       </p>
       <div class="examples-actions">
-        <a class="button" href="/docs/examples/browser-csv/">Run the browser CSV guide</a>
-        <span>The first complete demo remains in Docs while the tutorial workspace is built.</span>
+        <a class="button" href="/examples/playground/">Open the playground</a>
+        <a href="/docs/examples/browser-csv/">Or run the browser CSV guide →</a>
       </div>
     </div>
 
-    <div class="tutorial-preview" aria-label="Planned interactive tutorial sequence">
+    <div class="tutorial-preview" aria-label="Interactive tutorial sequence">
       <div class="tutorial-preview-bar">
         <span>Learning path</span>
         <span>runs client-side</span>
       </div>
       <ol>
         <li>
-          <span>01</span><strong>Transform records</strong><small
-            >map, filter, and inspect output</small
-          >
+          <a href="/examples/playground/?example=sources">
+            <span class="tutorial-number">01</span><strong>Create a source</strong><small
+              >pull an infinite async generator</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
         <li>
-          <span>02</span><strong>Parse a remote CSV</strong><small>fetch and stream rows</small>
+          <a href="/examples/playground/?example=transform-data">
+            <span class="tutorial-number">02</span><strong>Transform records</strong><small
+              >map, filter, batch, and inspect output</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
         <li>
-          <span>03</span><strong>Enrich concurrently</strong><small
-            >bound work and preserve order</small
-          >
+          <a href="/examples/playground/?example=async-work">
+            <span class="tutorial-number">03</span><strong>Enrich concurrently</strong><small
+              >bound work and choose output order</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
         <li>
-          <span>04</span><strong>Control backpressure</strong><small
-            >slow the sink and watch demand</small
-          >
+          <a href="/examples/playground/?example=backpressure">
+            <span class="tutorial-number">04</span><strong>Control backpressure</strong><small
+              >slow the sink and watch demand</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
         <li>
-          <span>05</span><strong>Fork the flow</strong><small
-            >database, file, and audit outputs</small
-          >
+          <a href="/examples/playground/?example=branching">
+            <span class="tutorial-number">05</span><strong>Fork the flow</strong><small
+              >coordinate reliable destinations</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
         <li>
-          <span>06</span><strong>Handle bad records</strong><small>route, skip, or fail</small>
+          <a href="/examples/playground/?example=errors">
+            <span class="tutorial-number">06</span><strong>Handle bad records</strong><small
+              >route retries and dead letters</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
         <li>
-          <span>07</span><strong>Merge sources</strong><small>parallelism and output order</small>
+          <a href="/examples/playground/?example=merge-sources">
+            <span class="tutorial-number">07</span><strong>Merge sources</strong><small
+              >parallel inputs and output order</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
         <li>
-          <span>08</span><strong>Build for the browser</strong><small
-            >Web Streams and cancellation</small
-          >
+          <a href="/docs/examples/browser-csv/">
+            <span class="tutorial-number">08</span><strong>Stream a remote CSV</strong><small
+              >Web Streams, pressure, and cancellation</small
+            ><span class="tutorial-arrow" aria-hidden="true">→</span>
+          </a>
         </li>
       </ol>
       <p>
-        Every lesson will combine explanation, editable code, Run / Stop / Reset, and live output.
+        Every lesson combines explanation, editable code, Run / Stop / Reset, and live output.
       </p>
     </div>
   </section>
 
-  <section class="examples-method page-frame">
-    <div>
-      <p class="eyebrow">Tutorial contract</p>
-      <h2>Change one variable. See one consequence.</h2>
-    </div>
-    <div class="examples-method-grid">
-      <article>
-        <span>Problem</span>
-        <p>Begin with a concrete ETL failure mode, not an API name.</p>
-      </article>
-      <article>
-        <span>Code</span>
-        <p>Run the same package shipped to applications, isolated in the browser.</p>
-      </article>
-      <article>
-        <span>Flow</span>
-        <p>Show which records are active, waiting, emitted, dropped, or cancelled.</p>
-      </article>
-      <article>
-        <span>Why</span>
-        <p>Connect the observed behavior to the relevant concept and API contract.</p>
-      </article>
-    </div>
-  </section>
 </div>

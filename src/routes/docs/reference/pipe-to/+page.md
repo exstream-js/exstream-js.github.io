@@ -74,6 +74,8 @@ await pipeline.jsonlStringify().pipeTo(createWriteStream('./orders.jsonl'))
   </div>
 </dl>
 
+Passing `null` or `undefined` as `options` applies all defaults. Other non-object values and arrays reject the returned promise. The three lifecycle flags use normal JavaScript truthiness; the TypeScript API exposes booleans. `signal` must have a valid `AbortSignal` shape.
+
 ## Completion
 
 `pipeTo()` is terminal and supplies downstream demand. It resolves with `undefined` only after the source has ended and the destination has finished, closed, or completed all writes. With the destination left open, it waits for write callbacks or promises rather than for close.

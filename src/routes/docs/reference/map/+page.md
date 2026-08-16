@@ -15,6 +15,16 @@
 ```typescript
 map<U>(
   fn: (value: T, context: CallbackContext<T, C>) => U,
+  options: { wrap: true },
+): Exstream<
+  U extends PromiseLike<infer R>
+    ? Promise<{ input: T; output: Awaited<R> }>
+    : { input: T; output: U },
+  MaterializedContext<C, T>
+>
+
+map<U>(
+  fn: (value: T, context: CallbackContext<T, C>) => U,
   options?: MapOptions | null,
 ): Exstream<U, NextContext<C, U>>
 
@@ -22,8 +32,6 @@ interface MapOptions {
   wrap?: boolean
 }
 ```
-
-With `wrap: true`, the output is `{ input: T, output: Awaited<U> }`; promise-returning callbacks emit a promise of that object.
 
 ## Example
 
@@ -48,7 +56,7 @@ const totals = exstream(rows).map((row) => ({
     <dt><code>wrap</code></dt>
     <dd>
       <p class="parameter-meta"><span><strong>Type</strong> <code>boolean</code></span><span><strong>Default</strong> <code>false</code></span></p>
-      <p>When <code>true</code>, emits <code>&#123; input, output &#125;</code> so the transformed result stays associated with its original input. Passing <code>null</code> or <code>undefined</code> as the options object applies the default.</p>
+      <p>When <code>true</code>, emits <code>&#123; input, output &#125;</code> so the transformed result stays associated with its original input. The JavaScript implementation tests this field by truthiness, while the public TypeScript API intentionally accepts booleans only. Passing <code>null</code> or <code>undefined</code> as the options object applies the default.</p>
     </dd>
   </div>
 </dl>
@@ -57,7 +65,9 @@ const totals = exstream(rows).map((row) => ({
 
 `map()` preserves input order and adds no independent queue. It asks upstream for work only while downstream can accept it. Existing record errors pass through without calling `fn`.
 
-The callback result is emitted as-is, including `undefined`, arrays, streams, and promise-like values. Returning a promise does not make `map()` await it or limit concurrent work:
+When requested, `context.input` is the value that created the current context, `context.signal` aborts when this branch should stop, and any custom fields added upstream remain available. The same materialized context continues with the mapped output unless a later branch boundary copies it.
+
+The callback result is emitted as-is, including `undefined`, arrays, streams, and asynchronous values. A native promise, or an object exposing both callable `then` and `catch` properties, is recognized for rejection wrapping and `wrap` handling. A minimal thenable with only `then` is emitted as an ordinary value. Returning any promise does not make `map()` await it or limit concurrent work:
 
 ```javascript
 const pending = exstream(ids).map((id) => fetch(`/items/${id}`))

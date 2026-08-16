@@ -1,3 +1,7 @@
+<script>
+  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
+</script>
+
 <svelte:head>
   <title>Async work — Exstream</title>
   <meta name="description" content="Control concurrent asynchronous transformations, output order, retries, timeouts, and cancellation." />
@@ -23,6 +27,8 @@ const enriched = exstream(orderIds).mapAsync(
   { concurrency: 8 },
 )
 ```
+
+<PlaygroundLink example="async-work" />
 
 `concurrency: 8` allows at most eight active callbacks. The default is one. The bound limits parallel I/O; downstream backpressure may reduce the active work further.
 

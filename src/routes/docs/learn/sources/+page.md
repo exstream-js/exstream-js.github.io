@@ -1,3 +1,7 @@
+<script>
+  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
+</script>
+
 <svelte:head>
   <title>Create a source — Exstream</title>
   <meta name="description" content="Create an Exstream source from iterables, promises, platform streams, generators, and events." />
@@ -54,6 +58,8 @@ async function* pages() {
 
 const orders = exstream(pages())
 ```
+
+<PlaygroundLink example="sources" />
 
 If the branch is cancelled early, Exstream calls the iterator's `return()` method when available.
 

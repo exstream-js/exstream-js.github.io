@@ -46,13 +46,19 @@ const records = exstream(pageUrls)
   </div>
 </dl>
 
+`parallelism` is normalized with `Number()` at runtime, so any value coercing to a positive integer or `Infinity` is accepted. `preserveOrder` uses truthiness. TypeScript intentionally exposes a number and a boolean; use those explicit types.
+
 ## Input
 
-Every successful outer value must be an Exstream instance. Any other value becomes a record error stating that `merge()` can merge only Exstreams. To expand synchronous iterables, use [`flatMap()`](/docs/reference/flat-map/) instead.
+Every successful outer value must be a readable Exstream instance that can accept a consumer. Fork an inner stream first if it is already part of another reliable chain. Any non-Exstream outer value becomes a record error stating that `merge()` can merge only Exstreams. Existing outer record errors pass through. To expand synchronous iterables, use [`flatMap()`](/docs/reference/flat-map/) instead.
 
 ## Order and pressure
 
 Unordered mode forwards values as active inner streams produce them and propagates downstream pressure to those streams. Ordered mode collects each inner stream's records until it can emit that stream in outer order. It can therefore retain a complete inner stream and must not be used with an unbounded inner stream.
+
+The result is asynchronous even when all inner sources are synchronous. A finite `parallelism` bounds active inner streams, not the number of values buffered by ordered mode.
+
+The activation limit cannot retroactively pause work owned by hot inner streams that started before `merge()` attached. Create inner streams lazily or configure their source buffers when activation itself must control resource use.
 
 ## Errors
 

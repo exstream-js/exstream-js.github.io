@@ -1,3 +1,7 @@
+<script>
+  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
+</script>
+
 <svelte:head>
   <title>Errors and lifecycle — Exstream</title>
   <meta name="description" content="Distinguish recoverable record errors from fatal graph failures and cancellation." />
@@ -12,13 +16,66 @@
 
 ## Record errors
 
-An operator may produce an error associated with one input record. Handle it before the terminal boundary:
+An operator may produce an error associated with one input record. The error retains that input, so recovery does not need to reconstruct what failed:
 
 ```javascript
-const clean = pipeline.skipErrors((error) => error.code === 'INVALID_EMAIL')
+const validated = pipeline.map((transaction) => {
+  if (!transaction.customerId) {
+    const error = new Error('Missing customer')
+    error.code = 'MISSING_CUSTOMER'
+    throw error
+  }
+  return transaction
+})
 ```
 
-Use `errors()` to emit a replacement value, `skipErrors()` to drop accepted failures, or `routeErrors()` to split data and errors into separate streams.
+Throwing here creates a recoverable record error; it does not automatically mean that the complete job is broken. Use `errors()` to emit a replacement, `skipErrors()` only when losing the rejected input is acceptable, or route it explicitly.
+
+## Build a dead-letter path
+
+`routeErrors()` creates two reliable outputs. Successful records continue through `output`; failures become `{ error, input }` records on `deadLetters`:
+
+```javascript
+const { output, deadLetters } = validated.routeErrors()
+
+const rejected = deadLetters.map(({ error, input }) => ({
+  code: error.code ?? 'UNKNOWN',
+  message: error.message,
+  input,
+  failedAt: new Date().toISOString(),
+}))
+
+await Promise.all([
+  output.pipeTo(processedWriter),
+  rejected.pipeTo(deadLetterWriter),
+])
+```
+
+<PlaygroundLink example="errors" />
+
+Both outputs participate in backpressure and must be consumed concurrently. A dead-letter destination is not a console dump: its records need enough information to audit, repair, replay, or deliberately discard the failed input.
+
+## Separate retry from rejection
+
+Retry policy belongs in the dead-letter envelope, not in an indiscriminate loop. A timeout may be transient; invalid customer data usually is not:
+
+```javascript
+const failures = deadLetters.map(({ error, input }) => ({
+  input,
+  code: error.code,
+  retryable: error.code === 'RISK_TIMEOUT',
+}))
+
+const retryable = failures.fork().filter((failure) => failure.retryable)
+const rejected = failures.fork().filter((failure) => !failure.retryable)
+
+await Promise.all([
+  retryable.pipeTo(retryQueue),
+  rejected.pipeTo(deadLetterWriter),
+])
+```
+
+Keep retry attempts bounded and persist their count. Once the retry budget is exhausted, the record should become a permanent dead letter rather than circulate forever.
 
 ## Fatal failures
 
@@ -37,6 +94,8 @@ try {
 }
 ```
 
+Fatal source failures, destination failures, lifecycle failures, and cancellation bypass `routeErrors()`. A DLQ is a policy for recoverable record failures, not a mechanism for pretending broken infrastructure succeeded.
+
 ## Cancellation
 
 Exstream exposes an `AbortSignal` on the stream and in record context when context is materialized. Pass that signal into cancellable work such as `fetch()`.
@@ -45,4 +104,4 @@ When work is no longer useful—because a branch stopped, a terminal failed, or 
 
 ## Ownership
 
-The caller awaiting the terminal operation owns the final decision: retry the whole job, report failure, abort sibling work, or resume from a checkpoint. Keep that policy outside small transformation callbacks so the graph remains understandable.
+The caller awaiting all terminal operations owns the final decision: retry the whole job, report failure, abort sibling work, or resume from a checkpoint. Keep that policy outside small transformation callbacks so the graph—and the distinction between recovery and failure—remains understandable.

@@ -59,9 +59,13 @@ const metrics = source.observe({
 
 Passing `null` or `undefined` applies all defaults.
 
+At runtime `bufferLimit` is normalized with `Number()`, so any value coercing to a non-negative integer or `Infinity` satisfies the limit. The TypeScript API intentionally requires a number. Invalid signal shapes and invalid limit/policy combinations throw while the observer is created; unrelated non-object option values are treated like defaults.
+
 ## Delivery
 
 The source never waits for an observer. Retained values preserve source order, but a drop policy may create gaps. Observer completion can lag behind reliable completion while its queue drains. Context is copied at the observation boundary.
+
+An observer does not count as a reliable consumer and does not, by itself, drive a cold source. Consume the main source through a terminal operation, attach a reliable fork, or explicitly start the source. Destroying the observer detaches it without ending the source.
 
 Metrics, previews, and diagnostics often tolerate this contract. Required audit, billing, or persistence work should use [`fork()`](/docs/reference/fork/) instead.
 

@@ -43,6 +43,8 @@ await exstream(records)
 
 `tap()` preserves each value, its context, and input order. Existing record errors pass through without running the callback. The operator adds no queue and follows normal downstream demand.
 
+When requested, the callback context exposes `context.input`, the branch cancellation `context.signal`, and custom fields added upstream. Because the value is unchanged, the same context continues downstream.
+
 Like every intermediate operator, `tap()` is lazy: attaching it does not consume the source. End the chain with `drain()`, `pipeTo()`, an async iterator, or another terminal consumer when the side effect must actually run.
 
 ## Async work

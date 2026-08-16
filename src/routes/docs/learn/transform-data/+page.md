@@ -1,3 +1,7 @@
+<script>
+  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
+</script>
+
 <svelte:head>
   <title>Transform data — Exstream</title>
   <meta name="description" content="Use Exstream transformations without collecting the complete source." />
@@ -41,6 +45,8 @@ for await (const batch of batches.toAsyncIterator()) {
   await database.insertMany(batch)
 }
 ```
+
+<PlaygroundLink example="transform-data" />
 
 Batching deliberately retains up to the requested number of values. That memory belongs in the pipeline design, not in an accidental array outside it.
 

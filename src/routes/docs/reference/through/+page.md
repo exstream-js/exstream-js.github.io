@@ -46,7 +46,7 @@ const normalized = exstream(rows).through(normalizeOrder)
     <dt><code>writable</code></dt>
     <dd>
       <p class="parameter-meta"><span><strong>Type</strong> <code>boolean</code></span><span><strong>Default</strong> <code>false</code></span></p>
-      <p>Applies only to Node streams. When true, treats the target as write-only and returns a non-readable Exstream that mirrors its finish, close, and error lifecycle instead of exposing a readable side.</p>
+      <p>Applies only to Node streams. When true, treats the target as write-only and returns a non-readable Exstream that mirrors its finish, close, and error lifecycle instead of exposing a readable side. The runtime uses truthiness; TypeScript accepts a boolean.</p>
     </dd>
   </div>
 </dl>
@@ -61,6 +61,16 @@ const active = orders.through(activeOnly)
 ```
 
 Node stream targets are available only in the Node.js runtime. Invalid targets throw when attached.
+
+For an Exstream target, `through()` connects the source to the target's root and returns that target; it must not already have a reliable consumer. A function target is called immediately with the current stream and its return value becomes the result. A reusable pipeline creates a fresh live pipeline instance for every attachment.
+
+With a Node duplex or transform and the default `writable: false`, Exstream writes into the target and wraps its readable side. With `writable: true`, the returned Exstream is marked non-readable, starts consuming immediately, and mirrors destination `error`, `finish`, and `close` lifecycle events. Use [`pipeTo()`](/docs/reference/pipe-to/) when a completion promise and strict terminal failure contract are preferable.
+
+The current TypeScript overloads model pipeline, Exstream, function, and null targets. Node streams are supported by the JavaScript runtime but are not yet represented by a dedicated `through()` overload; TypeScript projects may prefer `pipeTo()` or need an explicit compatibility cast.
+
+## Errors
+
+An unsupported target throws when attached. A transform function that throws also escapes the attachment call. Once connected, record errors, fatal failures, and cancellation follow the target graph. In write-only Node mode, destination errors are written into the returned Exstream's error channel before it ends; they reject an attached terminal consumer unless handled.
 
 ## Forms
 
