@@ -1,38 +1,38 @@
 <svelte:head>
   <title>Documentation — Exstream</title>
-  <meta name="description" content="Learn Exstream from the first bounded pipeline to production semantics." />
+  <meta name="description" content="Learn the Exstream pipeline model, solve streaming ETL problems, and look up operator contracts." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/" />
 </svelte:head>
 
 <p class="eyebrow">Documentation</p>
 
-# Build the pipeline, then learn its edges.
+# Choose what you need
 
-<p class="lead">Start with working code. Go deeper only when backpressure, concurrency, fan-out, errors, or cancellation become part of the problem.</p>
+<p class="lead">Learn the model in order, solve a concrete ETL problem, or look up the exact contract of one operator.</p>
 
-## Pick your path
+## New to Exstream?
 
-### Working pipeline
-
-The [quick start](/quick-start/) installs Exstream, transforms records, runs bounded asynchronous work, and writes to a destination that can push back.
-
-### Understand behavior
-
-Read [backpressure](/docs/concepts/backpressure/) before connecting a fast source to slow I/O. Every operator page will use the same contract: buffering, order, concurrency, errors, and cancellation.
-
-### Adoption decision
-
-Read [when not to use Exstream](/docs/project/when-not-to-use/). A small array, a simple async iterator, or a columnar engine can be the more honest answer.
-
-## One-line model
+Start with the [quick start](/quick-start/) if you have not run a pipeline yet. Then read the [pipeline model](/docs/learn/pipeline-model/) and [backpressure](/docs/concepts/backpressure/). Together they explain when work starts, who controls the pace, and why the pipeline stays bounded.
 
 ```text
-source → operators → sink
+source → transformations → terminal consumer
+   ↑                              │
+   └──────────── demand ──────────┘
 ```
 
-Nothing runs merely because the chain exists. A terminal consumer starts pulling. Demand travels toward the source; records and failures travel toward the sink.
+## Solving a problem?
 
-> Exstream is for the pipeline as a whole: bounded memory, controlled I/O, fan-out, cancellation, format parsing, and cleanup.
+Guides begin with a real task and end with a complete pipeline. The first one [fetches and transforms a public CSV in the browser](/docs/examples/browser-csv/) without a server or upload.
+
+More guides will cover bounded enrichment, multiple writers, paginated APIs, dead-letter flows, and hot event sources. They belong here only when their code can be verified against a released package.
+
+## Looking up an operator?
+
+Use the [operator index](/docs/reference/). Reference pages state the details production code depends on: input and output, sync or async execution, order, concurrency, buffering, backpressure, errors, cancellation, and runtime support.
+
+## Deciding whether to adopt it?
+
+Read [when to use Exstream](/docs/project/when-not-to-use/). Native arrays, a small `for await` loop, Web Streams, or a columnar engine can all be the better answer. Exstream earns its place when the pipeline as a whole becomes the difficult part.
 
 ## Runtime baseline
 
@@ -42,4 +42,4 @@ Nothing runs merely because the chain exists. A terminal consumer starts pulling
 - Zero runtime dependencies
 - TypeScript declarations included
 
-The default import selects the Node.js or browser implementation through package exports. Use `exstream.js/node`, `exstream.js/core`, or `exstream.js/web` when the runtime boundary should be explicit.
+The default import selects the Node.js or browser implementation through package exports. Explicit entry points are available as `exstream.js/node`, `exstream.js/core`, and `exstream.js/web`.

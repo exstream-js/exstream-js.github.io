@@ -1,14 +1,28 @@
 <svelte:head>
-  <title>When not to use Exstream</title>
-  <meta name="description" content="Choose a simpler loop, native streams, or a columnar engine when Exstream is not the right fit." />
+  <title>When to use Exstream</title>
+  <meta name="description" content="Decide when Exstream solves a real pipeline problem and when a simpler JavaScript tool is clearer." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/project/when-not-to-use/" />
 </svelte:head>
 
-<p class="eyebrow">Project · Honest boundary</p>
+<p class="eyebrow">Learn · Adoption decision</p>
 
-# When not to use Exstream
+# When Exstream earns its place
 
-<p class="lead">Exstream is useful when the pipeline is the hard part. It should not make a small problem look architectural.</p>
+<p class="lead">Use Exstream when the pipeline as a whole is difficult: bounded memory, controlled I/O, fan-out, failure, and cleanup. Do not use it to make a small loop look architectural.</p>
+
+## Strong fit
+
+Exstream is a strong fit when several of these are true:
+
+- records can number in the millions;
+- memory must remain bounded;
+- I/O should run concurrently but not without limit;
+- more than one reliable destination needs the same flow;
+- failure and cancellation must clean up the complete graph;
+- CSV, JSON Lines, or streamed JSON must be processed incrementally;
+- one pipeline crosses iterables, Node streams, and Web Streams.
+
+The value is not shorter syntax for `map()`. It is one explicit contract for the system those operations form.
 
 ## Data fits in memory
 
@@ -45,16 +59,6 @@ DuckDB, Polars, and Arrow are often better for large analytical joins, aggregati
 
 An `EventEmitter` or `EventTarget` can produce events whether the consumer is ready or not. If the producer cannot pause and losing events is unacceptable, put a durable queue or broker at the boundary. An in-process library cannot manufacture backpressure that the source does not support.
 
-## Adoption test
+## Decision test
 
-Choose Exstream when several of these are true:
-
-- records can number in the millions;
-- memory must remain bounded;
-- I/O should run concurrently but not without limit;
-- more than one destination must receive the flow;
-- failure and cancellation must clean up the whole graph;
-- CSV, JSON Lines, or streamed JSON must be parsed incrementally;
-- the same pipeline crosses Node.js and Web platform primitives.
-
-If none are true, start with the platform. You can move to Exstream when the pipeline—not the syntax—becomes the problem.
+Ask what code you would otherwise need to write: a concurrency pool, ordering queue, retry policy, fan-out coordinator, parser, cancellation graph, or cleanup protocol. If the answer is “none of those,” start with the platform. You can move to Exstream when the pipeline—not the syntax—becomes the problem.

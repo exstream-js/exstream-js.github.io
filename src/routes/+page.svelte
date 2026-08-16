@@ -30,10 +30,11 @@
     <div class="hero-inner">
       <div class="hero-copy">
         <p class="eyebrow">Streaming ETL for JavaScript</p>
-        <h1>Move records, <em>not limits.</em></h1>
+        <h1>Stream millions. <em>Stay bounded.</em></h1>
         <p>
-          Build bounded, concurrent data pipelines without reimplementing backpressure, fan-out,
-          cancellation, and cleanup every time.
+          Connect large data sources to JavaScript transforms and one or more destinations. Exstream
+          keeps memory, asynchronous work, failure, and cancellation under control across the whole
+          pipeline.
         </p>
         <div class="hero-actions">
           <a class="button" href="/quick-start/">Build your first pipeline</a>
@@ -76,12 +77,12 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">The core difference</p>
-          <h2>The whole graph slows down together.</h2>
+          <h2>A slow destination does not become a memory leak.</h2>
         </div>
         <div>
           <p>
-            A slow writer propagates pressure through every transform to the source. Async work
-            stays inside the concurrency bound. Cancellation reaches work that is no longer useful.
+            When a writer cannot keep up, demand travels back through every transform to the source.
+            Records wait where you set a bound instead of accumulating in an invisible queue.
           </p>
         </div>
       </div>
@@ -89,25 +90,75 @@
         <article class="principle">
           <span class="number">01 / PRESSURE</span>
           <h3>Bounded by design</h3>
-          <p>Sources pull only as fast as the slowest reliable consumer can accept records.</p>
+          <p>The source pulls the next record only when the reliable destinations can accept it.</p>
         </article>
         <article class="principle">
           <span class="number">02 / WORK</span>
           <h3>Concurrency you can name</h3>
-          <p>Ordering, retries, timeouts, and parallel work are explicit operator contracts.</p>
+          <p>Choose how many requests run at once and whether their results must stay ordered.</p>
         </article>
         <article class="principle">
           <span class="number">03 / GRAPH</span>
           <h3>Fan-out that finishes</h3>
-          <p>
-            Reliable branches, observers, errors, and cancellation follow the complete pipeline.
-          </p>
+          <p>Send the same flow to multiple writers and know which branches may slow or stop it.</p>
         </article>
       </div>
     </div>
   </section>
 
   <section class="section">
+    <div class="section-inner">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">What it does</p>
+          <h2>Operations for real record flows.</h2>
+        </div>
+        <div>
+          <p>
+            Exstream is a record-oriented pipeline for backend JavaScript and browser runtimes. It
+            becomes useful when a loop starts growing its own queues, worker pools, branches, and
+            cleanup rules.
+          </p>
+        </div>
+      </div>
+      <div class="capabilities-grid">
+        <article>
+          <span>Transform</span>
+          <h3>Shape data as it arrives.</h3>
+          <p>
+            Map, filter, batch, group, reduce, and compose reusable pipelines without collecting the
+            source.
+          </p>
+        </article>
+        <article>
+          <span>Coordinate</span>
+          <h3>Bound asynchronous I/O.</h3>
+          <p>
+            Run enrichment concurrently with explicit order, retry, timeout, and cancellation
+            behavior.
+          </p>
+        </article>
+        <article>
+          <span>Branch</span>
+          <h3>Fork, observe, and merge flows.</h3>
+          <p>
+            Choose reliable branches for required data and non-blocking observers for metrics or
+            sampling.
+          </p>
+        </article>
+        <article>
+          <span>Encode</span>
+          <h3>Stream CSV, JSON, and JSON Lines.</h3>
+          <p>
+            Parse and serialize large inputs incrementally with explicit limits for records, values,
+            and depth.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section pt-0">
     <div class="section-inner">
       <div class="section-heading">
         <div>
@@ -161,8 +212,8 @@
       <div class="quick-cta">
         <div>
           <p class="eyebrow">Five-minute start</p>
-          <h2>Start with one useful pipeline.</h2>
-          <p>No framework, service, or account required.</p>
+          <h2>Turn a CSV into a bounded pipeline.</h2>
+          <p>Choose Node.js or browser, JavaScript or TypeScript, and get a real result.</p>
         </div>
         <div>
           <div class="install-command"><span>$</span> npm install exstream.js</div>

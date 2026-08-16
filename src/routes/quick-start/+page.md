@@ -1,115 +1,78 @@
+<script>
+  import QuickStartDemo from '$lib/components/QuickStartDemo.svelte'
+  import QuickStartTabs from '$lib/components/QuickStartTabs.svelte'
+</script>
+
 <svelte:head>
   <title>Quick start — Exstream</title>
-  <meta name="description" content="Install Exstream and build a bounded JavaScript ETL pipeline in five minutes." />
+  <meta name="description" content="Build and run a bounded Exstream pipeline in Node.js or the browser." />
   <link rel="canonical" href="https://exstream-js.github.io/quick-start/" />
 </svelte:head>
 
 <p class="eyebrow">Start here · 5 minutes</p>
 
-# Your first bounded pipeline
+# Build one useful pipeline
 
-<p class="lead">Turn a source into records, transform them, and consume the result. The consumer decides how fast the pipeline moves.</p>
+<p class="lead">Read records, transform them while they flow, and write the result without collecting the whole input first.</p>
 
-## 1. Install
+## Install
 
-Exstream requires Node.js 22 or newer.
+For Node.js, install the package. Exstream requires Node.js 22 or newer.
 
 ```shell
 npm install exstream.js
 ```
 
-## 2. Transform a synchronous source
+In a browser project, install the same package through your bundler. The default import selects the portable browser runtime automatically.
 
-```javascript
-import exstream from 'exstream.js'
+<QuickStartTabs />
 
-const values = exstream([1, 2, 3, 4])
-  .map((value) => value * 2)
-  .filter((value) => value > 4)
+## What the pipeline does
 
-for (const value of values.values()) {
-  console.log(value)
-}
-```
+The example connects a real source and destination, parses CSV incrementally, converts `total` to a number, keeps active orders, and serializes each result as JSON Lines.
 
-This prints `6` and `8`. `map()` and `filter()` stay on Exstream's synchronous path.
-
-## 3. Bound asynchronous work
-
-Use `mapAsync()` when each record needs I/O. State the concurrency and ordering you want:
-
-```javascript
-const orders = exstream(orderIds).mapAsync(
-  async (id, context) => {
-    const response = await fetch(`https://api.example.com/orders/${id}`, {
-      signal: context.signal,
-    })
-
-    return response.json()
-  },
-  {
-    concurrency: 8,
-    ordered: true,
-    retry: 2,
-    timeout: 5_000,
-  },
-)
-
-for await (const order of orders.toAsyncIterator()) {
-  await saveOrder(order)
-}
-```
-
-At most eight lookups are active. Results keep input order. The context signal is cancelled when work for the record is no longer useful.
+Nothing runs just because the chain exists. `pipeTo()` is the terminal operation: it starts demand and settles only after the destination finishes.
 
 <div class="contract-grid">
-  <div><strong>Concurrency</strong><span>8 active records</span></div>
-  <div><strong>Order</strong><span>Input order preserved</span></div>
-  <div><strong>Retry</strong><span>2 retries per record</span></div>
-  <div><strong>Cancellation</strong><span>Passed as AbortSignal</span></div>
+  <div><strong>Memory</strong><span>No complete-file collection</span></div>
+  <div><strong>Flow</strong><span>The destination sets the pace</span></div>
+  <div><strong>Transform</strong><span>One record at a time</span></div>
+  <div><strong>Completion</strong><span>Explicit terminal promise</span></div>
 </div>
 
-## 4. Parse without collecting the file
+<QuickStartDemo />
 
-CSV input may arrive as strings, buffers, or chunks. Records are emitted incrementally:
+## Add bounded asynchronous work
+
+When a record needs I/O, use `mapAsync()` and state the contract you need:
 
 ```javascript
-const rows = exstream(csvChunks).csv({
-  header: true,
-  maxColumns: 100,
-  maxRecordBytes: 8 * 1024 * 1024,
+const enriched = orders.mapAsync(loadCustomer, {
+  concurrency: 8,
+  ordered: true,
+  retry: 2,
+  timeout: 5_000,
 })
-
-for await (const row of rows.toAsyncIterator()) {
-  await writeRow(row)
-}
 ```
 
-The limits are part of the example because unbounded inputs should not get an unbounded parser by accident.
+At most eight calls are active, results preserve input order, and cancelled work receives an `AbortSignal` through the record context.
 
-## 5. Make the destination terminal
-
-Use `pipeTo()` when writing is the operation that completes the graph:
-
-```javascript
-await exstream(input).csv({ header: true }).map(normalize).jsonlStringify().pipeTo(output)
-```
-
-The returned promise resolves only after the destination finishes. It rejects on an unhandled record error, source or destination failure, structural format error, or cancellation.
-
-## Minimal error handling
+## Handle the terminal failure
 
 ```javascript
 try {
-  await exstream(input).csv({ header: true }).map(transform).pipeTo(output)
+  await pipeline.pipeTo(destination)
 } catch (error) {
   const { origin, stage } = exstream.errorInfo(error)
   console.error(`Pipeline failed in ${origin}:${stage ?? 'unknown'}`, error)
 }
 ```
 
-Record errors can remain recoverable; graph failures are fatal. Choose the policy explicitly with `errors()`, `skipErrors()`, `routeErrors()`, or `failOnError()`.
+Recoverable record errors and fatal graph failures are separate policies. The quick start stops at the terminal boundary; the error guide explains routing, skipping, and promotion.
 
-## What to read next
+## Continue from here
 
-Read [backpressure](/docs/concepts/backpressure/) before adding fan-out or connecting to event sources. If this already feels heavier than the problem, check [when not to use Exstream](/docs/project/when-not-to-use/).
+- Understand the [pipeline model](/docs/learn/pipeline-model/).
+- Learn how [backpressure](/docs/concepts/backpressure/) keeps the graph bounded.
+- Run the full [browser CSV guide](/docs/examples/browser-csv/).
+- Check [when not to use Exstream](/docs/project/when-not-to-use/) before making the pipeline more elaborate.

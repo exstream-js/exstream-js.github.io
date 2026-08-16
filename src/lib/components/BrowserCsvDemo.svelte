@@ -15,22 +15,88 @@
     year: number
   }
 
+  const sinkSpeeds = [
+    { label: 'None', delay: 0 },
+    { label: 'Low', delay: 25 },
+    { label: 'Medium', delay: 75 },
+    { label: 'High', delay: 200 },
+  ] as const
+
   let status = $state<DemoState>('idle')
   let continent = $state('All')
-  let slowSink = $state(true)
+  let writerDelay = $state<number>(sinkSpeeds[1].delay)
+  let paused = $state(false)
   let rowsRead = $state(0)
   let rowsMatched = $state(0)
   let population = $state(0)
   let recentRows = $state<GapminderRow[]>([])
   let errorMessage = $state('')
   let controller: AbortController | undefined
+  let releasePausedWrite: (() => void) | undefined
 
   const progress = $derived(Math.min(100, (rowsRead / expectedRows) * 100))
+  const displayedStatus = $derived(paused && status === 'running' ? 'paused' : status)
   const formattedPopulation = $derived(
     new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(
       population,
     ),
   )
+
+  function abortableDelay(milliseconds: number, signal: AbortSignal) {
+    if (signal.aborted) return Promise.reject(signal.reason)
+    if (milliseconds === 0) return Promise.resolve()
+
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(finish, milliseconds)
+
+      function cleanup() {
+        clearTimeout(timer)
+        signal.removeEventListener('abort', abort)
+      }
+
+      function finish() {
+        cleanup()
+        resolve()
+      }
+
+      function abort() {
+        cleanup()
+        reject(signal.reason)
+      }
+
+      signal.addEventListener('abort', abort, { once: true })
+    })
+  }
+
+  function waitWhilePaused(signal: AbortSignal) {
+    if (signal.aborted) return Promise.reject(signal.reason)
+    if (!paused) return Promise.resolve()
+
+    return new Promise<void>((resolve, reject) => {
+      function cleanup() {
+        signal.removeEventListener('abort', abort)
+        releasePausedWrite = undefined
+      }
+
+      function resume() {
+        cleanup()
+        resolve()
+      }
+
+      function abort() {
+        cleanup()
+        reject(signal.reason)
+      }
+
+      releasePausedWrite = resume
+      signal.addEventListener('abort', abort, { once: true })
+    })
+  }
+
+  function resumeWriter() {
+    paused = false
+    releasePausedWrite?.()
+  }
 
   async function run() {
     controller?.abort()
@@ -38,6 +104,7 @@
     const signal = controller.signal
 
     status = 'running'
+    resumeWriter()
     rowsRead = 0
     rowsMatched = 0
     population = 0
@@ -68,13 +135,18 @@
         .filter((row) => row.year === 2007)
         .filter((row) => continent === 'All' || row.continent === continent)
 
-      for await (const row of rows.toAsyncIterator({ signal })) {
-        if (slowSink) await new Promise((resolve) => setTimeout(resolve, 28))
+      const destination = new WritableStream<GapminderRow>({
+        async write(row) {
+          await waitWhilePaused(signal)
+          await abortableDelay(writerDelay, signal)
 
-        rowsMatched++
-        population += row.population
-        recentRows = [row, ...recentRows].slice(0, 6)
-      }
+          rowsMatched++
+          population += row.population
+          recentRows = [row, ...recentRows].slice(0, 6)
+        },
+      })
+
+      await rows.pipe(destination, { signal })
 
       status = 'complete'
     } catch (error) {
@@ -85,11 +157,18 @@
 
       errorMessage = error instanceof Error ? error.message : 'The pipeline failed.'
       status = 'error'
+    } finally {
+      resumeWriter()
     }
   }
 
   function cancel() {
     controller?.abort()
+  }
+
+  function togglePause() {
+    if (paused) resumeWriter()
+    else paused = true
   }
 </script>
 
@@ -118,15 +197,29 @@
         <option>Oceania</option>
       </select>
     </label>
-    <label class="demo-checkbox">
-      <input type="checkbox" bind:checked={slowSink} disabled={status === 'running'} />
-      <span>
-        <strong>Simulate a slow sink</strong>
-        <small>28 ms per accepted record</small>
-      </span>
-    </label>
+    <fieldset class="demo-speed">
+      <legend>Writer delay</legend>
+      <div class="demo-speed-options">
+        {#each sinkSpeeds as speed}
+          <button
+            class:active={writerDelay === speed.delay}
+            type="button"
+            aria-pressed={writerDelay === speed.delay}
+            onclick={() => (writerDelay = speed.delay)}
+          >
+            <strong>{speed.label}</strong>
+            <small>{speed.delay} ms</small>
+          </button>
+        {/each}
+      </div>
+    </fieldset>
     {#if status === 'running'}
-      <button class="button secondary" type="button" onclick={cancel}>Cancel</button>
+      <div class="demo-actions">
+        <button class="button secondary" type="button" aria-pressed={paused} onclick={togglePause}>
+          {paused ? 'Resume' : 'Pause'}
+        </button>
+        <button class="button secondary" type="button" onclick={cancel}>Cancel</button>
+      </div>
     {:else}
       <button class="button" type="button" onclick={run}>
         {status === 'idle' ? 'Run pipeline' : 'Run again'}
@@ -139,7 +232,7 @@
   </div>
 
   <div class="demo-stats" aria-live="polite">
-    <div><span>State</span><strong>{status}</strong></div>
+    <div><span>State</span><strong>{displayedStatus}</strong></div>
     <div><span>Rows read</span><strong>{rowsRead.toLocaleString('en')}</strong></div>
     <div><span>2007 matches</span><strong>{rowsMatched.toLocaleString('en')}</strong></div>
     <div><span>Population</span><strong>{formattedPopulation}</strong></div>
