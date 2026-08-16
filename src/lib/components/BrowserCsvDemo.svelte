@@ -146,7 +146,7 @@
         },
       })
 
-      await rows.pipe(destination, { signal })
+      await rows.pipeTo(destination, { signal })
 
       status = 'complete'
     } catch (error) {

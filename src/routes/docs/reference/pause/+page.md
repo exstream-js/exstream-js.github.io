@@ -20,7 +20,7 @@ pause(fromInside?: boolean): this
 
 Pause is immediate, idempotent, and propagates to the source. Manual writes accepted while paused enter this stream's configured buffer and return `false`; overflow follows `bufferLimit` and `overflow`. Existing buffered values remain until resume, graceful end, or destructive termination.
 
-Use pause/resume only for adapter-level integration. Normal operators, `pipe()`, async consumers, and terminals already coordinate backpressure automatically.
+Use pause/resume only for adapter-level integration. Normal operators, `pipeTo()`, async consumers, and terminals already coordinate backpressure automatically.
 
 ## Related
 

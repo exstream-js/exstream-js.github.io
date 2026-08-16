@@ -445,7 +445,7 @@ function callStreamMethod(
   if (methodName === 'routeErrors') {
     return instrumentRouteErrors(target, parentNodeId, method, unwrappedArguments)
   }
-  if (methodName === 'pipe') {
+  if (methodName === 'pipe' || methodName === 'pipeTo') {
     return instrumentPipe(target, parentNodeId, method, unwrappedArguments)
   }
 

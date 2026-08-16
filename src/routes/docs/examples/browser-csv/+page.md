@@ -42,7 +42,7 @@ const destination = new WritableStream({
   },
 })
 
-await rows.pipe(destination, { signal })
+await rows.pipeTo(destination, { signal })
 ```
 
 The destination's `write()` promise is the backpressure boundary. While it is delayed or paused, Exstream does not pull the next matching record; pressure travels through the CSV parser to `response.body`. Change the writer delay while the pipeline is running, pause it completely, or remove the delay to let it finish immediately.

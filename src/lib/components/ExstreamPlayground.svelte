@@ -75,8 +75,8 @@ const review = transactions
   .filter((transaction) => transaction.risk === 'high')
 
 await Promise.all([
-  approved.pipe(destination('approved')),
-  review.pipe(destination('manual-review')),
+  approved.pipeTo(destination('approved')),
+  review.pipeTo(destination('manual-review')),
 ])`
 
   let code = $state(starterCode)

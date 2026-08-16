@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@lucide/svelte": "^1.31.0",
-    "exstream.js": "^0.33.0",
+    "exstream.js": "^0.34.0",
     "prismjs": "^1.30.0",
     "simple-icons": "^16.28.0"
   },

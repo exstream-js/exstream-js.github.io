@@ -1767,10 +1767,9 @@ pre[data-copy-ready] {
 }
 
 .prose table:not([class]) {
-  display: block;
+  display: table;
   width: 100%;
   margin: 1.75rem 0;
-  overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 0.8rem;
   border-spacing: 0;

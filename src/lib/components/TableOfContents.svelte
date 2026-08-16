@@ -45,16 +45,13 @@
     if (headings.length === 0) return
 
     const documentHeight = document.documentElement.scrollHeight
-    const viewportBottom = window.scrollY + window.innerHeight
-    const reachedBottom =
-      documentHeight > window.innerHeight + 1 && viewportBottom >= documentHeight - 8
-
-    if (reachedBottom) {
-      activeId = headings.at(-1)!.id
-      return
-    }
-
-    const threshold = window.innerWidth <= 700 ? 150 : 110
+    const viewportHeight = window.innerHeight
+    const viewportBottom = window.scrollY + viewportHeight
+    const remainingScroll = Math.max(0, documentHeight - viewportBottom)
+    const baseThreshold = window.innerWidth <= 700 ? 150 : 110
+    const bottomProgress = 1 - Math.min(1, remainingScroll / viewportHeight)
+    const bottomThreshold = Math.max(baseThreshold, viewportHeight - 80)
+    const threshold = baseThreshold + (bottomThreshold - baseThreshold) * bottomProgress
     let current = headings[0]!
 
     for (const heading of headings) {

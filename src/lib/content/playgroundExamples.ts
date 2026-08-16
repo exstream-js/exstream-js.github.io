@@ -24,7 +24,7 @@ export const playgroundExamples = {
     code: `const transactions = exstream(source('transactions'))
   .take(40)
 
-await transactions.pipe(destination('transactions'))`,
+await transactions.pipeTo(destination('transactions'))`,
   },
   'pipeline-model': {
     title: 'Pipeline model',
@@ -38,7 +38,7 @@ await transactions.pipe(destination('transactions'))`,
   .filter((transaction) => transaction.active)
   .take(60)
 
-await activeOrders.pipe(destination('active-orders'))`,
+await activeOrders.pipeTo(destination('active-orders'))`,
   },
   'transform-data': {
     title: 'Transform data',
@@ -56,7 +56,7 @@ await activeOrders.pipe(destination('active-orders'))`,
   .flatMap((batch) => batch)
   .take(60)
 
-await highValueOrders.pipe(destination('high-value'))`,
+await highValueOrders.pipeTo(destination('high-value'))`,
   },
   'async-work': {
     title: 'Async work and order',
@@ -76,7 +76,7 @@ const enriched = exstream(source('transactions'))
     { concurrency: 8, ordered: false },
   )
 
-await enriched.pipe(destination('enriched'))`,
+await enriched.pipeTo(destination('enriched'))`,
   },
   consume: {
     title: 'Consume a pipeline',
@@ -89,7 +89,7 @@ await enriched.pipe(destination('enriched'))`,
     console.log('accepted', transaction.id, transaction.amount)
   })
 
-await pipeline.pipe(destination('processed'))`,
+await pipeline.pipeTo(destination('processed'))`,
   },
   backpressure: {
     title: 'Backpressure',
@@ -102,8 +102,8 @@ const primary = transactions.fork()
 const audit = transactions.fork()
 
 await Promise.all([
-  primary.pipe(destination('primary')),
-  audit.pipe(destination('slow-audit')),
+  primary.pipeTo(destination('primary')),
+  audit.pipeTo(destination('slow-audit')),
 ])`,
   },
   branching: {
@@ -122,8 +122,8 @@ const review = transactions
   .filter((transaction) => transaction.amount >= 5000)
 
 await Promise.all([
-  approved.pipe(destination('approved')),
-  review.pipe(destination('manual-review')),
+  approved.pipeTo(destination('approved')),
+  review.pipeTo(destination('manual-review')),
 ])`,
   },
   'merge-sources': {
@@ -141,7 +141,7 @@ const retail = exstream(source('transactions'))
 const transactions = exstream([web, retail])
   .merge(2, false)
 
-await transactions.pipe(destination('all-transactions'))`,
+await transactions.pipeTo(destination('all-transactions'))`,
   },
   errors: {
     title: 'Errors and lifecycle',
@@ -185,9 +185,9 @@ const rejected = failures
   .filter((failure) => !failure.retryable)
 
 await Promise.all([
-  output.pipe(destination('processed')),
-  retryable.pipe(destination('retry-queue')),
-  rejected.pipe(destination('dead-letter')),
+  output.pipeTo(destination('processed')),
+  retryable.pipeTo(destination('retry-queue')),
+  rejected.pipeTo(destination('dead-letter')),
 ])`,
   },
 } satisfies Record<string, PlaygroundExample>
