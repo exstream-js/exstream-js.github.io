@@ -1,0 +1,19 @@
+# Exstream
+
+> Exstream is composable streaming ETL for JavaScript with end-to-end backpressure, bounded asynchronous work, reliable fan-out, and explicit cancellation.
+
+Exstream is intended for backend JavaScript and TypeScript jobs that process large record flows and need bounded memory, controlled concurrency, incremental formats, or multiple destinations. For small in-memory collections or a simple linear flow, native arrays or `for await` are usually clearer.
+
+## Documentation
+
+- [Documentation overview](https://exstream-js.github.io/docs/): mental model, runtimes, and learning paths
+- [Quick start](https://exstream-js.github.io/docs/quick-start/): install and build a bounded pipeline
+- [Backpressure](https://exstream-js.github.io/docs/concepts/backpressure/): how demand moves through the graph
+- [When not to use Exstream](https://exstream-js.github.io/docs/project/when-not-to-use/): alternatives and honest boundaries
+
+## Canonical project sources
+
+- [Source repository](https://github.com/micheletriaca/exstream)
+- [Package](https://www.npmjs.com/package/exstream.js)
+- [Support policy](https://github.com/micheletriaca/exstream/blob/master/SUPPORT.md)
+- [Roadmap](https://github.com/micheletriaca/exstream/blob/master/ROADMAP.md)

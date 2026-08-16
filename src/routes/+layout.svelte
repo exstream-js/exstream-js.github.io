@@ -1,0 +1,55 @@
+<script lang="ts">
+  import '../app.css'
+  import Brand from '$lib/components/Brand.svelte'
+  import Search from '$lib/components/Search.svelte'
+  import ThemeToggle from '$lib/components/ThemeToggle.svelte'
+
+  let { children } = $props()
+</script>
+
+<svelte:head>
+  <meta
+    name="description"
+    content="Exstream is composable streaming ETL for JavaScript with end-to-end backpressure."
+  />
+  <meta property="og:site_name" content="Exstream documentation" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Exstream — composable streaming ETL" />
+  <meta
+    property="og:description"
+    content="Build bounded, concurrent data pipelines without reimplementing backpressure and cancellation."
+  />
+  <meta name="twitter:card" content="summary" />
+</svelte:head>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+  <div class="site-header-inner">
+    <Brand />
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a href="/docs/">Docs</a>
+      <a href="/docs/quick-start/">Quick start</a>
+      <a href="https://github.com/micheletriaca/exstream">GitHub</a>
+    </nav>
+    <div class="header-actions">
+      <Search />
+      <ThemeToggle />
+    </div>
+  </div>
+</header>
+
+<main id="main-content">
+  {@render children()}
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <Brand />
+    <p>Composable streaming ETL for JavaScript. MIT licensed.</p>
+    <nav aria-label="Footer navigation">
+      <a href="https://github.com/micheletriaca/exstream">Source</a>
+      <a href="https://github.com/micheletriaca/exstream/blob/master/ROADMAP.md">Roadmap</a>
+      <a href="https://github.com/micheletriaca/exstream/blob/master/SUPPORT.md">Support</a>
+    </nav>
+  </div>
+</footer>

@@ -1,0 +1,59 @@
+{
+  "name": "exstream-website",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Documentation portal for Exstream, composable streaming ETL for JavaScript",
+  "keywords": [
+    "documentation",
+    "etl",
+    "exstream",
+    "streaming",
+    "sveltekit"
+  ],
+  "homepage": "https://exstream-js.github.io/",
+  "bugs": {
+    "url": "https://github.com/micheletriaca/exstream-website/issues"
+  },
+  "license": "MIT",
+  "author": "Michele Triaca",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/micheletriaca/exstream-website.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build && pagefind --site build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "lint": "oxlint --report-unused-disable-directives-severity=error --deny-warnings src svelte.config.js vite.config.ts",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "test": "npm run check && npm run lint && npm run build"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.70.2",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.2.0",
+    "mdsvex": "^0.12.8",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0",
+    "pagefind": "^1.5.2",
+    "svelte": "^5.56.9",
+    "svelte-check": "^4.7.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1"
+  },
+  "overrides": {
+    "cookie": "^0.7.2"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  }
+}
