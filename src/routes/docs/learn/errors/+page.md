@@ -45,10 +45,7 @@ const rejected = deadLetters.map(({ error, input }) => ({
   failedAt: new Date().toISOString(),
 }))
 
-await Promise.all([
-  output.pipeTo(processedWriter),
-  rejected.pipeTo(deadLetterWriter),
-])
+await Promise.all([output.pipeTo(processedWriter), rejected.pipeTo(deadLetterWriter)])
 ```
 
 <PlaygroundLink example="errors" />
@@ -69,10 +66,7 @@ const failures = deadLetters.map(({ error, input }) => ({
 const retryable = failures.fork().filter((failure) => failure.retryable)
 const rejected = failures.fork().filter((failure) => !failure.retryable)
 
-await Promise.all([
-  retryable.pipeTo(retryQueue),
-  rejected.pipeTo(deadLetterWriter),
-])
+await Promise.all([retryable.pipeTo(retryQueue), rejected.pipeTo(deadLetterWriter)])
 ```
 
 Keep retry attempts bounded and persist their count. Once the retry budget is exhausted, the record should become a permanent dead letter rather than circulate forever.

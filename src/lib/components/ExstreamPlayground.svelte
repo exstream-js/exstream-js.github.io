@@ -148,7 +148,10 @@ await Promise.all([
 
   function reconcileDestinationPanels(names: string[]) {
     const currentNames = destinations.map((destination) => destination.name)
-    if (currentNames.length === names.length && currentNames.every((name, index) => name === names[index])) {
+    if (
+      currentNames.length === names.length &&
+      currentNames.every((name, index) => name === names[index])
+    ) {
       return
     }
 
@@ -266,12 +269,14 @@ await Promise.all([
         const candidate = entry as Record<string, unknown>
         if (!isConsoleLevel(candidate.level) || typeof candidate.message !== 'string') return []
 
-        return [{
-          id: nextConsoleEntryId++,
-          level: candidate.level,
-          message: candidate.message,
-          elapsed: typeof candidate.elapsed === 'number' ? candidate.elapsed : 0,
-        }]
+        return [
+          {
+            id: nextConsoleEntryId++,
+            level: candidate.level,
+            message: candidate.message,
+            elapsed: typeof candidate.elapsed === 'number' ? candidate.elapsed : 0,
+          },
+        ]
       })
       consoleEntries = [...consoleEntries, ...entries].slice(-500)
     } else if (message.type === 'complete') {
@@ -585,7 +590,11 @@ await Promise.all([
             bind:this={consoleOutput}
           >
             {#each consoleEntries as entry (entry.id)}
-              <div class:error={entry.level === 'error'} class:warn={entry.level === 'warn'} class="console-line">
+              <div
+                class:error={entry.level === 'error'}
+                class:warn={entry.level === 'warn'}
+                class="console-line"
+              >
                 <span>{formatConsoleTime(entry.elapsed)}</span>
                 <strong>{entry.level}</strong>
                 <pre>{entry.message}</pre>

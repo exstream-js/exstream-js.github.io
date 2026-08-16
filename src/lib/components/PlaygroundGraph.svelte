@@ -84,7 +84,8 @@
       column.nodes.sort((left, right) => {
         const leftIndex = previousOrder.get(left.id)!
         const rightIndex = previousOrder.get(right.id)!
-        const leftScore = barycenter(left.id, references, positions) ?? (leftIndex + 0.5) / column.nodes.length
+        const leftScore =
+          barycenter(left.id, references, positions) ?? (leftIndex + 0.5) / column.nodes.length
         const rightScore =
           barycenter(right.id, references, positions) ?? (rightIndex + 0.5) / column.nodes.length
 
@@ -116,7 +117,10 @@
       return position === undefined ? [] : [position]
     })
     if (referencePositions.length === 0) return undefined
-    return referencePositions.reduce((total, position) => total + position, 0) / referencePositions.length
+    return (
+      referencePositions.reduce((total, position) => total + position, 0) /
+      referencePositions.length
+    )
   }
 
   function registerNode(element: HTMLElement, id: string) {
@@ -248,11 +252,7 @@
     {#if nodes.length === 0}
       <div class="empty">Run the pipeline to build its graph.</div>
     {:else}
-      <div
-        class="scene"
-        use:registerScene
-        style={`--column-count:${orderedColumns.length}`}
-      >
+      <div class="scene" use:registerScene style={`--column-count:${orderedColumns.length}`}>
         <svg aria-hidden="true">
           <defs>
             <marker
@@ -272,7 +272,8 @@
               class:waiting={line.queued > 0}
               class:closed={line.closed}
               d={line.path}
-              marker-end="url(#graph-arrow)"></path>
+              marker-end="url(#graph-arrow)"
+            ></path>
           {/each}
         </svg>
 

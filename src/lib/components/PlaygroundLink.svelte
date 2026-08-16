@@ -1,9 +1,6 @@
 <script lang="ts">
   import Play from '@lucide/svelte/icons/play'
-  import {
-    getPlaygroundExample,
-    type PlaygroundExampleId,
-  } from '$lib/content/playgroundExamples'
+  import { getPlaygroundExample, type PlaygroundExampleId } from '$lib/content/playgroundExamples'
 
   let { example }: { example: PlaygroundExampleId } = $props()
   const playgroundExample = $derived(getPlaygroundExample(example))

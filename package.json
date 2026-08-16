@@ -12,13 +12,13 @@
   ],
   "homepage": "https://exstream-js.github.io/",
   "bugs": {
-    "url": "https://github.com/micheletriaca/exstream-website/issues"
+    "url": "https://github.com/exstream-js/exstream-js.github.io/issues"
   },
   "license": "MIT",
   "author": "Michele Triaca",
   "repository": {
     "type": "git",
-    "url": "https://github.com/micheletriaca/exstream-website.git"
+    "url": "https://github.com/exstream-js/exstream-js.github.io.git"
   },
   "type": "module",
   "scripts": {

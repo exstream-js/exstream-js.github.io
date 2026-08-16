@@ -13,8 +13,8 @@
       <p class="eyebrow">Learn by running</p>
       <h1>See the pipeline make decisions.</h1>
       <p class="lead">
-        Examples are guided browser labs, not a wall of snippets. Each lesson starts with a
-        problem, runs real Exstream code, and makes flow, buffering, and output visible.
+        Examples are guided browser labs, not a wall of snippets. Each lesson starts with a problem,
+        runs real Exstream code, and makes flow, buffering, and output visible.
       </p>
       <div class="examples-actions">
         <a class="button" href="/examples/playground/">Open the playground</a>
@@ -85,10 +85,7 @@
           </a>
         </li>
       </ol>
-      <p>
-        Every lesson combines explanation, editable code, Run / Stop / Reset, and live output.
-      </p>
+      <p>Every lesson combines explanation, editable code, Run / Stop / Reset, and live output.</p>
     </div>
   </section>
-
 </div>
