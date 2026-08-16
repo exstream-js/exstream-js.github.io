@@ -111,13 +111,11 @@ html.theme-transition::view-transition-new(root) {
 @keyframes search-target-pulse {
   0%,
   30% {
-    background: color-mix(in srgb, var(--accent) 18%, transparent);
-    box-shadow: 0 0 0 0.45rem color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 0 0 0.4rem color-mix(in srgb, var(--accent) 28%, transparent);
   }
 
   100% {
-    background: transparent;
-    box-shadow: 0 0 0 0.45rem transparent;
+    box-shadow: 0 0 0 0.4rem transparent;
   }
 }
 
