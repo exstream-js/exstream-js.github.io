@@ -311,6 +311,17 @@ a {
   color: var(--ink);
 }
 
+.primary-nav .nav-external {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-external .external-link-indicator {
+  margin-left: -0.1rem;
+  opacity: 0.55;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -980,11 +991,12 @@ pre[data-copy-ready] {
 
 .docs-shell {
   display: grid;
-  width: min(100% - 2rem, 78rem);
+  width: min(100% - 2rem, 90rem);
   min-height: calc(100vh - 4.5rem);
   margin-inline: auto;
-  grid-template-columns: 15rem minmax(0, 1fr);
-  gap: clamp(2.5rem, 7vw, 7rem);
+  grid-template-columns: 14rem minmax(0, 48rem) 12rem;
+  justify-content: space-between;
+  gap: clamp(2rem, 4vw, 4rem);
 }
 
 .standalone-shell {
@@ -1148,6 +1160,62 @@ pre[data-copy-ready] {
   box-shadow: inset 2px 0 var(--accent);
 }
 
+.docs-toc {
+  position: sticky;
+  top: 4.5rem;
+  align-self: start;
+  max-height: calc(100vh - 4.5rem);
+  overflow-y: auto;
+  padding-block: 3.5rem;
+}
+
+.docs-toc > p {
+  margin: 0 0 0.65rem;
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  font-weight: 720;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.docs-toc ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docs-toc li {
+  margin: 0;
+}
+
+.docs-toc a {
+  display: block;
+  border-left: 1px solid var(--line);
+  color: var(--ink-soft);
+  padding: 0.35rem 0 0.35rem 0.75rem;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  text-decoration: none;
+  transition:
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.docs-toc a:hover {
+  color: var(--ink);
+}
+
+.docs-toc a[aria-current='location'] {
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.docs-toc .toc-level-3 a {
+  padding-left: 1.25rem;
+  font-size: 0.86rem;
+}
+
 .docs-content {
   width: min(100%, 48rem);
   padding-block: clamp(3.5rem, 7vw, 6rem);
@@ -1170,6 +1238,10 @@ pre[data-copy-ready] {
   font-size: clamp(1.75rem, 3vw, 2.25rem);
   letter-spacing: -0.04em;
   line-height: 1.1;
+}
+
+.prose :is(h2, h3) {
+  scroll-margin-top: 6.5rem;
 }
 
 .prose h3 {
@@ -1597,6 +1669,18 @@ pre[data-copy-ready] {
 .site-footer nav {
   display: flex;
   gap: 1rem;
+}
+
+@media (max-width: 1200px) {
+  .docs-shell {
+    width: min(100% - 2rem, 78rem);
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: clamp(2.5rem, 7vw, 7rem);
+  }
+
+  .docs-toc {
+    display: none;
+  }
 }
 
 @media (max-width: 900px) {

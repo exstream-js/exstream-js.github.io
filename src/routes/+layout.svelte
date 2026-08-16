@@ -1,8 +1,10 @@
 <script lang="ts">
   import { page } from '$app/state'
+  import ExternalLink from '@lucide/svelte/icons/external-link'
   import '../app.css'
   import Brand from '$lib/components/Brand.svelte'
   import CopyCode from '$lib/components/CopyCode.svelte'
+  import GitHubIcon from '$lib/components/GitHubIcon.svelte'
   import PageTransitions from '$lib/components/PageTransitions.svelte'
   import Search from '$lib/components/Search.svelte'
   import ThemeToggle from '$lib/components/ThemeToggle.svelte'
@@ -44,7 +46,22 @@
         href="/examples/"
         aria-current={page.url.pathname.startsWith('/examples/') ? 'page' : undefined}>Examples</a
       >
-      <a class="nav-external" href="https://github.com/micheletriaca/exstream">GitHub</a>
+      <a
+        class="nav-external"
+        href="https://github.com/micheletriaca/exstream"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="GitHub (opens in a new tab)"
+      >
+        <GitHubIcon size={16} />
+        <span>GitHub</span>
+        <ExternalLink
+          class="external-link-indicator"
+          size={13}
+          strokeWidth={2}
+          aria-hidden="true"
+        />
+      </a>
     </nav>
     <div class="header-actions">
       <Search />

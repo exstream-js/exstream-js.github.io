@@ -12,19 +12,19 @@
 
 ## Pick your path
 
-### I need a working pipeline
+### Working pipeline
 
 The [quick start](/quick-start/) installs Exstream, transforms records, runs bounded asynchronous work, and writes to a destination that can push back.
 
-### I need to understand the behavior
+### Understand behavior
 
 Read [backpressure](/docs/concepts/backpressure/) before connecting a fast source to slow I/O. Every operator page will use the same contract: buffering, order, concurrency, errors, and cancellation.
 
-### I am deciding whether to adopt it
+### Adoption decision
 
 Read [when not to use Exstream](/docs/project/when-not-to-use/). A small array, a simple async iterator, or a columnar engine can be the more honest answer.
 
-## The model in one line
+## One-line model
 
 ```text
 source → operators → sink

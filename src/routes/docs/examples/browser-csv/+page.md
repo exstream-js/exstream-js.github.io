@@ -16,7 +16,7 @@
 
 <BrowserCsvDemo />
 
-## The pipeline behind the demo
+## Demo pipeline
 
 ```javascript
 const response = await fetch(datasetUrl, { signal })
@@ -41,7 +41,7 @@ for await (const row of rows.toAsyncIterator({ signal })) {
 
 The delay in the demo stands in for a slow destination. Because the loop waits before pulling again, pressure travels through the CSV parser to `response.body`. Turn the delay off and the same pipeline completes immediately.
 
-## Why a public static file
+## Why a static file
 
 The dataset is versioned in [Plotly’s public datasets repository](https://github.com/plotly/datasets), available over HTTPS, and served by GitHub with cross-origin access enabled. It makes the example reproducible without API keys or a third-party account.
 

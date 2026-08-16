@@ -10,7 +10,7 @@
 
 <p class="lead">Exstream is useful when the pipeline is the hard part. It should not make a small problem look architectural.</p>
 
-## Use an array when the data fits
+## Data fits in memory
 
 For a small collection already in memory, native methods are clearer and familiar:
 
@@ -20,7 +20,7 @@ const activeNames = users.filter((user) => user.active).map((user) => user.name)
 
 You do not need streaming semantics when there is no meaningful stream.
 
-## Use `for await` for one straight path
+## One straight path
 
 A single source, one or two transformations, and one destination may only need a loop:
 
@@ -33,19 +33,19 @@ for await (const record of source) {
 
 Reach for Exstream when the loop starts accumulating concurrency pools, ordering queues, retries, fan-out, cancellation, format parsing, and cleanup rules.
 
-## Keep native streams at native boundaries
+## Native stream boundaries
 
 If an existing Node.js or Web Streams pipeline already expresses the behavior safely, wrapping it brings little value. Exstream matters when you want one operator model across streams, iterables, async iterables, and multiple sinks.
 
-## Use a columnar engine for analytical workloads
+## Analytical workloads
 
 DuckDB, Polars, and Arrow are often better for large analytical joins, aggregations, scans, and columnar computation. Exstream is a record-oriented JavaScript pipeline, not a replacement for a query optimizer or a vectorized execution engine.
 
-## Do not convert a hot source into a promise
+## Hot sources are not promises
 
 An `EventEmitter` or `EventTarget` can produce events whether the consumer is ready or not. If the producer cannot pause and losing events is unacceptable, put a durable queue or broker at the boundary. An in-process library cannot manufacture backpressure that the source does not support.
 
-## The adoption test
+## Adoption test
 
 Choose Exstream when several of these are true:
 

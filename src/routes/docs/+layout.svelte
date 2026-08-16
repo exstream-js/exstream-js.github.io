@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'
+  import TableOfContents from '$lib/components/TableOfContents.svelte'
   import { docsNavigation } from '$lib/content/navigation'
 
   let { children } = $props()
@@ -35,4 +36,5 @@
       </div>
     {/key}
   </article>
+  <TableOfContents />
 </div>

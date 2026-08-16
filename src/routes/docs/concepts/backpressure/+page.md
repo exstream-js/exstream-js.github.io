@@ -10,7 +10,7 @@
 
 <p class="lead">A fast source must not outrun the slowest reliable destination. Exstream carries that demand through transforms, asynchronous work, and branches.</p>
 
-## The short version
+## Short version
 
 ```text
 fast source → transform → slow writer
@@ -22,7 +22,7 @@ The writer accepts one record at a time. That capacity travels upstream. The sou
 
 Backpressure is not a speed boost. It is what keeps a speed difference from turning into an ever-growing memory buffer.
 
-## What `mapAsync()` bounds
+## `mapAsync()` bounds
 
 ```javascript
 const enriched = exstream(records).mapAsync(loadCustomer, {
@@ -40,19 +40,19 @@ const enriched = exstream(records).mapAsync(loadCustomer, {
   <div><strong>Abort</strong><span>Stops useless work</span></div>
 </div>
 
-## Reliable branches and observers differ
+## Branches vs observers
 
 `fork()` is reliable: every branch participates in backpressure. If one branch is slow, the shared source must respect it.
 
 `observe()` is best-effort: it does not slow the main flow. Because a non-blocking observer can fall behind, it needs an explicit buffer limit and overflow policy. Use it for metrics, sampling, and diagnostics—not for data that must arrive.
 
-## Sources have different physical limits
+## Source limits
 
 A pull-based async iterator naturally waits until the next pull. A pausable Node.js stream can stop producing temporarily. An `EventEmitter` or `EventTarget` may be hot and non-pausable: once events arrive, software can only buffer, drop, or fail.
 
 > An API can preserve backpressure semantics only where the source primitive makes pressure possible. Hot sources need an explicit overflow decision.
 
-## A practical review
+## Review checklist
 
 Before shipping a pipeline, answer these questions:
 
