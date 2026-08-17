@@ -30,7 +30,7 @@ const enriched = exstream(orderIds).mapAsync(
 
 <PlaygroundLink example="async-work" />
 
-`concurrency: 8` allows at most eight active callbacks. The default is one. The bound limits parallel I/O; downstream backpressure may reduce the active work further.
+`concurrency: 8` gives the operator eight slots shared by active callbacks and completed results waiting for downstream demand. The default is one. Each result accepted downstream releases one slot and lets one new input start, so the window refills continuously rather than in batches. A slow destination may leave fewer than eight callbacks actively running because ready results still occupy slots.
 
 ## Choose the order
 
