@@ -49,7 +49,6 @@
 
 - [`mapAsync()`](/docs/reference/map-async/) — transform with concurrency, ordering, retry, timeout, and cancellation controls
 - [`asyncFilter()`](/docs/reference/async-filter/) and [`asyncReduce()`](/docs/reference/async-reduce/) — await sequential selection or aggregation
-- [`resolve()`](/docs/reference/resolve/), [`massThen()`](/docs/reference/mass-then/), and [`massCatch()`](/docs/reference/mass-catch/) — work with streams of promises
 - [`makeAsync()`](/docs/reference/make-async/) — yield long synchronous pipelines to the event loop
 
 ## Flow control

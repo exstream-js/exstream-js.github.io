@@ -153,4 +153,4 @@ stream.through(exstream.mapAsync(fn, options))
 
 ## Related
 
-[`map()`](/docs/reference/map/), [`resolve()`](/docs/reference/resolve/), [`errors()`](/docs/reference/errors/), [`drain()`](/docs/reference/drain/)
+[`map()`](/docs/reference/map/), [`errors()`](/docs/reference/errors/), [`drain()`](/docs/reference/drain/)

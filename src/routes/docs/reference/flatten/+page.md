@@ -56,4 +56,4 @@ exstream.flatten(stream)
 
 ## Related
 
-[`flatMap()`](/docs/reference/flat-map/), [`merge()`](/docs/reference/merge/), [`resolve()`](/docs/reference/resolve/)
+[`flatMap()`](/docs/reference/flat-map/), [`merge()`](/docs/reference/merge/), [`mapAsync()`](/docs/reference/map-async/)

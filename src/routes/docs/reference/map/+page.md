@@ -87,7 +87,7 @@ If `calculateScore` returns a promise, each emitted value is a promise that reso
 
 ## Errors
 
-If `fn` throws, Exstream emits a contextual record error for that input and continues when an error policy handles it. A returned promise rejection is wrapped only when a downstream promise-aware operator such as `resolve()` observes it. Fatal graph failures bypass `map()` and abort the branch.
+If `fn` throws, Exstream emits a contextual record error for that input and continues when an error policy handles it. Use `mapAsync()` when `fn` returns a promise so Exstream can await it and apply the configured concurrency. Fatal graph failures bypass `map()` and abort the branch.
 
 ## Forms
 

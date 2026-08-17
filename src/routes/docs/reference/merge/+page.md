@@ -70,4 +70,4 @@ Record errors from inner streams are forwarded with their contexts. Fatal failur
 
 ## Related
 
-[`fork()`](/docs/reference/fork/), [`flatMap()`](/docs/reference/flat-map/), [`resolve()`](/docs/reference/resolve/)
+[`fork()`](/docs/reference/fork/), [`flatMap()`](/docs/reference/flat-map/), [`mapAsync()`](/docs/reference/map-async/)
