@@ -24,4 +24,4 @@ Cancellation is idempotent and the first reason wins. Errors with provenance sup
 
 ## Related
 
-[`destroy()`](/docs/reference/destroy/), [`fail()`](/docs/reference/fail/), [`toAsyncIterator()`](/docs/reference/to-async-iterator/), [`fork()`](/docs/reference/fork/)
+[`destroy()`](/docs/reference/destroy/), [`fail()`](/docs/reference/fail/), [async iteration](/docs/reference/async-iteration/), [`fork()`](/docs/reference/fork/)

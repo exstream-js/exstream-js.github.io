@@ -149,17 +149,13 @@ export const docsNavigation = [
   {
     label: 'API · Consume',
     items: [
-      { href: '/docs/reference/pipe/', label: 'pipe()' },
       { href: '/docs/reference/pipe-to/', label: 'pipeTo()' },
-      { href: '/docs/reference/to-async-iterator/', label: 'toAsyncIterator()' },
+      { href: '/docs/reference/async-iteration/', label: 'Async iteration' },
       { href: '/docs/reference/to-web-readable/', label: 'toWebReadable()' },
-      { href: '/docs/reference/to-node-stream/', label: 'toNodeStream()' },
+      { href: '/docs/reference/to-node-readable/', label: 'toNodeReadable()' },
       { href: '/docs/reference/to-array/', label: 'toArray()' },
-      { href: '/docs/reference/to-promise/', label: 'toPromise()' },
       { href: '/docs/reference/drain/', label: 'drain()' },
-      { href: '/docs/reference/value/', label: 'value()' },
-      { href: '/docs/reference/values/', label: 'values()' },
-      { href: '/docs/reference/values-sync/', label: 'valuesSync()' },
+      { href: '/docs/reference/single/', label: 'single()' },
     ],
   },
   {
@@ -167,8 +163,6 @@ export const docsNavigation = [
     items: [
       { href: '/docs/reference/write/', label: 'write()' },
       { href: '/docs/reference/write-data/', label: 'writeData()' },
-      { href: '/docs/reference/pull/', label: 'pull()' },
-      { href: '/docs/reference/each/', label: 'each()' },
       { href: '/docs/reference/consume/', label: 'consume()' },
       { href: '/docs/reference/consume-sync/', label: 'consumeSync()' },
       { href: '/docs/reference/start/', label: 'start()' },

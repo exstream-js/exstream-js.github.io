@@ -24,7 +24,7 @@ asyncReduce<A>(
 ```javascript
 const total = await exstream(ids)
   .asyncReduce(async (sum, id) => sum + (await fetchPrice(id)), 0)
-  .value()
+  .single()
 ```
 
 ## Parameters

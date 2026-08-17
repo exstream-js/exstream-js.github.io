@@ -37,6 +37,12 @@
 
   async function render(selectedTransform: Transform, selectedFormat: Format) {
     let pipeline = exstream(orders)
+    const chunks: Array<string | Uint8Array> = []
+    const destination = new WritableStream<string | Uint8Array>({
+      write(chunk) {
+        chunks.push(chunk)
+      },
+    })
 
     if (selectedTransform === 'active') {
       pipeline = pipeline.filter((order) => order.status === 'active')
@@ -51,12 +57,14 @@
     }
 
     if (selectedFormat === 'csv') {
-      output = joinChunks(await pipeline.csvStringify({ header: true }).values())
+      await pipeline.csvStringify({ header: true }).pipeTo(destination)
     } else if (selectedFormat === 'json') {
-      output = joinChunks(await pipeline.jsonStringify().values())
+      await pipeline.jsonStringify().pipeTo(destination)
     } else {
-      output = joinChunks(await pipeline.jsonlStringify().values())
+      await pipeline.jsonlStringify().pipeTo(destination)
     }
+
+    output = joinChunks(chunks)
   }
 
   $effect(() => {

@@ -19,7 +19,7 @@ exstream.extend('double', function () {
   return this.map((value) => value * 2)
 })
 
-exstream([1, 2]).double().valuesSync()
+await exstream([1, 2]).double().toArray()
 ```
 
 ## Behavior

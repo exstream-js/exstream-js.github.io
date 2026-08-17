@@ -19,7 +19,7 @@ slice(start: number, end?: number): Exstream<T, C>
 ## Example
 
 ```javascript
-exstream(['a', 'b', 'c', 'd']).slice(1, 3).valuesSync()
+await exstream(['a', 'b', 'c', 'd']).slice(1, 3).toArray()
 // ['b', 'c']
 ```
 

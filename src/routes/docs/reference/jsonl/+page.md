@@ -27,7 +27,7 @@ interface JsonlOptions {
 ## Example
 
 ```javascript
-for await (const event of exstream(response.body).jsonl().toAsyncIterator()) {
+for await (const event of exstream(response.body).jsonl()) {
   await indexEvent(event)
 }
 ```

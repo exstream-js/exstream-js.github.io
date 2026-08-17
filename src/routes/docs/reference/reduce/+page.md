@@ -24,7 +24,7 @@ reduce<A>(
 ```javascript
 const total = await exstream(orders)
   .reduce((sum, order) => sum + order.total, 0)
-  .value()
+  .single()
 ```
 
 ## Parameters

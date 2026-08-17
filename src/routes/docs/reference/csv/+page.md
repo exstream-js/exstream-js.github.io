@@ -129,7 +129,7 @@ All numeric limits are normalized with `Number()` at runtime, so any value coerc
 The default emits every row, including the first, as an array:
 
 ```javascript
-exstream(['id,name\n1,Ada\n']).csv().valuesSync()
+await exstream(['id,name\n1,Ada\n']).csv().toArray()
 // [['id', 'name'], ['1', 'Ada']]
 ```
 
@@ -138,7 +138,7 @@ exstream(['id,name\n1,Ada\n']).csv().valuesSync()
 `header: true` consumes the first non-skipped row and uses its cells as object keys:
 
 ```javascript
-exstream(['id,name\n1,Ada\n']).csv({ header: true }).valuesSync()
+await exstream(['id,name\n1,Ada\n']).csv({ header: true }).toArray()
 // [{ id: '1', name: 'Ada' }]
 ```
 
@@ -149,9 +149,9 @@ An empty header array has the same runtime behavior as `true`: the first input r
 A non-empty array defines the keys before parsing begins, so the first input row remains data:
 
 ```javascript
-exstream(['1,Ada\n'])
+await exstream(['1,Ada\n'])
   .csv({ header: ['id', 'name'] })
-  .valuesSync()
+  .toArray()
 // [{ id: '1', name: 'Ada' }]
 ```
 

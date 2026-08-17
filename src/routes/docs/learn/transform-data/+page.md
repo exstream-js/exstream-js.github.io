@@ -41,7 +41,7 @@ Use `flatMap()` when one record produces an iterable of records. Use `batch(size
 ```javascript
 const batches = activeOrders.batch(100)
 
-for await (const batch of batches.toAsyncIterator()) {
+for await (const batch of batches) {
   await database.insertMany(batch)
 }
 ```

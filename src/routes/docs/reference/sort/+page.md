@@ -19,7 +19,7 @@ sort(): Exstream<T, C>
 ## Example
 
 ```javascript
-exstream([10, 2, 1]).sort().valuesSync()
+await exstream([10, 2, 1]).sort().toArray()
 // [1, 10, 2]
 ```
 

@@ -88,17 +88,12 @@ Unhandled record errors, source failures, structural format failures, destinatio
 
 `exstream.errorInfo(error)` preserves provenance: source failures report a source origin, destination write and close failures report a sink origin, and signal cancellation reports lifecycle abort. `EXSTREAM_DESTINATION_CLOSED` identifies a destination that completes before its source.
 
-## Forms
-
-`pipeTo()` is terminal and cannot be added to a reusable pipeline definition. It supports instance, standalone direct, and standalone curried forms:
+`pipeTo()` is an instance-only terminal and cannot be added to a reusable pipeline definition:
 
 ```javascript
 await stream.pipeTo(destination, options)
-await exstream.pipeTo(destination, stream)
-await exstream.pipeTo(destination, options, stream)
-await exstream.pipeTo(destination, options)(stream)
 ```
 
 ## Related
 
-[`toAsyncIterator()`](/docs/reference/to-async-iterator/), [`drain()`](/docs/reference/drain/), [consume a pipeline](/docs/learn/consume/)
+[async iteration](/docs/reference/async-iteration/), [`drain()`](/docs/reference/drain/), [consume a pipeline](/docs/learn/consume/)

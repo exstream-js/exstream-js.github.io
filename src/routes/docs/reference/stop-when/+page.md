@@ -19,9 +19,9 @@ stopWhen(fn: (value: T, context: C) => unknown): Exstream<T, C>
 ## Example
 
 ```javascript
-exstream([1, 2, 3, 4])
+await exstream([1, 2, 3, 4])
   .stopWhen((value) => value === 3)
-  .valuesSync()
+  .toArray()
 // [1, 2, 3]
 ```
 

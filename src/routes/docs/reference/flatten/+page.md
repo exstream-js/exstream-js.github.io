@@ -19,9 +19,9 @@ flatten(): Exstream<FlatValue<T>, C>
 ## Example
 
 ```javascript
-exstream([[1, 2], new Set([3, 4]), 5])
+await exstream([[1, 2], new Set([3, 4]), 5])
   .flatten()
-  .valuesSync()
+  .toArray()
 // [1, 2, 3, 4, 5]
 ```
 
@@ -30,9 +30,9 @@ exstream([[1, 2], new Set([3, 4]), 5])
 Arrays, sets, maps, generators, typed arrays, and other values with `Symbol.iterator` are expanded in iteration order. Strings are deliberately treated as scalar values. Non-iterables pass through unchanged. Flattening is exactly one level; nested iterables remain nested.
 
 ```javascript
-exstream([[[1]], 'ab'])
+await exstream([[[1]], 'ab'])
   .flatten()
-  .valuesSync()
+  .toArray()
 // [[1], 'ab']
 ```
 

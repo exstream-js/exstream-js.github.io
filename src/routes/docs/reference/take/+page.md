@@ -19,7 +19,7 @@ take(n: number): Exstream<T, C>
 ## Example
 
 ```javascript
-const preview = await exstream(largeSource).take(10).toPromise()
+const preview = await exstream(largeSource).take(10).toArray()
 ```
 
 ## Parameters

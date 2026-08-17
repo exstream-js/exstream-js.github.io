@@ -19,7 +19,7 @@ compact(): Exstream<Exclude<T, false | 0 | '' | null | undefined>, C>
 ## Example
 
 ```javascript
-exstream([0, 1, false, 2, '', null, 3]).compact().valuesSync()
+await exstream([0, 1, false, 2, '', null, 3]).compact().toArray()
 // [1, 2, 3]
 ```
 

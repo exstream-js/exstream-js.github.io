@@ -37,18 +37,12 @@ return new Response(body, { headers: { 'content-type': 'application/x-ndjson' } 
 
 ## Demand and lifecycle
 
-Each native `pull()` requests one Exstream value through `toAsyncIterator()`, so reader demand controls upstream work. Normal Exstream end closes the readable. A record or fatal error errors the native stream. Reader cancellation without a reason destroys the iterator cleanly; cancellation with a reason aborts the Exstream graph with that reason.
+Each native `pull()` requests one value through Exstream's async iterator, so reader demand controls upstream work. Normal Exstream end closes the readable. A record or fatal error errors the native stream. Reader cancellation without a reason destroys the iterator cleanly; cancellation with a reason aborts the Exstream graph with that reason.
 
 The method requires a global `ReadableStream` constructor and otherwise throws. It works in modern browsers and compatible Node runtimes.
 
-## Forms
-
-```javascript
-stream.toWebReadable({ signal })
-exstream.toWebReadable({ signal }, stream)
-exstream.toWebReadable({ signal })(stream)
-```
+`toWebReadable()` is an instance-only adapter.
 
 ## Related
 
-[`toAsyncIterator()`](/docs/reference/to-async-iterator/), [`toNodeStream()`](/docs/reference/to-node-stream/), [`pipeTo()`](/docs/reference/pipe-to/)
+[async iteration](/docs/reference/async-iteration/), [`toNodeReadable()`](/docs/reference/to-node-readable/), [`pipeTo()`](/docs/reference/pipe-to/)

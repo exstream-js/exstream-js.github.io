@@ -29,7 +29,7 @@ await exstream(events)
 
 `drain()` is a terminal consumer. It starts downstream demand immediately, consumes to normal source completion, discards successful values, and resolves with `undefined` only after asynchronous operators have finished.
 
-Unlike `collect()` or `toPromise()`, it retains no output array, so memory does not grow with the number of successful values. Operator-specific buffers and in-flight async work still apply.
+Unlike `collect()` or `toArray()`, it retains no output array, so memory does not grow with the number of successful values. Operator-specific buffers and in-flight async work still apply.
 
 Unlike `start()`, `drain()` creates an actual downstream consumer and returns an observable completion promise. Use it when the useful work happens in side-effecting operators and no destination needs the values.
 
@@ -37,14 +37,7 @@ Unlike `start()`, `drain()` creates an actual downstream consumer and returns an
 
 The first unhandled record error rejects the promise and aborts this branch. Fatal graph failures and cancellation also reject with their reason. Handle or route recoverable errors before `drain()` when processing should continue.
 
-## Forms
-
-`drain()` is terminal and cannot be placed in a reusable pipeline definition. Use the instance method or pass a stream directly to the standalone function:
-
-```javascript
-await stream.drain()
-await exstream.drain(stream)
-```
+`drain()` is an instance-only terminal and cannot be placed in a reusable pipeline definition.
 
 ## Related
 

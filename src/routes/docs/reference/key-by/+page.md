@@ -21,7 +21,7 @@ keyBy<K extends PropertyKey>(
 ## Example
 
 ```javascript
-const usersById = await exstream(users).keyBy('id').value()
+const usersById = await exstream(users).keyBy('id').single()
 ```
 
 ## Parameters

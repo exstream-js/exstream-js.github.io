@@ -8,23 +8,23 @@
 
 ## Properties
 
-| Property               | Type                                                                     | Meaning                                                    |
-| ---------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| `state`                | `'idle' \| 'running' \| 'ending' \| 'ended' \| 'destroyed' \| 'aborted'` | Current lifecycle state                                    |
-| `ended`                | `boolean`                                                                | True for ended, destroyed, or aborted                      |
-| `abortReason`          | `unknown`                                                                | Explicit abort/fatal reason; `null` for normal end/destroy |
-| `signal`               | `AbortSignal`                                                            | Lazily created branch cancellation signal                  |
-| `paused`               | `boolean`                                                                | Any active pause gate                                      |
-| `pausedFromOutside`    | `boolean`                                                                | Manual/external pause gate                                 |
-| `pausedFromInside`     | `boolean`                                                                | Operator/generator pressure gate                           |
-| `buffered`             | `number`                                                                 | Currently queued data and error records                    |
-| `peakBuffered`         | `number`                                                                 | Maximum queued record count observed                       |
-| `dropped`              | `number`                                                                 | Records discarded by an overflow drop policy               |
-| `bufferLimit`          | `number`                                                                 | Configured maximum queued records                          |
-| `overflowPolicy`       | `'error' \| 'drop-oldest' \| 'drop-newest'`                              | Configured full-buffer action                              |
-| `writable`, `readable` | `boolean`                                                                | Capability flags for adapters                              |
-| `source`               | `Exstream                                                                | null`                                                      | Immediate upstream stream when connected  |
-| `endOfChain`           | `Exstream                                                                | undefined`                                                 | Last stream assigned in a connected chain |
+| Property               | Type                                                                                                    | Meaning                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `state`                | <code>'idle' &#124; 'running' &#124; 'ending' &#124; 'ended' &#124; 'destroyed' &#124; 'aborted'</code> | Current lifecycle state                                    |
+| `ended`                | `boolean`                                                                                               | True for ended, destroyed, or aborted                      |
+| `abortReason`          | `unknown`                                                                                               | Explicit abort/fatal reason; `null` for normal end/destroy |
+| `signal`               | `AbortSignal`                                                                                           | Lazily created branch cancellation signal                  |
+| `paused`               | `boolean`                                                                                               | Any active pause gate                                      |
+| `pausedFromOutside`    | `boolean`                                                                                               | Manual/external pause gate                                 |
+| `pausedFromInside`     | `boolean`                                                                                               | Operator/generator pressure gate                           |
+| `buffered`             | `number`                                                                                                | Currently queued data and error records                    |
+| `peakBuffered`         | `number`                                                                                                | Maximum queued record count observed                       |
+| `dropped`              | `number`                                                                                                | Records discarded by an overflow drop policy               |
+| `bufferLimit`          | `number`                                                                                                | Configured maximum queued records                          |
+| `overflowPolicy`       | <code>'error' &#124; 'drop-oldest' &#124; 'drop-newest'</code>                                          | Configured full-buffer action                              |
+| `writable`, `readable` | `boolean`                                                                                               | Capability flags for adapters                              |
+| `source`               | `Exstream                                                                                               | null`                                                      | Immediate upstream stream when connected  |
+| `endOfChain`           | `Exstream                                                                                               | undefined`                                                 | Last stream assigned in a connected chain |
 
 ## Invariants
 

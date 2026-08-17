@@ -19,7 +19,7 @@ uniq(): Exstream<T, C>
 ## Example
 
 ```javascript
-exstream(['eu', 'us', 'eu', 'apac', 'us']).uniq().valuesSync()
+await exstream(['eu', 'us', 'eu', 'apac', 'us']).uniq().toArray()
 // ['eu', 'us', 'apac']
 ```
 

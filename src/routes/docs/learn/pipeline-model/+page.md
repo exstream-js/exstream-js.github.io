@@ -24,7 +24,7 @@ A [**source**](/docs/learn/sources/) may be an iterable, async iterable, Web `Re
 
 **Operators** transform the flow. `map()` changes values, `filter()` removes them, `mapAsync()` coordinates asynchronous work, and format operators turn chunks into records or records into chunks.
 
-A **terminal consumer** creates downstream demand. Examples include `pipeTo()`, `toAsyncIterator()`, `drain()`, and `values()`.
+A **terminal consumer** creates downstream demand. Examples include `pipeTo()`, async iteration, `drain()`, and `toArray()`.
 
 ## Chains are lazy
 
@@ -37,7 +37,7 @@ const activeOrders = exstream(source)
 This code describes a pipeline. It does not consume the source yet. Work begins when something asks `activeOrders` for values:
 
 ```javascript
-for await (const order of activeOrders.toAsyncIterator()) {
+for await (const order of activeOrders) {
   await saveOrder(order)
 }
 ```
@@ -52,17 +52,17 @@ The consumer asks for capacity. Operators pass that demand toward the source. Va
 
 This is the basis of [backpressure](/docs/concepts/backpressure/). It is also why a terminal operation should be visible in application code: it identifies who owns completion and failure.
 
-## Sync stays sync
+## Synchronous work, predictable completion
 
 With a synchronous source and synchronous operators, Exstream keeps a synchronous path:
 
 ```javascript
-const values = exstream([1, 2, 3])
+const values = await exstream([1, 2, 3])
   .map((value) => value * 2)
-  .valuesSync()
+  .toArray()
 ```
 
-An asynchronous source or operator changes how the result must be consumed. Use `toAsyncIterator()`, `pipeTo()`, `drain()`, or await the relevant terminal promise.
+Synchronous operators still process records synchronously. Terminal methods nevertheless return promises whether the pipeline is synchronous or asynchronous, so changing a source or adding `mapAsync()` does not change the caller's contract.
 
 ## Next
 

@@ -16,8 +16,8 @@ start(): Promise<void>
 
 ```javascript
 const source = exstream(rows)
-const left = source.fork(true).map(leftTransform).toPromise()
-const right = source.fork(true).map(rightTransform).toPromise()
+const left = source.fork(true).map(leftTransform).toArray()
+const right = source.fork(true).map(rightTransform).toArray()
 
 await source.start()
 const [a, b] = await Promise.all([left, right])

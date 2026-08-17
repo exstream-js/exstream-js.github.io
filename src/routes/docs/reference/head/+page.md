@@ -19,7 +19,7 @@ head(): Exstream<T, C>
 ## Example
 
 ```javascript
-const first = await exstream(source).head().value()
+const first = await exstream(source).head().single()
 ```
 
 ## Behavior
@@ -38,4 +38,4 @@ exstream.head(stream)
 
 ## Related
 
-[`find()`](/docs/reference/find/), [`take()`](/docs/reference/take/), [`last()`](/docs/reference/last/), [`value()`](/docs/reference/value/)
+[`find()`](/docs/reference/find/), [`take()`](/docs/reference/take/), [`last()`](/docs/reference/last/), [`single()`](/docs/reference/single/)
