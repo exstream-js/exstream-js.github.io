@@ -158,6 +158,8 @@ type GraphNode = {
   input: number
   output: number
   active: number
+  ready: number
+  errors: number
   capacity?: number
   status: 'open' | 'closed' | 'aborted'
   metric?: 'dropped' | 'errors'
@@ -512,7 +514,9 @@ function callStreamMethod(
       node.active += 1
       scheduleTelemetry()
       try {
-        return await operation(...values)
+        const result = await operation(...values)
+        node.ready += 1
+        return result
       } finally {
         node.active -= 1
         scheduleTelemetry()
@@ -527,8 +531,17 @@ function callStreamMethod(
   const result = Reflect.apply(method, countedInput, unwrappedArguments)
   if (!isStream(result)) return result
 
-  const countedOutput = callTargetMethod(result, 'tap', () => {
+  const errorCountedResult =
+    node.metric === 'errors'
+      ? callTargetMethod(result, 'errors', (error: unknown, push: (error: unknown) => void) => {
+          node.errors += 1
+          scheduleTelemetry()
+          push(error)
+        })
+      : result
+  const countedOutput = callTargetMethod(errorCountedResult, 'tap', () => {
     node.output += 1
+    if (methodName === 'mapAsync' && node.ready > 0) node.ready -= 1
     scheduleTelemetry()
   })
   watchNodeLifecycle(countedOutput, nodeId)
@@ -755,6 +768,8 @@ function addNode(
     input: 0,
     output: 0,
     active: 0,
+    ready: 0,
+    errors: 0,
     status: 'open',
     metric,
   })
@@ -782,6 +797,11 @@ function scheduleTelemetry() {
   telemetryTimer = setTimeout(flushTelemetry, 100)
 }
 
+function occupiedSlots(node: GraphNode | undefined) {
+  if (!node || node.capacity === undefined) return 0
+  return Math.max(0, node.input - node.output - node.errors)
+}
+
 function flushTelemetry() {
   if (telemetryTimer) {
     clearTimeout(telemetryTimer)
@@ -790,7 +810,10 @@ function flushTelemetry() {
 
   send({
     type: 'graph',
-    nodes: Array.from(graphNodes.values()),
+    nodes: Array.from(graphNodes.values(), (node) => ({
+      ...node,
+      window: occupiedSlots(node),
+    })),
     edges: graphEdges.map((edge) => {
       const from = graphNodes.get(edge.from)
       const to = graphNodes.get(edge.to)
@@ -798,7 +821,8 @@ function flushTelemetry() {
       const produced = edge.produced ?? from?.output ?? 0
       const queued = Math.max(0, produced - flowed)
       const closed = to?.status !== 'open' || (from?.status !== 'open' && queued === 0)
-      const paused = !closed && to?.capacity !== undefined && to.active >= to.capacity
+      const occupied = occupiedSlots(to)
+      const paused = !closed && to?.capacity !== undefined && occupied >= to.capacity
       return {
         ...edge,
         flowed,

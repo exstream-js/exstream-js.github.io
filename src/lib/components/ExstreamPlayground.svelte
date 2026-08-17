@@ -33,6 +33,9 @@
     input: number
     output: number
     active: number
+    ready: number
+    window: number
+    errors: number
     capacity?: number
     status: 'open' | 'closed' | 'aborted'
     metric?: 'dropped' | 'errors'

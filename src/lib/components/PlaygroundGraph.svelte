@@ -11,6 +11,9 @@
     input: number
     output: number
     active: number
+    ready: number
+    window: number
+    errors: number
     capacity?: number
     status: 'open' | 'closed' | 'aborted'
     metric?: 'dropped' | 'errors'
@@ -330,18 +333,28 @@
                         <dd>{(node.input - node.output).toLocaleString('en')}</dd>
                       </div>
                     {/if}
-                    {#if node.metric === 'errors' && node.input > node.output}
+                    {#if node.errors > 0}
                       <div>
                         <dt>errors</dt>
-                        <dd>{(node.input - node.output).toLocaleString('en')}</dd>
+                        <dd>{node.errors.toLocaleString('en')}</dd>
                       </div>
                     {/if}
-                    {#if node.active > 0}
+                    {#if node.active > 0 || node.capacity !== undefined}
                       <div>
                         <dt>active</dt>
-                        <dd>
-                          {node.active}{node.capacity === undefined ? '' : ` / ${node.capacity}`}
-                        </dd>
+                        <dd>{node.active.toLocaleString('en')}</dd>
+                      </div>
+                    {/if}
+                    {#if node.ready > 0}
+                      <div>
+                        <dt>ready</dt>
+                        <dd>{node.ready.toLocaleString('en')}</dd>
+                      </div>
+                    {/if}
+                    {#if node.capacity !== undefined}
+                      <div>
+                        <dt>window</dt>
+                        <dd>{node.window} / {node.capacity}</dd>
                       </div>
                     {/if}
                   </dl>
