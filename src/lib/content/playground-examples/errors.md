@@ -1,9 +1,9 @@
-# Route failures without losing their input
+# Retry through a finite work queue
 
 Validation deliberately creates two recoverable failure classes. Exstream attaches each error to the transaction that caused it, and `routeErrors()` splits the flow into successful `output` and structured `deadLetters`.
 
-The dead-letter envelope records the error code, message, original transaction, and whether the failure is safe to retry. A second reliable fork sends temporary failures to `retry-queue` and permanent failures to `dead-letter`.
+The manual `work queue` receives 120 original transactions. Temporary failures are written back to that same input with an incremented attempt; permanent failures go to `dead-letter`. `retry-queue` makes every retry decision visible without removing it from the loop.
 
-All three destinations must be consumed concurrently. Slow down either failure writer and watch its backpressure travel through the routing graph.
+`pending` counts logical transactions, not attempts. A retry replaces its failed attempt, while a success or permanent rejection settles one transaction. Once the original source has ended and `pending` reaches zero, the queue closes and all three destinations finish naturally.
 
-Fatal source, sink, lifecycle, and cancellation failures never become dead letters. To see that boundary, replace `routeErrors()` with `failOnError()`.
+Retries are bounded to two attempts. In this simulation the transient timeout then succeeds; invalid customer data is rejected immediately. Fatal source, sink, lifecycle, and cancellation failures still bypass the dead-letter path.

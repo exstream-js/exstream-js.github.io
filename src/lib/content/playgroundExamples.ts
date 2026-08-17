@@ -69,26 +69,34 @@ const enriched = exstream(source('transactions'))
   .take(40)
   .mapAsync(
     async (transaction) => {
-      const latency = 30 + (Number(transaction.id.slice(-2)) % 5) * 35
+      const latency = 2_000 + Math.round(Math.random() * 1_000)
       await wait(latency)
       return { ...transaction, latency }
     },
     { concurrency: 8, ordered: false },
   )
 
-await enriched.pipeTo(destination('enriched'))`,
+await enriched.pipeTo(destination('enriched', { speed: Infinity }))`,
   },
   consume: {
     title: 'Consume a pipeline',
     sourcePath: '/docs/learn/consume/',
     description: ConsumeDescription,
-    code: `const pipeline = exstream(source('transactions'))
+    code: `const wait = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds))
+
+// Building the chain does not read from the source.
+const pipeline = exstream(source('transactions'))
   .filter((transaction) => transaction.amount >= 7500)
   .take(30)
   .tap((transaction) => {
     console.log('accepted', transaction.id, transaction.amount)
   })
 
+// Nothing flows during this second: the pipeline is still lazy.
+await wait(1000)
+
+// This terminal call creates demand and starts draining the pipeline.
 await pipeline.pipeTo(destination('processed'))`,
   },
   backpressure: {
@@ -102,8 +110,8 @@ const primary = transactions.fork()
 const audit = transactions.fork()
 
 await Promise.all([
-  primary.pipeTo(destination('primary')),
-  audit.pipeTo(destination('slow-audit')),
+  primary.take(130).pipeTo(destination('primary', { speed: 5 })),
+  audit.slice(100).pipeTo(destination('slow-audit', { speed: 1 })),
 ])`,
   },
   branching: {
@@ -122,8 +130,8 @@ const review = transactions
   .filter((transaction) => transaction.amount >= 5000)
 
 await Promise.all([
-  approved.pipeTo(destination('approved')),
-  review.pipeTo(destination('manual-review')),
+  approved.pipeTo(destination('approved', { speed: 20 })),
+  review.pipeTo(destination('manual-review', { speed: 5 })),
 ])`,
   },
   'merge-sources': {
@@ -147,12 +155,48 @@ await transactions.pipeTo(destination('all-transactions'))`,
     title: 'Errors and lifecycle',
     sourcePath: '/docs/learn/errors/',
     description: ErrorsDescription,
-    code: `const validated = exstream(source('transactions'))
-  .take(120)
+    code: `const MAX_RETRIES = 2
+const input = exstream(null, { bufferLimit: 256 })
+
+let originalSourceEnded = false
+let pending = 0
+let closeScheduled = false
+
+function closeInputWhenIdle() {
+  if (!originalSourceEnded || pending !== 0 || closeScheduled) return
+
+  closeScheduled = true
+  queueMicrotask(() => {
+    closeScheduled = false
+    if (originalSourceEnded && pending === 0 && !input.ended) input.end()
+  })
+}
+
+function settle() {
+  pending -= 1
+  closeInputWhenIdle()
+}
+
+async function seedInput() {
+  let count = 0
+
+  for await (const transaction of source('transactions')) {
+    pending += 1
+    input.writeData({ ...transaction, attempt: 0 })
+    count += 1
+
+    if (count === 120) break
+  }
+
+  originalSourceEnded = true
+  closeInputWhenIdle()
+}
+
+const validated = input
   .map((transaction) => {
     const sequence = Number(transaction.id.slice(-2))
 
-    if (sequence % 17 === 0) {
+    if (sequence % 17 === 0 && transaction.attempt < MAX_RETRIES) {
       const error = new Error('Risk service timed out')
       error.code = 'RISK_TIMEOUT'
       throw error
@@ -172,7 +216,7 @@ const { output, deadLetters } = validated.routeErrors()
 const failures = deadLetters.map(({ error, input }) => ({
   code: error.code ?? 'UNKNOWN',
   message: error.message,
-  retryable: error.code === 'RISK_TIMEOUT',
+  retryable: error.code === 'RISK_TIMEOUT' && input.attempt < MAX_RETRIES,
   input,
 }))
 
@@ -185,9 +229,21 @@ const rejected = failures
   .filter((failure) => !failure.retryable)
 
 await Promise.all([
-  output.pipeTo(destination('processed')),
-  retryable.pipeTo(destination('retry-queue')),
-  rejected.pipeTo(destination('dead-letter')),
+  output
+    .tap(settle)
+    .pipeTo(destination('processed')),
+  retryable
+    .tap((failure) => {
+      input.writeData({
+        ...failure.input,
+        attempt: failure.input.attempt + 1,
+      })
+    })
+    .pipeTo(destination('retry-queue')),
+  rejected
+    .tap(settle)
+    .pipeTo(destination('dead-letter')),
+  seedInput(),
 ])`,
   },
 } satisfies Record<string, PlaygroundExample>

@@ -11,6 +11,7 @@
     input: number
     output: number
     active: number
+    capacity?: number
     status: 'open' | 'closed' | 'aborted'
     metric?: 'dropped' | 'errors'
   }
@@ -21,6 +22,7 @@
     to: string
     queued: number
     flowed: number
+    paused: boolean
     closed: boolean
   }
 
@@ -270,6 +272,7 @@
           {#each lines as line (line.id)}
             <path
               class:waiting={line.queued > 0}
+              class:paused={line.paused}
               class:closed={line.closed}
               d={line.path}
               marker-end="url(#graph-arrow)"
@@ -280,15 +283,18 @@
         {#each lines as line (line.id)}
           <span
             class:waiting={line.queued > 0}
+            class:paused={line.paused}
             class:closed={line.closed}
             class="edge-count"
             style={`left:${line.labelX}px;top:${line.labelY}px`}
           >
             {line.closed
               ? 'closed'
-              : line.queued > 0
-                ? `${line.queued} waiting`
-                : line.flowed.toLocaleString('en')}
+              : line.paused
+                ? 'paused upstream'
+                : line.queued > 0
+                  ? `${line.queued} waiting`
+                  : line.flowed.toLocaleString('en')}
           </span>
         {/each}
 
@@ -333,7 +339,9 @@
                     {#if node.active > 0}
                       <div>
                         <dt>active</dt>
-                        <dd>{node.active}</dd>
+                        <dd>
+                          {node.active}{node.capacity === undefined ? '' : ` / ${node.capacity}`}
+                        </dd>
                       </div>
                     {/if}
                   </dl>
@@ -450,6 +458,12 @@
     stroke-width: 2;
   }
 
+  svg > path.paused {
+    stroke: #ff9c82;
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+  }
+
   svg > path.closed {
     stroke: #3e4a44;
     stroke-dasharray: 3 3;
@@ -562,7 +576,8 @@
     pointer-events: none;
   }
 
-  .edge-count.waiting {
+  .edge-count.waiting,
+  .edge-count.paused {
     border-color: #7b3c2d;
     color: #ff9c82;
   }

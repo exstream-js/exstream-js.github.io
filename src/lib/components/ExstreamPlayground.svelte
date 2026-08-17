@@ -18,6 +18,8 @@
     id: number
     name: string
     delay: number
+    scriptDelay: number
+    speedOverridden: boolean
     bufferSize: number
     values: unknown[]
     count: number
@@ -31,6 +33,7 @@
     input: number
     output: number
     active: number
+    capacity?: number
     status: 'open' | 'closed' | 'aborted'
     metric?: 'dropped' | 'errors'
   }
@@ -40,6 +43,7 @@
     to: string
     queued: number
     flowed: number
+    paused: boolean
     closed: boolean
   }
 
@@ -75,8 +79,8 @@ const review = transactions
   .filter((transaction) => transaction.risk === 'high')
 
 await Promise.all([
-  approved.pipeTo(destination('approved')),
-  review.pipeTo(destination('manual-review')),
+  approved.pipeTo(destination('approved', { speed: 20 })),
+  review.pipeTo(destination('manual-review', { speed: 5 })),
 ])`
 
   let code = $state(starterCode)
@@ -119,26 +123,40 @@ await Promise.all([
     const currentCode = code
     if (isRunning || currentCode === lastDestinationScript) return
     lastDestinationScript = currentCode
-    reconcileDestinationPanels(extractDestinationNames(currentCode))
+    reconcileDestinationPanels(extractDestinations(currentCode))
   })
 
-  function extractDestinationNames(script: string) {
-    const names: string[] = []
-    const pattern = /\bdestination\s*\(\s*(['"])((?:\\.|(?!\1).)*)\1\s*\)/g
+  type DestinationDeclaration = {
+    name: string
+    delay: number
+  }
+
+  function extractDestinations(script: string) {
+    const declarations: DestinationDeclaration[] = []
+    const pattern = /\bdestination\s*\(\s*(['"])((?:\\.|(?!\1).)*)\1(?:\s*,\s*\{([^{}]*)\})?/g
 
     for (const match of script.matchAll(pattern)) {
       const name = match[2]?.replace(/\\(['"\\])/g, '$1').trim()
-      if (name && !names.includes(name)) names.push(name)
+      if (!name || declarations.some((declaration) => declaration.name === name)) continue
+
+      const speedLiteral = match[3]?.match(/\bspeed\s*:\s*(Infinity|(?:\d+(?:\.\d*)?|\.\d+))/)?.[1]
+      const speed = speedLiteral === 'Infinity' ? Infinity : Number(speedLiteral)
+      declarations.push({
+        name,
+        delay: speed > 0 ? (speed === Infinity ? 0 : 1_000 / speed) : 100,
+      })
     }
 
-    return names
+    return declarations
   }
 
-  function createDestinationPanel(name: string): DestinationPanel {
+  function createDestinationPanel({ name, delay }: DestinationDeclaration): DestinationPanel {
     return {
       id: nextDestinationId++,
       name,
-      delay: name === 'approved' ? 50 : name === 'manual-review' ? 200 : 100,
+      delay,
+      scriptDelay: delay,
+      speedOverridden: false,
       bufferSize: name === 'approved' ? 12 : name === 'manual-review' ? 8 : 10,
       values: [],
       count: 0,
@@ -146,17 +164,31 @@ await Promise.all([
     }
   }
 
-  function reconcileDestinationPanels(names: string[]) {
+  function reconcileDestinationPanels(declarations: DestinationDeclaration[]) {
+    const names = declarations.map((declaration) => declaration.name)
     const currentNames = destinations.map((destination) => destination.name)
     if (
       currentNames.length === names.length &&
-      currentNames.every((name, index) => name === names[index])
+      currentNames.every((name, index) => name === names[index]) &&
+      destinations.every(
+        (destination, index) => destination.scriptDelay === declarations[index]?.delay,
+      )
     ) {
       return
     }
 
     const existing = new Map(destinations.map((destination) => [destination.name, destination]))
-    destinations = names.map((name) => existing.get(name) ?? createDestinationPanel(name))
+    destinations = declarations.map((declaration) => {
+      const current = existing.get(declaration.name)
+      if (!current) return createDestinationPanel(declaration)
+
+      const scriptChanged = current.scriptDelay !== declaration.delay
+      return {
+        ...current,
+        delay: scriptChanged && !current.speedOverridden ? declaration.delay : current.delay,
+        scriptDelay: declaration.delay,
+      }
+    })
   }
 
   function createWorker() {
@@ -220,6 +252,7 @@ await Promise.all([
     const speed = destinationSpeeds[Number(input.value)]
     if (!speed) return
     destination.delay = speed.delay
+    destination.speedOverridden = true
 
     if (isRunning) {
       worker?.postMessage({
@@ -243,7 +276,10 @@ await Promise.all([
       const name = typeof message.name === 'string' ? message.name : ''
       if (!name || destinations.some((destination) => destination.name === name)) return
 
-      const panel = createDestinationPanel(name)
+      const panel = createDestinationPanel({
+        name,
+        delay: typeof message.delay === 'number' ? message.delay : 100,
+      })
       panel.delay = typeof message.delay === 'number' ? message.delay : panel.delay
       panel.bufferSize =
         typeof message.bufferSize === 'number' ? message.bufferSize : panel.bufferSize
