@@ -8,7 +8,7 @@
 
 # `merge()`
 
-<p class="lead">Consume Exstreams carried by the outer stream, with bounded activation and optional outer-source order.</p>
+<p class="lead">Lazily consume Exstreams carried by the outer stream, with bounded activation and optional outer-source order.</p>
 
 ## Signature
 
@@ -54,15 +54,19 @@ Every successful outer value must be a readable Exstream instance that can accep
 
 ## Order and pressure
 
-Unordered mode forwards values as active inner streams produce them and propagates downstream pressure to those streams. Ordered mode collects each inner stream's records until it can emit that stream in outer order. It can therefore retain a complete inner stream and must not be used with an unbounded inner stream.
+Unordered mode forwards frames as active inner streams produce them. A delivered frame releases only the inner that produced it, so downstream pressure keeps every active inner to at most one ready frame.
 
-The result is asynchronous even when all inner sources are synchronous. A finite `parallelism` bounds active inner streams, not the number of values buffered by ordered mode.
+Ordered mode streams the current inner directly. Later active inners are still consumed eagerly, but their data, record errors, and contexts are buffered as protocol frames. When the current inner ends, the next inner's buffered frames are replayed in order; if that inner is still open, its subsequent frames continue streaming directly.
+
+This eager ordered buffering is useful for response bodies, cursors, and similar resources that must be consumed before their turn to emit. It can retain a complete future inner stream and must not be used with unbounded or unexpectedly large inners. A finite `parallelism` bounds active and completed-but-not-emitted inner streams, not the number of records held by each ordered slot.
+
+`merge()` is lazy: no inner stream is activated until downstream consumption starts.
 
 The activation limit cannot retroactively pause work owned by hot inner streams that started before `merge()` attached. Create inner streams lazily or configure their source buffers when activation itself must control resource use.
 
 ## Errors
 
-Record errors from inner streams are forwarded with their contexts. Fatal failure of an active inner stream aborts the merged branch and stops the coordinator. Cancelling the merged output destroys active inner work and prevents further activation.
+Record errors from the outer or any inner stream are forwarded in the selected order with their contexts and do not complete an inner slot. Fatal failure or abort of an active inner aborts the merged branch and stops the coordinator. Cancelling the merged output destroys all active inner work and prevents further activation.
 
 ## Forms
 
