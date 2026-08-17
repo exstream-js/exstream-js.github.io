@@ -195,6 +195,22 @@ a {
   backdrop-filter: blur(14px);
 }
 
+/*
+ * iOS in-app browsers can place their controls over the visual viewport while
+ * keeping sticky elements below them. Extend the header surface upward so
+ * scrolling content cannot show through that browser-owned area.
+ */
+.site-header::before {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% - 1px);
+  left: 0;
+  height: calc(10rem + env(safe-area-inset-top, 0px));
+  background: var(--page);
+  content: '';
+  pointer-events: none;
+}
+
 .site-header-inner,
 .site-footer-inner {
   width: min(100% - 2rem, 78rem);
@@ -1673,6 +1689,11 @@ pre[data-copy-ready] {
 .prose p,
 .prose li {
   color: var(--ink-soft);
+}
+
+.prose > p + p,
+.prose > .page-frame > p + p {
+  margin-top: 1rem;
 }
 
 .prose ul,

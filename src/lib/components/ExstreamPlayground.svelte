@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getPlaygroundExample } from '$lib/content/playgroundExamples'
   import { onDestroy, onMount } from 'svelte'
+  import CodeEditor from './CodeEditor.svelte'
   import PlaygroundGraph from './PlaygroundGraph.svelte'
 
   type RunState = 'idle' | 'running' | 'complete' | 'stopped' | 'error'
@@ -96,6 +97,10 @@ await Promise.all([
   let consoleEntries = $state<ConsoleEntry[]>([])
   let consoleOutput = $state<HTMLDivElement>()
   let errorMessage = $state('')
+  let editorProblemCount = $state(0)
+  let editorWidth = $state(38)
+  let workspace = $state.raw<HTMLDivElement>()
+  let resizing = $state(false)
   let nextDestinationId = 1
   let nextConsoleEntryId = 1
   let lastDestinationScript = ''
@@ -374,11 +379,42 @@ await Promise.all([
     return `${Number.isInteger(rps) ? rps : Number(rps.toFixed(1))} rps`
   }
 
-  function handleEditorKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-      event.preventDefault()
-      if (!isRunning) run()
+  function setEditorWidth(nextWidth: number) {
+    editorWidth = Math.min(75, Math.max(25, nextWidth))
+  }
+
+  function resizeFromPointer(event: PointerEvent) {
+    if (!resizing || !workspace) return
+    const bounds = workspace.getBoundingClientRect()
+    setEditorWidth(((event.clientX - bounds.left) / bounds.width) * 100)
+  }
+
+  function startResize(event: PointerEvent) {
+    if (event.button !== 0) return
+    resizing = true
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.setPointerCapture(event.pointerId)
     }
+    resizeFromPointer(event)
+  }
+
+  function finishResize() {
+    if (!resizing) return
+    resizing = false
+    localStorage.setItem('exstream-playground-editor-width', String(editorWidth))
+  }
+
+  function handleResizeKeydown(event: KeyboardEvent) {
+    let nextWidth = editorWidth
+    if (event.key === 'ArrowLeft') nextWidth -= 2
+    else if (event.key === 'ArrowRight') nextWidth += 2
+    else if (event.key === 'Home') nextWidth = 25
+    else if (event.key === 'End') nextWidth = 75
+    else return
+
+    event.preventDefault()
+    setEditorWidth(nextWidth)
+    localStorage.setItem('exstream-playground-editor-width', String(editorWidth))
   }
 
   function encodeCode(value: string) {
@@ -422,6 +458,11 @@ await Promise.all([
   }
 
   onMount(() => {
+    const storedEditorWidth = localStorage.getItem('exstream-playground-editor-width')
+    if (storedEditorWidth !== null && Number.isFinite(Number(storedEditorWidth))) {
+      setEditorWidth(Number(storedEditorWidth))
+    }
+
     playgroundExample = getPlaygroundExample(
       new URL(window.location.href).searchParams.get('example'),
     )
@@ -459,7 +500,12 @@ await Promise.all([
     </div>
   </header>
 
-  <div class="workspace">
+  <div
+    class:resizing
+    class="workspace"
+    style={`--editor-width: ${editorWidth}%`}
+    bind:this={workspace}
+  >
     <section class="editor-pane" aria-label="Playground editor">
       <header class="pane-bar editor-tabs-bar">
         <div class="editor-tabs" role="tablist" aria-label="Playground editor views">
@@ -487,7 +533,11 @@ await Promise.all([
         {#if editorTab === 'description' && playgroundExample}
           <a class="lesson-link" href={playgroundExample.sourcePath}>Lesson ↗</a>
         {:else}
-          <span>⌘/Ctrl + Enter</span>
+          <span class:has-problems={editorProblemCount > 0}>
+            {editorProblemCount > 0
+              ? `${editorProblemCount} ${editorProblemCount === 1 ? 'problem' : 'problems'}`
+              : 'No syntax errors'} · ⌘/Ctrl + Enter
+          </span>
         {/if}
       </header>
       {#if editorTab === 'description' && playgroundExample}
@@ -502,17 +552,33 @@ await Promise.all([
         </div>
       {:else}
         <div id="code-panel" class="code-panel" role="tabpanel" aria-labelledby="code-tab">
-          <label class="sr-only" for="playground-editor">Pipeline JavaScript</label>
-          <textarea
-            id="playground-editor"
+          <CodeEditor
             bind:value={code}
-            spellcheck="false"
-            autocapitalize="off"
-            autocomplete="off"
-            onkeydown={handleEditorKeydown}></textarea>
+            ariaLabel="Pipeline JavaScript"
+            onRun={() => !isRunning && run()}
+            onProblemsChange={(count) => (editorProblemCount = count)}
+          />
         </div>
       {/if}
     </section>
+
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex (ARIA separator is keyboard-adjustable) -->
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions (ARIA separator supports pointer and keyboard adjustment) -->
+    <div
+      class="panel-resizer"
+      role="separator"
+      aria-label="Resize editor and results panels"
+      aria-orientation="vertical"
+      aria-valuemin="25"
+      aria-valuemax="75"
+      aria-valuenow={Math.round(editorWidth)}
+      tabindex="0"
+      onpointerdown={startResize}
+      onpointermove={resizeFromPointer}
+      onpointerup={finishResize}
+      onpointercancel={finishResize}
+      onkeydown={handleResizeKeydown}
+    ></div>
 
     <div class="runtime-pane">
       <PlaygroundGraph nodes={graphNodes} edges={graphEdges} />
@@ -803,7 +869,13 @@ await Promise.all([
     display: grid;
     min-width: 0;
     min-height: 0;
-    grid-template-columns: minmax(25rem, 38%) minmax(0, 1fr);
+    grid-template-columns: minmax(20rem, var(--editor-width)) 0.5rem minmax(0, 1fr);
+  }
+
+  .workspace.resizing,
+  .workspace.resizing * {
+    cursor: col-resize !important;
+    user-select: none;
   }
 
   .editor-pane {
@@ -811,8 +883,45 @@ await Promise.all([
     min-width: 0;
     min-height: 0;
     grid-template-rows: 2.65rem minmax(0, 1fr);
-    border-right: 1px solid var(--pg-line);
     background: var(--pg-shell);
+  }
+
+  .panel-resizer {
+    position: relative;
+    z-index: 2;
+    border: 0;
+    border-right: 1px solid var(--pg-line);
+    border-left: 1px solid var(--pg-line);
+    background: var(--pg-shell);
+    cursor: col-resize;
+    touch-action: none;
+  }
+
+  .panel-resizer::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 2.5rem;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: var(--pg-line-strong);
+    content: '';
+    transition:
+      background 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  .panel-resizer:hover::after,
+  .panel-resizer:focus-visible::after,
+  .workspace.resizing .panel-resizer::after {
+    background: var(--pg-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pg-accent) 14%, transparent);
+  }
+
+  .panel-resizer:focus-visible {
+    outline: 2px solid var(--pg-accent);
+    outline-offset: -2px;
   }
 
   .pane-bar {
@@ -826,6 +935,10 @@ await Promise.all([
 
   .pane-bar span {
     color: var(--pg-dim);
+  }
+
+  .pane-bar span.has-problems {
+    color: var(--pg-danger-ink);
   }
 
   .editor-tabs-bar {
@@ -875,24 +988,6 @@ await Promise.all([
   .code-panel {
     min-width: 0;
     min-height: 0;
-  }
-
-  textarea {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    resize: none;
-    border: 0;
-    outline: 0;
-    background: var(--pg-editor);
-    color: var(--pg-ink);
-    padding: 1rem;
-    font: 0.78rem/1.65 var(--font-mono);
-    tab-size: 2;
-  }
-
-  textarea:focus-visible {
-    box-shadow: inset 0 0 0 2px var(--accent);
   }
 
   .playground-description {
@@ -1270,6 +1365,10 @@ await Promise.all([
 
     .workspace {
       grid-template-columns: 1fr;
+    }
+
+    .panel-resizer {
+      display: none;
     }
 
     .editor-pane {

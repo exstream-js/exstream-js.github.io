@@ -135,21 +135,43 @@ await Promise.all([
 ])`,
   },
   'merge-sources': {
-    title: 'Merge sources',
+    title: 'Rejoin processing lanes',
     sourcePath: '/docs/reference/merge/',
     description: MergeSourcesDescription,
-    code: `const web = exstream(source('transactions'))
-  .take(60)
-  .map((transaction) => ({ ...transaction, lane: 'web' }))
+    code: `const wait = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds))
 
-const retail = exstream(source('transactions'))
-  .take(60)
-  .map((transaction) => ({ ...transaction, lane: 'retail' }))
+const transactions = exstream(source('transactions'))
+  .take(120)
 
-const transactions = exstream([web, retail])
+const routine = transactions
+  .fork()
+  .filter((transaction) => transaction.amount < 7500)
+  .map((transaction) => ({
+    ...transaction,
+    decision: 'approved',
+    reviewedBy: 'rules',
+  }))
+
+const highRisk = transactions
+  .fork()
+  .filter((transaction) => transaction.amount >= 7500)
+  .mapAsync(
+    async (transaction) => {
+      await wait(250 + Math.round(Math.random() * 500))
+      return {
+        ...transaction,
+        decision: transaction.amount >= 9000 ? 'held' : 'approved',
+        reviewedBy: 'risk-engine',
+      }
+    },
+    { concurrency: 6, ordered: false },
+  )
+
+const decisions = exstream([routine, highRisk])
   .merge(2, false)
 
-await transactions.pipeTo(destination('all-transactions'))`,
+await decisions.pipeTo(destination('decisions', { speed: Infinity }))`,
   },
   errors: {
     title: 'Errors and lifecycle',
