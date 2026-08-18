@@ -1,26 +1,22 @@
 <svelte:head>
-  <title>Why Exstream exists</title>
+  <title>History — Exstream</title>
   <meta
     name="description"
-    content="The path from large streaming workloads and Highland experiments to Exstream's production years and renewed development."
+    content="How Exstream grew from JavaScript ETL work, Highland experiments, and several years of use in production pipelines."
   />
   <link rel="canonical" href="https://exstream-js.github.io/docs/project/origin/" />
 </svelte:head>
 
 <p class="eyebrow">Overview · History</p>
 
-# Why Exstream exists
+# History
 
-<p class="lead">Exstream did not begin as a framework pitch. It began because large datasets had to move through real systems without being collected entirely in memory.</p>
+<p class="lead">Exstream grew out of JavaScript ETL work on datasets that could not be collected entirely in memory.</p>
 
-1. **Streaming work came first.** Large ETL workloads needed bounded memory, explicit backpressure, incremental formats, and more than one reliable destination.
+The original pipelines needed to process records incrementally, coordinate asynchronous I/O, respect slow destinations, and send the same input to more than one output. Node streams covered transport, but the application still had to implement much of that coordination itself.
 
-2. **Highland showed a compelling shape.** Early experiments with [Highland](https://github.com/caolan/highland) demonstrated how pleasant a composable streaming API could be. Exstream borrows heavily from its ideas and should credit that lineage plainly.
+Experiments with [Highland](https://github.com/caolan/highland) showed that a higher-level, composable stream API fit this work well. Exstream started as an independent implementation influenced by that model, both to adapt it to those pipelines and to understand the underlying machinery. The first public commit was made on 9 August 2021; version `0.1.0` followed one week later.
 
-3. **A new implementation became the learning project.** The first public commit landed on 9 August 2021, followed by `0.1.0` one week later. The goal was to modernize the model, explore the internals, and learn by building the machinery directly.
+Over the following years, a small group used Exstream in production data pipelines. Requirements from that work shaped its behavior around backpressure, asynchronous concurrency, streaming formats, branching, lifecycle, and failures.
 
-4. **Then it quietly did the job.** Exstream spent the following years serving across a range of production data pipelines. It accumulated practical behavior around pressure, lifecycle, formats, fan-out, and failure—mostly without the documentation or visibility to show it.
-
-5. **Now the project gets daylight.** Development is active again: sharper contracts, new operators, browser and platform support, stronger tests, and documentation serious enough to expose what the library has already earned.
-
-> Exstream was never a prototype waiting to become useful. It was useful software waiting to be explained.
+Development later resumed with a focus on making those behaviors explicit: revising the API, supporting Node.js and browser runtimes, strengthening tests and types, and documenting the contracts needed for a stable 1.0 release.

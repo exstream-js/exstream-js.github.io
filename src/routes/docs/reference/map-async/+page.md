@@ -62,7 +62,7 @@ const profiles = exstream(userIds).mapAsync(fetchProfile, {
     <dt><code>concurrency</code></dt>
     <dd>
       <p class="parameter-meta"><span><strong>Type</strong> <code>positive integer | Infinity</code></span><span><strong>Default</strong> <code>1</code></span></p>
-      <p>Maximum active tasks. Positive integers and <code>Infinity</code> are accepted; zero, negative values, fractions, and non-numeric values are rejected. A retry and its delay retain the task's slot. Use a finite value at external I/O boundaries.</p>
+      <p>Maximum inputs owned by the operator: callbacks still running plus completed results waiting for downstream demand. Positive integers and <code>Infinity</code> are accepted; zero, negative values, fractions, and non-numeric values are rejected. A retry, its delay, and an ordered result waiting behind an earlier input retain their slots. Use a finite value at external I/O boundaries.</p>
     </dd>
   </div>
   <div>
@@ -122,7 +122,9 @@ The JavaScript runtime normalizes numeric policy fields with `Number()`, so any 
 
 ## Order and pressure
 
-At most `concurrency` callbacks are active. Upstream demand pauses when all slots are occupied. In ordered mode, completed results may wait in memory behind a slower earlier input; unordered mode avoids that head-of-line delay and emits completion order.
+`concurrency` bounds the complete operator window, not only unresolved promises. The window contains callbacks still running and completed results waiting to be accepted downstream. As soon as downstream accepts one result, that slot is released and exactly one new input may start. With a slow writer and fast callbacks, active work can therefore fall below `concurrency` while ready results occupy the rest of the window; the operator does not drain the whole window before refilling it.
+
+Upstream demand pauses while the window is full. In ordered mode, completed results may wait in memory behind a slower earlier input; unordered mode avoids that head-of-line delay and emits completion order. Both modes use the same sliding-window refill rule.
 
 The callback context exposes `context.input`, `context.signal`, and custom upstream fields. It is created lazily when `fn` declares its second parameter, `retry.when` declares its third, or a dynamic `retry.delay` declares its fourth. Declare those positional parameters rather than retrieving them through rest arguments when a materialized context is required. The context remains the same object across attempts and continues with the emitted result. During a timed attempt, only its `signal` is temporarily replaced with an attempt-specific signal and restored afterward.
 
@@ -151,4 +153,4 @@ stream.through(exstream.mapAsync(fn, options))
 
 ## Related
 
-[`map()`](/docs/reference/map/), [`resolve()`](/docs/reference/resolve/), [`errors()`](/docs/reference/errors/), [`drain()`](/docs/reference/drain/)
+[`map()`](/docs/reference/map/), [`errors()`](/docs/reference/errors/), [`drain()`](/docs/reference/drain/)

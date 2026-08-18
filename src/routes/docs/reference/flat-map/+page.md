@@ -41,14 +41,14 @@ const lineItems = exstream(orders).flatMap((order) => order.items)
 Arrays, sets, maps, generators, and other synchronous iterables are expanded. Strings are deliberately treated as scalar values rather than sequences of characters:
 
 ```javascript
-exstream([1, 2])
+await exstream([1, 2])
   .flatMap((value) => [value, value * 10])
-  .valuesSync()
+  .toArray()
 // [1, 10, 2, 20]
 
-exstream(['Ada'])
+await exstream(['Ada'])
   .flatMap((name) => name)
-  .valuesSync()
+  .toArray()
 // ['Ada']
 ```
 

@@ -39,7 +39,7 @@ const orders = exstream([
   { id: 2, total: 28 },
 ])
 
-const totals = orders.map((order) => order.total).valuesSync()
+const totals = await orders.map((order) => order.total).toArray()
 ```
 
 Async iterables are pulled only when downstream has capacity:

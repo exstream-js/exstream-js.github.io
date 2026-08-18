@@ -30,7 +30,7 @@ Place recoverable policies such as `errors()` or `skipErrors()` before `failOnEr
 
 ## Errors
 
-The original error object remains the failure reason; Exstream marks the failure as fatal rather than wrapping it into a different user-visible error. Terminal consumers such as `drain()`, `toPromise()`, and `pipeTo()` reject.
+The original error object remains the failure reason; Exstream marks the failure as fatal rather than wrapping it into a different user-visible error. Terminal consumers such as `drain()`, `toArray()`, and `pipeTo()` reject.
 
 ## Forms
 

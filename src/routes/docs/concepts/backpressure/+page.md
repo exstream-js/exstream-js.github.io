@@ -35,7 +35,7 @@ const enriched = exstream(records).mapAsync(loadCustomer, {
 })
 ```
 
-`concurrency: 16` limits active calls. With `ordered: true`, a later result may need to wait for an earlier one, so ordering also contributes to the amount of retained work. Both choices belong in the operator contract.
+`concurrency: 16` bounds active calls plus completed results waiting for downstream demand. Every result accepted downstream releases one slot and permits one replacement input. With `ordered: true`, a later result may need to wait for an earlier one, so ordering contributes to the retained window. Both choices belong in the operator contract.
 
 <div class="contract-grid">
   <div><strong>Input</strong><span>Pulled on demand</span></div>

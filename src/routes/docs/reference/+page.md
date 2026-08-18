@@ -49,7 +49,6 @@
 
 - [`mapAsync()`](/docs/reference/map-async/) — transform with concurrency, ordering, retry, timeout, and cancellation controls
 - [`asyncFilter()`](/docs/reference/async-filter/) and [`asyncReduce()`](/docs/reference/async-reduce/) — await sequential selection or aggregation
-- [`resolve()`](/docs/reference/resolve/), [`massThen()`](/docs/reference/mass-then/), and [`massCatch()`](/docs/reference/mass-catch/) — work with streams of promises
 - [`makeAsync()`](/docs/reference/make-async/) — yield long synchronous pipelines to the event loop
 
 ## Flow control
@@ -82,16 +81,15 @@
 
 ## Consume
 
-- [`pipe()`](/docs/reference/pipe/) and [`pipeTo()`](/docs/reference/pipe-to/) — connect a destination with native or promise completion semantics
-- [`toAsyncIterator()`](/docs/reference/to-async-iterator/) — consume one value per `for await` demand
-- [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeStream()`](/docs/reference/to-node-stream/) — expose platform streams
-- [`toArray()`](/docs/reference/to-array/), [`toPromise()`](/docs/reference/to-promise/), and [`drain()`](/docs/reference/drain/) — finish through callbacks or promises
-- [`value()`](/docs/reference/value/), [`values()`](/docs/reference/values/), and [`valuesSync()`](/docs/reference/values-sync/) — collect with cardinality or synchrony checks
+- [`pipeTo()`](/docs/reference/pipe-to/) — write to a Node or Web destination and await completion
+- [Async iteration](/docs/reference/async-iteration/) — consume one value per `for await` demand
+- [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeReadable()`](/docs/reference/to-node-readable/) — expose platform readables
+- [`toArray()`](/docs/reference/to-array/), [`single()`](/docs/reference/single/), and [`drain()`](/docs/reference/drain/) — finish with uniform promise semantics
 
 ## Low-level API
 
-- [`write()`](/docs/reference/write/), [`writeData()`](/docs/reference/write-data/), and [`pull()`](/docs/reference/pull/) — implement manual sources and demand
-- [`consume()`](/docs/reference/consume/), [`consumeSync()`](/docs/reference/consume-sync/), and [`each()`](/docs/reference/each/) — build custom operators or callback terminals
+- [`write()`](/docs/reference/write/) and [`writeData()`](/docs/reference/write-data/) — implement manual sources
+- [`consume()`](/docs/reference/consume/) and [`consumeSync()`](/docs/reference/consume-sync/) — build custom operators
 - [`start()`](/docs/reference/start/), [`pause()`](/docs/reference/pause/), and [`resume()`](/docs/reference/resume/) — control source gates and adapters
 - [`end()`](/docs/reference/end/), [`destroy()`](/docs/reference/destroy/), [`abort()`](/docs/reference/abort/), and [`fail()`](/docs/reference/fail/) — choose the correct terminal transition
 - [`extend()`](/docs/reference/extend/) and [Utilities](/docs/reference/utilities/) — extend the prototype or reuse exported helpers

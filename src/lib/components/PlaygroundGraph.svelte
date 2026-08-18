@@ -11,6 +11,10 @@
     input: number
     output: number
     active: number
+    ready: number
+    window: number
+    errors: number
+    capacity?: number
     status: 'open' | 'closed' | 'aborted'
     metric?: 'dropped' | 'errors'
   }
@@ -21,6 +25,7 @@
     to: string
     queued: number
     flowed: number
+    paused: boolean
     closed: boolean
   }
 
@@ -270,6 +275,7 @@
           {#each lines as line (line.id)}
             <path
               class:waiting={line.queued > 0}
+              class:paused={line.paused}
               class:closed={line.closed}
               d={line.path}
               marker-end="url(#graph-arrow)"
@@ -280,15 +286,18 @@
         {#each lines as line (line.id)}
           <span
             class:waiting={line.queued > 0}
+            class:paused={line.paused}
             class:closed={line.closed}
             class="edge-count"
             style={`left:${line.labelX}px;top:${line.labelY}px`}
           >
             {line.closed
               ? 'closed'
-              : line.queued > 0
-                ? `${line.queued} waiting`
-                : line.flowed.toLocaleString('en')}
+              : line.paused
+                ? 'paused upstream'
+                : line.queued > 0
+                  ? `${line.queued} waiting`
+                  : line.flowed.toLocaleString('en')}
           </span>
         {/each}
 
@@ -324,16 +333,28 @@
                         <dd>{(node.input - node.output).toLocaleString('en')}</dd>
                       </div>
                     {/if}
-                    {#if node.metric === 'errors' && node.input > node.output}
+                    {#if node.errors > 0}
                       <div>
                         <dt>errors</dt>
-                        <dd>{(node.input - node.output).toLocaleString('en')}</dd>
+                        <dd>{node.errors.toLocaleString('en')}</dd>
                       </div>
                     {/if}
-                    {#if node.active > 0}
+                    {#if node.active > 0 || node.capacity !== undefined}
                       <div>
                         <dt>active</dt>
-                        <dd>{node.active}</dd>
+                        <dd>{node.active.toLocaleString('en')}</dd>
+                      </div>
+                    {/if}
+                    {#if node.ready > 0}
+                      <div>
+                        <dt>ready</dt>
+                        <dd>{node.ready.toLocaleString('en')}</dd>
+                      </div>
+                    {/if}
+                    {#if node.capacity !== undefined}
+                      <div>
+                        <dt>window</dt>
+                        <dd>{node.window} / {node.capacity}</dd>
                       </div>
                     {/if}
                   </dl>
@@ -355,9 +376,9 @@
     display: grid;
     min-height: 0;
     grid-template-rows: 2.65rem minmax(0, 1fr);
-    border-bottom: 1px solid #29332f;
-    background: #111815;
-    color: #e7eee9;
+    border-bottom: 1px solid var(--pg-line);
+    background: var(--pg-graph);
+    color: var(--pg-ink);
   }
 
   .graph.expanded {
@@ -371,7 +392,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #29332f;
+    border-bottom: 1px solid var(--pg-line);
     padding: 0 0.85rem;
     font: 0.72rem var(--font-mono);
   }
@@ -383,7 +404,7 @@
   }
 
   .graph-actions span {
-    color: #7f8c85;
+    color: var(--pg-muted);
   }
 
   .expand-toggle {
@@ -391,16 +412,16 @@
     width: 1.8rem;
     height: 1.8rem;
     place-items: center;
-    border: 1px solid #34423b;
+    border: 1px solid var(--pg-line-strong);
     border-radius: 0.38rem;
-    background: #151d19;
-    color: #aebbb4;
+    background: var(--pg-panel);
+    color: var(--pg-muted);
     cursor: pointer;
   }
 
   .expand-toggle:hover {
-    border-color: #53655c;
-    color: #eef4f0;
+    border-color: var(--pg-line-hover);
+    color: var(--pg-ink);
   }
 
   .expand-toggle:focus-visible {
@@ -420,7 +441,7 @@
     display: grid;
     height: 100%;
     place-items: center;
-    color: #68766f;
+    color: var(--pg-dim);
     font: 0.76rem var(--font-mono);
   }
 
@@ -441,22 +462,28 @@
 
   svg > path {
     fill: none;
-    stroke: #52615a;
+    stroke: var(--pg-edge);
     stroke-width: 1.25;
   }
 
   svg > path.waiting {
-    stroke: #ff7653;
+    stroke: var(--pg-accent);
     stroke-width: 2;
   }
 
+  svg > path.paused {
+    stroke: var(--pg-danger-ink);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+  }
+
   svg > path.closed {
-    stroke: #3e4a44;
+    stroke: var(--pg-edge-closed);
     stroke-dasharray: 3 3;
   }
 
   marker path {
-    fill: #718078;
+    fill: var(--pg-dim);
   }
 
   .columns {
@@ -479,28 +506,28 @@
     width: 9.5rem;
     min-height: 6.2rem;
     justify-self: center;
-    border: 1px solid #34423b;
+    border: 1px solid var(--pg-line-strong);
     border-radius: 0.65rem;
-    background: #1a231f;
+    background: var(--pg-panel-raised);
     padding: 0.62rem;
-    box-shadow: 0 8px 30px rgb(0 0 0 / 18%);
+    box-shadow: var(--pg-shadow);
   }
 
   article.type-source {
-    border-color: color-mix(in srgb, var(--accent) 70%, #34423b);
+    border-color: color-mix(in srgb, var(--accent) 70%, var(--pg-line-strong));
   }
 
   article.type-fork {
-    border-color: #b08cff;
+    border-color: var(--pg-purple);
   }
 
   article.type-destination {
-    border-color: #70cfa1;
+    border-color: var(--pg-success);
   }
 
   article > span {
     display: block;
-    color: #748179;
+    color: var(--pg-dim);
     font: 0.58rem var(--font-mono);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -534,17 +561,17 @@
   }
 
   dt {
-    color: #718078;
+    color: var(--pg-dim);
   }
 
   dd {
-    color: #c9d4ce;
+    color: var(--pg-ink-soft);
   }
 
   article small {
     display: block;
     margin-top: 0.45rem;
-    color: #ff9c82;
+    color: var(--pg-danger-ink);
     font: 0.56rem var(--font-mono);
   }
 
@@ -552,23 +579,24 @@
     position: absolute;
     z-index: 2;
     transform: translate(-50%, -50%);
-    border: 1px solid #34423b;
+    border: 1px solid var(--pg-line-strong);
     border-radius: 999px;
-    background: #111815;
-    color: #718078;
+    background: var(--pg-graph);
+    color: var(--pg-dim);
     padding: 0.13rem 0.35rem;
     white-space: nowrap;
     font: 0.52rem var(--font-mono);
     pointer-events: none;
   }
 
-  .edge-count.waiting {
-    border-color: #7b3c2d;
-    color: #ff9c82;
+  .edge-count.waiting,
+  .edge-count.paused {
+    border-color: var(--pg-danger-border);
+    color: var(--pg-danger-ink);
   }
 
   .edge-count.closed {
-    border-color: #2d3933;
-    color: #66736c;
+    border-color: var(--pg-line);
+    color: var(--pg-dim);
   }
 </style>

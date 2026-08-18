@@ -21,7 +21,7 @@ groupBy<K extends PropertyKey>(
 ## Example
 
 ```javascript
-const byRegion = await exstream(customers).groupBy('region').value()
+const byRegion = await exstream(customers).groupBy('region').single()
 // { eu: [...], us: [...] }
 ```
 

@@ -47,4 +47,4 @@ stream.through(exstream.decode('base64'))
 
 ## Related
 
-[`encode()`](/docs/reference/encode/), [`split()`](/docs/reference/split/), [`toNodeStream()`](/docs/reference/to-node-stream/)
+[`encode()`](/docs/reference/encode/), [`split()`](/docs/reference/split/), [`toNodeReadable()`](/docs/reference/to-node-readable/)

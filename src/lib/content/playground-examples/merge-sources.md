@@ -1,7 +1,7 @@
-# Merge two live sources
+# Rejoin fast and slow lanes
 
-Two independent transaction generators are transformed into labeled lanes and then consumed by a single `merge(2, false)` node.
+A single transaction stream is split into two useful paths: routine payments are approved immediately, while high-value payments go through a slower asynchronous risk check.
 
-The concurrency bound allows both inputs to make progress. With unordered output, the destination receives whichever lane produces its next value first.
+`merge(2, false)` consumes both branches together and reunites their decisions in one destination. Routine approvals keep flowing while the risk engine works, and reviewed payments are emitted as soon as each check finishes.
 
-Change the merge concurrency or add asynchronous work to one lane and watch the per-input counters diverge.
+Switch `preserveOrder` to `true` to compare that behavior with emitting the complete routine lane before the reviewed lane.

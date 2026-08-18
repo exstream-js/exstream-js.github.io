@@ -19,7 +19,7 @@ drop(n: number): Exstream<T, C>
 ## Example
 
 ```javascript
-exstream(['header', 'a', 'b']).drop(1).valuesSync()
+await exstream(['header', 'a', 'b']).drop(1).toArray()
 // ['a', 'b']
 ```
 

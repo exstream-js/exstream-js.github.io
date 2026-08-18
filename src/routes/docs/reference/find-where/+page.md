@@ -19,7 +19,7 @@ findWhere(properties: Partial<T>): Exstream<T, C>
 ## Example
 
 ```javascript
-const admin = await exstream(users).findWhere({ role: 'admin', active: true }).value()
+const admin = await exstream(users).findWhere({ role: 'admin', active: true }).single()
 ```
 
 ## Parameters

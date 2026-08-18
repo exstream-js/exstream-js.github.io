@@ -23,7 +23,7 @@ reduce1(
 ```javascript
 const maximum = await exstream(scores)
   .reduce1((best, score) => Math.max(best, score))
-  .value()
+  .single()
 ```
 
 ## Parameters

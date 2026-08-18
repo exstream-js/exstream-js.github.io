@@ -19,7 +19,7 @@ encode(encoding: 'base64'): Exstream<string, C>
 ## Example
 
 ```javascript
-const encoded = await exstream(byteChunks).encode('base64').toPromise()
+const encoded = await exstream(byteChunks).encode('base64').toArray()
 const base64 = encoded.join('')
 ```
 
@@ -48,4 +48,4 @@ stream.through(exstream.encode('base64'))
 
 ## Related
 
-[`decode()`](/docs/reference/decode/), [`toWebReadable()`](/docs/reference/to-web-readable/), [`toNodeStream()`](/docs/reference/to-node-stream/)
+[`decode()`](/docs/reference/decode/), [`toWebReadable()`](/docs/reference/to-web-readable/), [`toNodeReadable()`](/docs/reference/to-node-readable/)

@@ -22,7 +22,7 @@ find(fn: (value: T, context: C) => unknown): Exstream<T, C>
 ```javascript
 const firstOverdue = await exstream(invoices)
   .find((invoice) => invoice.status === 'overdue')
-  .value()
+  .single()
 ```
 
 ## Parameters

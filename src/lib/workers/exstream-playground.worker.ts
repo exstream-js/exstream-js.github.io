@@ -114,21 +114,36 @@ const instrumentedOperators = new Set([
   'pluck',
   'reject',
   'resolve',
+  'ratelimit',
+  'slice',
   'skipErrors',
   'stopWhen',
   'take',
   'tap',
+  'throttle',
   'uniq',
   'uniqBy',
 ])
 
-const recordDroppingOperators = new Set(['compact', 'filter', 'reject', 'uniq', 'uniqBy'])
+const recordDroppingOperators = new Set([
+  'compact',
+  'filter',
+  'reject',
+  'slice',
+  'throttle',
+  'uniq',
+  'uniqBy',
+])
 const recordErrorOperators = new Set(['map', 'mapAsync'])
 
 type DestinationConfig = {
   name: string
   delay: number
   bufferSize: number
+}
+
+type DestinationOptions = {
+  speed?: number
 }
 
 type RunMessage = {
@@ -153,6 +168,9 @@ type GraphNode = {
   input: number
   output: number
   active: number
+  ready: number
+  errors: number
+  capacity?: number
   status: 'open' | 'closed' | 'aborted'
   metric?: 'dropped' | 'errors'
 }
@@ -190,6 +208,11 @@ type DestinationRuntime = DestinationConfig & {
 type AsyncFunction = (...arguments_: unknown[]) => Promise<unknown>
 type AsyncFunctionConstructor = new (...arguments_: string[]) => AsyncFunction
 type StreamTarget = object
+type StreamOptions = {
+  bufferLimit?: number
+  overflow?: 'error' | 'drop-oldest' | 'drop-newest'
+  signal?: AbortSignal
+}
 
 const AsyncFunction = Object.getPrototypeOf(async function () {})
   .constructor as AsyncFunctionConstructor
@@ -282,12 +305,13 @@ function source(name: string) {
   return transactionSource()
 }
 
-function destination(name: string) {
+function destination(name: string, options: DestinationOptions = {}) {
+  const defaultDelay = destinationDelay(options.speed)
   let runtime = destinations.get(name)
   if (!runtime) {
     runtime = {
       name,
-      delay: 100,
+      delay: defaultDelay,
       bufferSize: 10,
       count: 0,
       values: [],
@@ -344,6 +368,15 @@ function destination(name: string) {
   return writable
 }
 
+function destinationDelay(speed: number | undefined) {
+  if (speed === undefined) return 100
+  if (speed === Infinity) return 0
+  if (!Number.isFinite(speed) || speed <= 0) {
+    throw new Error('destination() speed must be a positive number or Infinity.')
+  }
+  return 1_000 / speed
+}
+
 function scheduleDestinationSnapshot(runtime: DestinationRuntime) {
   if (runtime.snapshotTimer) return
   runtime.snapshotTimer = setTimeout(() => {
@@ -367,14 +400,21 @@ function sendDestinationSnapshot(runtime: DestinationRuntime, reason?: string) {
   })
 }
 
-function instrumentedExstream(input: unknown) {
+function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
   const mergeInputs = extractMergeInputs(input)
   if (mergeInputs) {
     return wrapStream(realExstream([]) as StreamTarget, undefined, mergeInputs)
   }
 
-  const sourceNodeId = addNode('source', 'transactions ∞', 0)
+  const manual = input === undefined || input === null
+  const sourceNodeId = addNode('source', manual ? 'work queue' : 'transactions ∞', 0)
   const node = graphNodes.get(sourceNodeId)!
+
+  if (manual) {
+    const stream = realExstream(input, options) as StreamTarget
+    watchNodeLifecycle(stream, sourceNodeId)
+    return wrapStream(stream, sourceNodeId)
+  }
 
   async function* observedInput() {
     for await (const value of input as AsyncIterable<unknown>) {
@@ -384,7 +424,7 @@ function instrumentedExstream(input: unknown) {
     }
   }
 
-  const stream = realExstream(observedInput()) as StreamTarget
+  const stream = realExstream(observedInput(), options) as StreamTarget
   watchNodeLifecycle(stream, sourceNodeId)
   return wrapStream(stream, sourceNodeId)
 }
@@ -448,6 +488,15 @@ function callStreamMethod(
   if (methodName === 'pipe' || methodName === 'pipeTo') {
     return instrumentPipe(target, parentNodeId, method, unwrappedArguments)
   }
+  if (methodName === 'write' || methodName === 'writeData') {
+    const result = Reflect.apply(method, target, unwrappedArguments)
+    const node = graphNodes.get(parentNodeId)
+    if (node) {
+      node.output += 1
+      scheduleTelemetry()
+    }
+    return result
+  }
 
   if (!instrumentedOperators.has(methodName)) {
     const result = Reflect.apply(method, target, unwrappedArguments)
@@ -469,12 +518,15 @@ function callStreamMethod(
   addEdge(parentNodeId, nodeId)
 
   if (methodName === 'mapAsync' && typeof unwrappedArguments[0] === 'function') {
+    node.capacity = mapAsyncCapacity(unwrappedArguments[1])
     const operation = unwrappedArguments[0] as (...values: unknown[]) => unknown
     unwrappedArguments[0] = async (...values: unknown[]) => {
       node.active += 1
       scheduleTelemetry()
       try {
-        return await operation(...values)
+        const result = await operation(...values)
+        node.ready += 1
+        return result
       } finally {
         node.active -= 1
         scheduleTelemetry()
@@ -489,12 +541,38 @@ function callStreamMethod(
   const result = Reflect.apply(method, countedInput, unwrappedArguments)
   if (!isStream(result)) return result
 
-  const countedOutput = callTargetMethod(result, 'tap', () => {
+  const errorCountedResult =
+    node.metric === 'errors'
+      ? callTargetMethod(result, 'errors', (error: unknown, push: (error: unknown) => void) => {
+          node.errors += 1
+          scheduleTelemetry()
+          push(error)
+        })
+      : result
+  const countedOutput = callTargetMethod(errorCountedResult, 'tap', () => {
     node.output += 1
+    if (methodName === 'mapAsync' && node.ready > 0) node.ready -= 1
     scheduleTelemetry()
   })
   watchNodeLifecycle(countedOutput, nodeId)
   return wrapStream(countedOutput, nodeId)
+}
+
+function mapAsyncCapacity(options: unknown) {
+  if (options === null || options === undefined) return 1
+  if (typeof options !== 'object' || Array.isArray(options)) return undefined
+
+  const concurrency = (options as { concurrency?: unknown }).concurrency
+  if (concurrency === undefined) return 1
+  if (
+    typeof concurrency === 'number' &&
+    Number.isFinite(concurrency) &&
+    Number.isInteger(concurrency) &&
+    concurrency > 0
+  ) {
+    return concurrency
+  }
+  return undefined
 }
 
 function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
@@ -679,7 +757,10 @@ function isStream(value: unknown): value is StreamTarget {
 
 function formatOperator(name: string, arguments_: unknown[]) {
   if (name === 'take') return `take(${String(arguments_[0] ?? '')})`
+  if (name === 'slice') return `slice(${arguments_.map(String).join(', ')})`
   if (name === 'batch') return `batch(${String(arguments_[0] ?? '')})`
+  if (name === 'throttle') return `throttle(${String(arguments_[0] ?? '')})`
+  if (name === 'ratelimit') return `ratelimit(${arguments_.map(String).join(', ')})`
   if (name === 'merge') return `merge(${arguments_.map(String).join(', ')})`
   return name
 }
@@ -699,6 +780,8 @@ function addNode(
     input: 0,
     output: 0,
     active: 0,
+    ready: 0,
+    errors: 0,
     status: 'open',
     metric,
   })
@@ -726,6 +809,11 @@ function scheduleTelemetry() {
   telemetryTimer = setTimeout(flushTelemetry, 100)
 }
 
+function occupiedSlots(node: GraphNode | undefined) {
+  if (!node || node.capacity === undefined) return 0
+  return Math.max(0, node.input - node.output - node.errors)
+}
+
 function flushTelemetry() {
   if (telemetryTimer) {
     clearTimeout(telemetryTimer)
@@ -734,7 +822,10 @@ function flushTelemetry() {
 
   send({
     type: 'graph',
-    nodes: Array.from(graphNodes.values()),
+    nodes: Array.from(graphNodes.values(), (node) => ({
+      ...node,
+      window: occupiedSlots(node),
+    })),
     edges: graphEdges.map((edge) => {
       const from = graphNodes.get(edge.from)
       const to = graphNodes.get(edge.to)
@@ -742,10 +833,13 @@ function flushTelemetry() {
       const produced = edge.produced ?? from?.output ?? 0
       const queued = Math.max(0, produced - flowed)
       const closed = to?.status !== 'open' || (from?.status !== 'open' && queued === 0)
+      const occupied = occupiedSlots(to)
+      const paused = !closed && to?.capacity !== undefined && occupied >= to.capacity
       return {
         ...edge,
         flowed,
         queued: closed ? 0 : queued,
+        paused,
         closed,
       }
     }),

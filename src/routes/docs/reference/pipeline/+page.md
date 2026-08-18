@@ -32,7 +32,7 @@ Calling an operator on a pipeline records its method name and arguments; it does
 
 ## Supported methods
 
-The typed pipeline surface contains reusable non-terminal operators: transforms, selection, context, async work, error policies, parsers/stringifiers, range, aggregation, sorting, encoding, rate control, `sortedGroupBy()`, and nested `through()`. Source/terminal/graph-specific methods such as `fork()`, `merge()`, `pipeTo()`, `sortedJoin()`, and `values()` belong to instantiated Exstreams.
+The typed pipeline surface contains reusable non-terminal operators: transforms, selection, context, async work, error policies, parsers/stringifiers, range, aggregation, sorting, encoding, rate control, `sortedGroupBy()`, and nested `through()`. Source, terminal, and graph-specific methods such as `fork()`, `merge()`, `toArray()`, `drain()`, `pipeTo()`, and `sortedJoin()` belong to instantiated Exstreams.
 
 ## Errors
 

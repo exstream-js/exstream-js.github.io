@@ -19,7 +19,7 @@ last(): Exstream<T, C>
 ## Example
 
 ```javascript
-const latest = await exstream(records).last().value()
+const latest = await exstream(records).last().single()
 ```
 
 ## Behavior
@@ -38,4 +38,4 @@ exstream.last(stream)
 
 ## Related
 
-[`head()`](/docs/reference/head/), [`value()`](/docs/reference/value/), [`reduce1()`](/docs/reference/reduce-1/)
+[`head()`](/docs/reference/head/), [`single()`](/docs/reference/single/), [`reduce1()`](/docs/reference/reduce-1/)

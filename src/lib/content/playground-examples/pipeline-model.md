@@ -1,7 +1,7 @@
-# Description first, execution later
+# Reading the graph
 
-`map()` and `filter()` build a lazy pipeline. No transaction moves until the final `pipeTo()` attaches a consumer and owns its completion.
+The source produces transactions, `map()` and `filter()` transform the records, and `pipeTo()` connects the result to the destination.
 
-The live graph makes that model visible: values travel from the source through both operators, while the destination supplies demand in the opposite direction.
+The chain is lazy: no transaction moves until `pipeTo()` attaches the terminal consumer. The graph then shows values moving toward the destination and demand moving back toward the source.
 
 Change the amount threshold and compare the `in`, `out`, and `dropped` counters.

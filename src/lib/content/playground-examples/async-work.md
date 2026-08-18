@@ -1,7 +1,7 @@
-# Bounded asynchronous work
+# Concurrent enrichment
 
-Each transaction waits for a simulated remote enrichment. `concurrency: 8` allows at most eight callbacks to be active at once.
+Each transaction waits between two and three seconds for a simulated remote risk check. `concurrency: 8` fills the `mapAsync` window but never allows a ninth callback to start. While the window is full, the incoming edge shows that upstream is paused.
 
-`ordered: false` emits completed work immediately, so records with shorter simulated latency can overtake earlier records.
+As each request finishes, `ordered: false` emits the enriched transaction and starts the next check. Shorter requests can overtake earlier records. The destination runs at maximum speed so its own delay does not affect completion order.
 
-Switch it to `true` and observe how input order is restored, even when later work finishes first.
+Switch `ordered` to `true` to restore input order.

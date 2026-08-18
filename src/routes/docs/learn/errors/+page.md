@@ -54,7 +54,7 @@ Both outputs participate in backpressure and must be consumed concurrently. A de
 
 ## Separate retry from rejection
 
-Retry policy belongs in the dead-letter envelope, not in an indiscriminate loop. A timeout may be transient; invalid customer data usually is not:
+Retry policy belongs in the dead-letter envelope, not in an indiscriminate loop. A timeout may be transient; invalid customer data usually is not. A real feedback loop also needs explicit ownership of its lifetime:
 
 ```javascript
 const failures = deadLetters.map(({ error, input }) => ({
@@ -65,11 +65,11 @@ const failures = deadLetters.map(({ error, input }) => ({
 
 const retryable = failures.fork().filter((failure) => failure.retryable)
 const rejected = failures.fork().filter((failure) => !failure.retryable)
-
-await Promise.all([retryable.pipeTo(retryQueue), rejected.pipeTo(deadLetterWriter)])
 ```
 
-Keep retry attempts bounded and persist their count. Once the retry budget is exhausted, the record should become a permanent dead letter rather than circulate forever.
+The playground example uses a manual Exstream as a finite work queue. Retryable failures are written back to that input with an incremented attempt. A counter tracks logical records still in flight: retries do not change it, while a success or permanent rejection decrements it. The input ends only after the original source is exhausted and that counter reaches zero.
+
+Keep retry attempts bounded and persist their count. Once the retry budget is exhausted, the record must become a permanent dead letter rather than circulate forever. Open the example above to watch the queue accept retries and eventually close by itself.
 
 ## Fatal failures
 

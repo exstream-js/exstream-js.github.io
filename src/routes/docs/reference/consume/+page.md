@@ -31,4 +31,4 @@ Call `next()` exactly once when ready for another upstream record. If it is not 
 
 ## Related
 
-[`consumeSync()`](/docs/reference/consume-sync/), [`pull()`](/docs/reference/pull/), [`mapAsync()`](/docs/reference/map-async/)
+[`consumeSync()`](/docs/reference/consume-sync/), [async iteration](/docs/reference/async-iteration/), [`mapAsync()`](/docs/reference/map-async/)

@@ -42,7 +42,7 @@ await exstream(records)
 A full array is emitted as soon as it reaches `size`. When the source ends, a final non-empty partial array is emitted. An empty source emits no batches:
 
 ```javascript
-exstream([1, 2, 3, 4, 5]).batch(2).valuesSync()
+await exstream([1, 2, 3, 4, 5]).batch(2).toArray()
 // [[1, 2], [3, 4], [5]]
 ```
 

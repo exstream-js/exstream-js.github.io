@@ -16,7 +16,7 @@ write(value: T | Error | DataValue<T> | typeof exstream.nil): boolean
 
 ```javascript
 const source = exstream()
-const result = source.map(transform).toPromise()
+const result = await source.map(transform).toArray()
 
 if (!source.write(row)) await new Promise((resolve) => source.once('drain', resolve))
 source.end()

@@ -2,18 +2,18 @@ export const docsNavigation = [
   {
     label: 'Overview',
     items: [
-      { href: '/docs/', label: 'Choose a path' },
-      { href: '/docs/project/origin/', label: 'Why Exstream exists' },
+      { href: '/docs/project/what-is-exstream/', label: 'What is Exstream' },
+      { href: '/docs/project/when-not-to-use/', label: 'When to use it' },
+      { href: '/docs/project/origin/', label: 'History' },
     ],
   },
   {
     label: 'Learn',
     items: [
-      { href: '/docs/project/when-not-to-use/', label: 'When to use Exstream' },
-      { href: '/docs/learn/sources/', label: 'Create a source' },
       { href: '/docs/learn/pipeline-model/', label: 'Pipeline model' },
+      { href: '/docs/learn/sources/', label: 'Create a source' },
       { href: '/docs/learn/transform-data/', label: 'Transform data' },
-      { href: '/docs/learn/async-work/', label: 'Async work & order' },
+      { href: '/docs/learn/async-work/', label: 'Async processing' },
       { href: '/docs/learn/consume/', label: 'Consume a pipeline' },
       { href: '/docs/concepts/backpressure/', label: 'Backpressure' },
       { href: '/docs/learn/branching/', label: 'Branch & observe' },
@@ -97,9 +97,6 @@ export const docsNavigation = [
       { href: '/docs/reference/map-async/', label: 'mapAsync()' },
       { href: '/docs/reference/async-filter/', label: 'asyncFilter()' },
       { href: '/docs/reference/async-reduce/', label: 'asyncReduce()' },
-      { href: '/docs/reference/resolve/', label: 'resolve()' },
-      { href: '/docs/reference/mass-then/', label: 'massThen()' },
-      { href: '/docs/reference/mass-catch/', label: 'massCatch()' },
       { href: '/docs/reference/make-async/', label: 'makeAsync()' },
     ],
   },
@@ -149,17 +146,13 @@ export const docsNavigation = [
   {
     label: 'API · Consume',
     items: [
-      { href: '/docs/reference/pipe/', label: 'pipe()' },
       { href: '/docs/reference/pipe-to/', label: 'pipeTo()' },
-      { href: '/docs/reference/to-async-iterator/', label: 'toAsyncIterator()' },
+      { href: '/docs/reference/async-iteration/', label: 'Async iteration' },
       { href: '/docs/reference/to-web-readable/', label: 'toWebReadable()' },
-      { href: '/docs/reference/to-node-stream/', label: 'toNodeStream()' },
+      { href: '/docs/reference/to-node-readable/', label: 'toNodeReadable()' },
       { href: '/docs/reference/to-array/', label: 'toArray()' },
-      { href: '/docs/reference/to-promise/', label: 'toPromise()' },
       { href: '/docs/reference/drain/', label: 'drain()' },
-      { href: '/docs/reference/value/', label: 'value()' },
-      { href: '/docs/reference/values/', label: 'values()' },
-      { href: '/docs/reference/values-sync/', label: 'valuesSync()' },
+      { href: '/docs/reference/single/', label: 'single()' },
     ],
   },
   {
@@ -167,8 +160,6 @@ export const docsNavigation = [
     items: [
       { href: '/docs/reference/write/', label: 'write()' },
       { href: '/docs/reference/write-data/', label: 'writeData()' },
-      { href: '/docs/reference/pull/', label: 'pull()' },
-      { href: '/docs/reference/each/', label: 'each()' },
       { href: '/docs/reference/consume/', label: 'consume()' },
       { href: '/docs/reference/consume-sync/', label: 'consumeSync()' },
       { href: '/docs/reference/start/', label: 'start()' },
