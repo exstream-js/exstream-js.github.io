@@ -4,11 +4,11 @@
   <link rel="canonical" href="https://exstream-js.github.io/docs/project/when-not-to-use/" />
 </svelte:head>
 
-<p class="eyebrow">Learn · Adoption decision</p>
+<p class="eyebrow">Overview · Scope</p>
 
-# When Exstream earns its place
+# When to use Exstream
 
-<p class="lead">Use Exstream when the pipeline as a whole is difficult: bounded memory, controlled I/O, fan-out, failure, and cleanup. Do not use it to make a small loop look architectural.</p>
+<p class="lead">Use Exstream when a data flow needs bounded memory, controlled I/O, multiple branches, and coordinated failure or cleanup. For a small collection or a simple loop, use the platform directly.</p>
 
 ## Strong fit
 

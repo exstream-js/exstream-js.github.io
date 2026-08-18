@@ -2,18 +2,18 @@ export const docsNavigation = [
   {
     label: 'Overview',
     items: [
-      { href: '/docs/', label: 'Choose a path' },
-      { href: '/docs/project/origin/', label: 'Why Exstream exists' },
+      { href: '/docs/project/what-is-exstream/', label: 'What is Exstream' },
+      { href: '/docs/project/when-not-to-use/', label: 'When to use it' },
+      { href: '/docs/project/origin/', label: 'History' },
     ],
   },
   {
     label: 'Learn',
     items: [
-      { href: '/docs/project/when-not-to-use/', label: 'When to use Exstream' },
-      { href: '/docs/learn/sources/', label: 'Create a source' },
       { href: '/docs/learn/pipeline-model/', label: 'Pipeline model' },
+      { href: '/docs/learn/sources/', label: 'Create a source' },
       { href: '/docs/learn/transform-data/', label: 'Transform data' },
-      { href: '/docs/learn/async-work/', label: 'Async work & order' },
+      { href: '/docs/learn/async-work/', label: 'Async processing' },
       { href: '/docs/learn/consume/', label: 'Consume a pipeline' },
       { href: '/docs/concepts/backpressure/', label: 'Backpressure' },
       { href: '/docs/learn/branching/', label: 'Branch & observe' },

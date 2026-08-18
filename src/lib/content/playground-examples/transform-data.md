@@ -1,7 +1,7 @@
-# Transform without collecting
+# Settlement batches
 
-This pipeline filters high-value transactions, reshapes them, groups them into batches of ten, and expands the batches back into individual records.
+This pipeline keeps transactions above the settlement floor, normalizes their monetary value to cents, and groups 120 accepted records into batches of 20.
 
-Watch how `batch(10)` changes the unit of flow: ten input records become one array. `flatMap()` performs the inverse expansion.
+The final `map()` turns each batch into a settlement summary. Watch how the graph changes from individual transactions to six destination records.
 
-The complete source is never collected in memory.
+Only the current batch is retained; the complete source is not collected.

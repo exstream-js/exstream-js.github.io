@@ -44,22 +44,28 @@ await activeOrders.pipeTo(destination('active-orders'))`,
     title: 'Transform data',
     sourcePath: '/docs/learn/transform-data/',
     description: TransformDataDescription,
-    code: `const highValueOrders = exstream(source('transactions'))
-  .filter((transaction) => transaction.amount >= 5000)
-  .map(({ id, customer, product, amount }) => ({
-    id,
-    customer,
-    product,
-    amount,
+    code: `const settlementBatches = exstream(source('transactions'))
+  .filter((transaction) => transaction.amount >= 1000)
+  .map((transaction) => ({
+    ...transaction,
+    amountInCents: Math.round(transaction.amount * 100),
   }))
-  .batch(10)
-  .flatMap((batch) => batch)
-  .take(60)
+  .take(120)
+  .batch(20)
+  .map((transactions) => ({
+    firstId: transactions[0].id,
+    lastId: transactions.at(-1).id,
+    count: transactions.length,
+    totalInCents: transactions.reduce(
+      (total, transaction) => total + transaction.amountInCents,
+      0,
+    ),
+  }))
 
-await highValueOrders.pipeTo(destination('high-value'))`,
+await settlementBatches.pipeTo(destination('settlement-batches'))`,
   },
   'async-work': {
-    title: 'Async work and order',
+    title: 'Async processing',
     sourcePath: '/docs/learn/async-work/',
     description: AsyncWorkDescription,
     code: `const wait = (milliseconds) =>
@@ -71,7 +77,11 @@ const enriched = exstream(source('transactions'))
     async (transaction) => {
       const latency = 2_000 + Math.round(Math.random() * 1_000)
       await wait(latency)
-      return { ...transaction, latency }
+      return {
+        ...transaction,
+        risk: transaction.amount >= 7500 ? 'review' : 'clear',
+        latency,
+      }
     },
     { concurrency: 8, ordered: false },
   )

@@ -32,7 +32,7 @@ Use the [operator index](/docs/reference/). Reference pages state the details pr
 
 ## Deciding whether to adopt it?
 
-Read [when to use Exstream](/docs/project/when-not-to-use/). Native arrays, a small `for await` loop, Web Streams, or a columnar engine can all be the better answer. Exstream earns its place when the pipeline as a whole becomes the difficult part.
+Read [when to use Exstream](/docs/project/when-not-to-use/). Native arrays, a small `for await` loop, Web Streams, or a columnar engine can all be the better answer. Exstream is useful when coordinating the complete pipeline is the difficult part.
 
 ## Runtime baseline
 

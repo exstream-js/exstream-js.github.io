@@ -1,7 +1,7 @@
-# Fill the concurrency window
+# Concurrent enrichment
 
-Each transaction waits between two and three seconds for a simulated remote enrichment. `concurrency: 8` quickly fills the `mapAsync` node to `active 8 / 8`, but never allows a ninth callback to start. While the window is full, the dashed incoming edge marks the upstream branch as paused rather than inventing records waiting in a queue.
+Each transaction waits between two and three seconds for a simulated remote risk check. `concurrency: 8` fills the `mapAsync` window but never allows a ninth callback to start. While the window is full, the incoming edge shows that upstream is paused.
 
-As each request finishes, `ordered: false` emits that record immediately and starts the next waiting enrichment. Shorter requests can therefore overtake earlier records. The destination runs at maximum speed so it does not hide or reshape the completions coming out of `mapAsync`.
+As each request finishes, `ordered: false` emits the enriched transaction and starts the next check. Shorter requests can overtake earlier records. The destination runs at maximum speed so its own delay does not affect completion order.
 
-Switch it to `true` and observe how input order is restored, even when later work finishes first.
+Switch `ordered` to `true` to restore input order.

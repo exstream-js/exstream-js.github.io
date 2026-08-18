@@ -85,7 +85,7 @@
         <pre class="pipeline-code"><code>{@html heroCode}</code></pre>
         <div class="pipeline-contract" aria-label="Pipeline contract">
           <div><span>input</span><strong>pulled on demand</strong></div>
-          <div><span>async work</span><strong>8 at a time</strong></div>
+          <div><span>async processing</span><strong>8 at a time</strong></div>
           <div><span>output</span><strong>incremental JSONL</strong></div>
         </div>
       </div>
@@ -101,7 +101,7 @@
           <code>mapAsync()</code> runs promise-returning transforms with an explicit concurrency limit.
           Results stay in input order by default, or can leave as soon as they complete.
         </p>
-        <a class="topic-link" href="/docs/learn/async-work/">Async work and order →</a>
+        <a class="topic-link" href="/docs/learn/async-work/">Async processing →</a>
       </div>
       <div class="topic-detail">
         <div class="topic-code"><pre><code>{@html asyncCode}</code></pre></div>

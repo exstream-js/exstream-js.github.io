@@ -114,16 +114,26 @@ const instrumentedOperators = new Set([
   'pluck',
   'reject',
   'resolve',
+  'ratelimit',
   'slice',
   'skipErrors',
   'stopWhen',
   'take',
   'tap',
+  'throttle',
   'uniq',
   'uniqBy',
 ])
 
-const recordDroppingOperators = new Set(['compact', 'filter', 'reject', 'slice', 'uniq', 'uniqBy'])
+const recordDroppingOperators = new Set([
+  'compact',
+  'filter',
+  'reject',
+  'slice',
+  'throttle',
+  'uniq',
+  'uniqBy',
+])
 const recordErrorOperators = new Set(['map', 'mapAsync'])
 
 type DestinationConfig = {
@@ -749,6 +759,8 @@ function formatOperator(name: string, arguments_: unknown[]) {
   if (name === 'take') return `take(${String(arguments_[0] ?? '')})`
   if (name === 'slice') return `slice(${arguments_.map(String).join(', ')})`
   if (name === 'batch') return `batch(${String(arguments_[0] ?? '')})`
+  if (name === 'throttle') return `throttle(${String(arguments_[0] ?? '')})`
+  if (name === 'ratelimit') return `ratelimit(${arguments_.map(String).join(', ')})`
   if (name === 'merge') return `merge(${arguments_.map(String).join(', ')})`
   return name
 }
