@@ -6,12 +6,6 @@
 
 <p class="lead">Gracefully finish a stream after delivering values already accepted into its buffer.</p>
 
-## Signature
-
-```typescript
-end(): void
-```
-
 ## Example
 
 ```javascript
@@ -24,10 +18,16 @@ source.end()
 
 `end()` queues the end marker, force-flushes buffered records if needed, transitions to `ended`, emits `end` once for readable streams, detaches consumers/observers, and releases source resources. Repeated terminal calls are no-ops; the first terminal state wins.
 
-Graceful end differs from `destroy()` and `abort()`: accepted buffered values are delivered instead of discarded, and no abort reason is set. Downstream end propagation follows the connected graph. Later `write()` or `writeData()` calls throw.
+Graceful end delivers accepted buffered values instead of discarding them, and no abort reason is set. Downstream end propagation follows the connected graph. Later `write()` calls throw. External cancellation is expressed through the `AbortSignal` supplied when the source or terminal is created.
 
 `end()` is immediate in lifecycle terms and returns no completion promise. Await a terminal consumer such as `drain()` or `pipeTo()` when downstream completion matters.
 
+## Signature
+
+```typescript
+end(): void
+```
+
 ## Related
 
-[`destroy()`](/docs/reference/destroy/), [`abort()`](/docs/reference/abort/), [`drain()`](/docs/reference/drain/), [`write()`](/docs/reference/write/)
+[`drain()`](/docs/reference/drain/), [`write()`](/docs/reference/write/), [`start()`](/docs/reference/start/)

@@ -6,22 +6,6 @@
 
 <p class="lead">Adapt an existing source into one lazy, backpressure-aware pipeline model.</p>
 
-## Signature
-
-```typescript
-exstream<T, C extends object>(source: Exstream<T, C>, options?: StreamOptions | null): Exstream<T, C>
-exstream<T>(source: PromiseLike<T>, options?: StreamOptions | null): Exstream<Awaited<T>>
-exstream<T>(source: Iterable<T> | AsyncIterable<T>, options?: StreamOptions | null): Exstream<T>
-exstream<T>(source: ReadableStream<T> | NodeReadableLike<T> | StreamGenerator<T>, options?: StreamOptions | null): Exstream<T>
-exstream<T = unknown>(source?: null, options?: StreamOptions | null): Exstream<T>
-
-interface StreamOptions {
-  bufferLimit?: number
-  overflow?: 'error' | 'drop-oldest' | 'drop-newest'
-  signal?: AbortSignal
-}
-```
-
 ## Sources
 
 Accepted sources are existing Exstreams, promises, synchronous and asynchronous iterables, Web `ReadableStream`s, Node readable streams, custom `(write, next) => void` producers, or no source for a manually writable stream. Existing Exstreams are returned unchanged. Source adapters preserve their natural pressure model; see [Create a source](/docs/learn/sources/) for complete examples.
@@ -37,6 +21,22 @@ Accepted sources are existing Exstreams, promises, synchronous and asynchronous 
 ## Errors and runtimes
 
 Invalid source types throw synchronously. Iterator/read failures enter the record-error protocol with source provenance. Node stream support is selected by the Node entry; browser builds use Web streams and portable codecs. The constructor is lazy: a consumer supplies demand before pull-based sources advance.
+
+## Signature
+
+```typescript
+exstream<T, C extends object>(source: Exstream<T, C>, options?: StreamOptions | null): Exstream<T, C>
+exstream<T>(source: PromiseLike<T>, options?: StreamOptions | null): Exstream<Awaited<T>>
+exstream<T>(source: Iterable<T> | AsyncIterable<T>, options?: StreamOptions | null): Exstream<T>
+exstream<T>(source: ReadableStream<T> | NodeReadableLike<T> | StreamGenerator<T>, options?: StreamOptions | null): Exstream<T>
+exstream<T = unknown>(source?: null, options?: StreamOptions | null): Exstream<T>
+
+interface StreamOptions {
+  bufferLimit?: number
+  overflow?: 'error' | 'drop-oldest' | 'drop-newest'
+  signal?: AbortSignal
+}
+```
 
 ## Related
 

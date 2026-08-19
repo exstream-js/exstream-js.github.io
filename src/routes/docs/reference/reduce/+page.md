@@ -10,15 +10,6 @@
 
 <p class="lead">Combine all successful values into one accumulator, starting from an explicit initial value.</p>
 
-## Signature
-
-```typescript
-reduce<A>(
-  fn: (accumulator: A, value: T, context: C) => A,
-  initialValue: A,
-): Exstream<A, AggregateOutputContext<C, A>>
-```
-
 ## Example
 
 ```javascript
@@ -53,6 +44,15 @@ stream.reduce(reducer, initialValue)
 exstream.pipeline().reduce(reducer, initialValue)
 exstream.reduce(reducer, initialValue, stream)
 stream.through(exstream.reduce(reducer, initialValue))
+```
+
+## Signature
+
+```typescript
+reduce<A>(
+  fn: (accumulator: A, value: T, context: C) => A,
+  initialValue: A,
+): Exstream<A, AggregateOutputContext<C, A>>
 ```
 
 ## Related

@@ -34,4 +34,4 @@ These values are useful for diagnostics and observability, not for polling-based
 
 ## Related
 
-[`events`](/docs/reference/events/), [`write()`](/docs/reference/write/), [`pause()`](/docs/reference/pause/), [`abort()`](/docs/reference/abort/)
+[`events`](/docs/reference/events/), [`write()`](/docs/reference/write/), [`end()`](/docs/reference/end/), [`pipeTo()`](/docs/reference/pipe-to/)

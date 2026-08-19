@@ -10,12 +10,6 @@
 
 <p class="lead">Decode a continuous base64 text stream into binary chunks.</p>
 
-## Signature
-
-```typescript
-decode(encoding: 'base64'): Exstream<Uint8Array, C>
-```
-
 ## Example
 
 ```javascript
@@ -43,6 +37,12 @@ stream.decode('base64')
 exstream.pipeline().decode('base64')
 exstream.decode('base64', stream)
 stream.through(exstream.decode('base64'))
+```
+
+## Signature
+
+```typescript
+decode(encoding: 'base64'): Exstream<Uint8Array, C>
 ```
 
 ## Related

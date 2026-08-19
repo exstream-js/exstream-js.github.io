@@ -10,21 +10,6 @@
 
 <p class="lead">Parse one chunked JSON document and emit selected values as soon as each is complete.</p>
 
-## Signature
-
-```typescript
-json<U = unknown>(
-  options?: JsonOptions | null,
-): Exstream<U, C>
-
-interface JsonOptions {
-  encoding?: string
-  path?: string
-  maxDepth?: number
-  maxValueBytes?: number
-}
-```
-
 ## Example
 
 ```javascript
@@ -92,6 +77,21 @@ stream.through(exstream.json(options))
 Pass `null` in the direct standalone form to apply defaults. Supply the output generic when the selected JSON shape is known: `stream.json<Event>(options)`.
 
 The generic is a compile-time assertion only. `json()` parses JSON syntax but does not validate the result against a TypeScript interface or application schema.
+
+## Signature
+
+```typescript
+json<U = unknown>(
+  options?: JsonOptions | null,
+): Exstream<U, C>
+
+interface JsonOptions {
+  encoding?: string
+  path?: string
+  maxDepth?: number
+  maxValueBytes?: number
+}
+```
 
 ## Related
 

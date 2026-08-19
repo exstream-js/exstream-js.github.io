@@ -10,13 +10,6 @@
 
 <p class="lead">Supply terminal demand, discard every successful output, and wait for the pipeline to finish.</p>
 
-## Signature
-
-```typescript
-Exstream<T>.drain(): Promise<void>
-Pipeline<Input, Output>.drain(): Destination<Input>
-```
-
 ## Example
 
 ```javascript
@@ -53,6 +46,13 @@ await source.pipeTo(destination)
 ```
 
 The destination consumes the pipeline's original input type. It keeps no source or running state; each `pipeTo()` call creates an independent operator chain. See [`destination()`](/docs/reference/destination/) for destinations that also need resource setup and cleanup.
+
+## Signature
+
+```typescript
+Exstream<T>.drain(): Promise<void>
+Pipeline<Input, Output>.drain(): Destination<Input>
+```
 
 ## Related
 

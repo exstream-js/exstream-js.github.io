@@ -10,13 +10,6 @@
 
 <p class="lead">Replace each input object with the value found at one property or nested field path.</p>
 
-## Signature
-
-```typescript
-pluck<K extends keyof T>(field: K): Exstream<T[K], C>
-pluck<D = undefined>(field: string, defaultValue?: D): Exstream<unknown | D, C>
-```
-
 ## Example
 
 ```javascript
@@ -59,6 +52,13 @@ stream.pluck('profile.email', 'missing')
 exstream.pipeline().pluck('profile.email', 'missing')
 exstream.pluck('profile.email', undefined, stream)
 stream.through(exstream.pluck('profile.email', 'missing'))
+```
+
+## Signature
+
+```typescript
+pluck<K extends keyof T>(field: K): Exstream<T[K], C>
+pluck<D = undefined>(field: string, defaultValue?: D): Exstream<unknown | D, C>
 ```
 
 ## Related

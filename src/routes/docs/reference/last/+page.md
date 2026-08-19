@@ -10,12 +10,6 @@
 
 <p class="lead">Consume the complete source and emit its final successful value.</p>
 
-## Signature
-
-```typescript
-last(): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -34,6 +28,12 @@ Memory is constant apart from the retained value. Downstream pressure propagates
 stream.last()
 exstream.pipeline().last()
 exstream.last(stream)
+```
+
+## Signature
+
+```typescript
+last(): Exstream<T, C>
 ```
 
 ## Related

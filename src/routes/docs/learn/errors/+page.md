@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: errors
+---
 
 <svelte:head>
   <title>Errors and lifecycle — Exstream</title>
@@ -47,8 +47,6 @@ const rejected = deadLetters.map(({ error, input }) => ({
 
 await Promise.all([output.pipeTo(processedWriter), rejected.pipeTo(deadLetterWriter)])
 ```
-
-<PlaygroundLink example="errors" />
 
 Both outputs participate in backpressure and must be consumed concurrently. A dead-letter destination is not a console dump: its records need enough information to audit, repair, replay, or deliberately discard the failed input.
 

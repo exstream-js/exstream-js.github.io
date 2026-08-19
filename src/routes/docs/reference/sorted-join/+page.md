@@ -10,18 +10,6 @@
 
 <p class="lead">Merge-join exactly two pre-sorted streams without collecting both inputs.</p>
 
-## Signature
-
-```typescript
-sortedJoin<K, A, B>(
-  leftKey: ((value: A, context: object) => K) | keyof A,
-  rightKey: ((value: B, context: object) => K) | keyof B,
-  type?: 'inner' | 'left' | 'right',
-  direction?: 'asc' | 'desc' | ((left: K, right: K, leftContext: object, rightContext: object) => boolean),
-  buffer?: number,
-): Exstream<{ key: K; a: A | null; b: B | null }, AggregateContext<unknown, object>>
-```
-
 ## Example
 
 ```javascript
@@ -59,6 +47,18 @@ Wrong outer cardinality rejects with `.sortedJoin() can merge only 2 exstream in
 ```javascript
 exstream([left, right]).sortedJoin('id', 'parentId', 'left', 'asc', 1)
 exstream.sortedJoin('id', 'parentId', 'left', 'asc', 1, exstream([left, right]))
+```
+
+## Signature
+
+```typescript
+sortedJoin<K, A, B>(
+  leftKey: ((value: A, context: object) => K) | keyof A,
+  rightKey: ((value: B, context: object) => K) | keyof B,
+  type?: 'inner' | 'left' | 'right',
+  direction?: 'asc' | 'desc' | ((left: K, right: K, leftContext: object, rightContext: object) => boolean),
+  buffer?: number,
+): Exstream<{ key: K; a: A | null; b: B | null }, AggregateContext<unknown, object>>
 ```
 
 ## Related

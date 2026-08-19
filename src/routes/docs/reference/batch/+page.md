@@ -10,12 +10,6 @@
 
 <p class="lead">Group successful values into arrays with a fixed maximum length.</p>
 
-## Signature
-
-```typescript
-batch(size: number): Exstream<T[], AggregateOutputContext<C, T[]>>
-```
-
 ## Example
 
 ```javascript
@@ -65,6 +59,12 @@ stream.batch(100)
 exstream.pipeline().batch(100)
 exstream.batch(100, stream)
 stream.through(exstream.batch(100))
+```
+
+## Signature
+
+```typescript
+batch(size: number): Exstream<T[], AggregateOutputContext<C, T[]>>
 ```
 
 ## Related

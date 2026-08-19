@@ -10,12 +10,6 @@
 
 <p class="lead">Skip the first `n` successful values and emit the rest.</p>
 
-## Signature
-
-```typescript
-drop(n: number): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -42,6 +36,12 @@ stream.drop(1)
 exstream.pipeline().drop(1)
 exstream.drop(1, stream)
 stream.through(exstream.drop(1))
+```
+
+## Signature
+
+```typescript
+drop(n: number): Exstream<T, C>
 ```
 
 ## Related

@@ -10,13 +10,6 @@
 
 <p class="lead">Emit the first value accepted by a synchronous predicate, then stop this branch.</p>
 
-## Signature
-
-```typescript
-find<S extends T>(fn: (value: T, context: C) => value is S): Exstream<S, C>
-find(fn: (value: T, context: C) => unknown): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -54,6 +47,13 @@ stream.find(predicate)
 exstream.pipeline().find(predicate)
 exstream.find(predicate, stream)
 stream.through(exstream.find(predicate))
+```
+
+## Signature
+
+```typescript
+find<S extends T>(fn: (value: T, context: C) => value is S): Exstream<S, C>
+find(fn: (value: T, context: C) => unknown): Exstream<T, C>
 ```
 
 ## Related

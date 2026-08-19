@@ -10,18 +10,6 @@
 
 <p class="lead">Keep successful values whose synchronous predicate returns a truthy result.</p>
 
-## Signature
-
-```typescript
-filter<S extends T>(
-  fn: (value: T, context: CallbackContext<T, C>) => value is S,
-): Exstream<S, C>
-
-filter(
-  fn: (value: T, context: CallbackContext<T, C>) => unknown,
-): Exstream<T, C>
-```
-
 ## Example
 
 ```typescript
@@ -72,6 +60,18 @@ stream.filter(predicate)
 exstream.pipeline().filter(predicate)
 exstream.filter(predicate, stream)
 stream.through(exstream.filter(predicate))
+```
+
+## Signature
+
+```typescript
+filter<S extends T>(
+  fn: (value: T, context: CallbackContext<T, C>) => value is S,
+): Exstream<S, C>
+
+filter(
+  fn: (value: T, context: CallbackContext<T, C>) => unknown,
+): Exstream<T, C>
 ```
 
 ## Related

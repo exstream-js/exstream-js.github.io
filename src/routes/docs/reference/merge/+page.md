@@ -10,15 +10,6 @@
 
 <p class="lead">Lazily consume Exstreams or stream factories carried by the outer stream, with bounded activation and optional outer-source order.</p>
 
-## Signature
-
-```typescript
-merge(
-  parallelism?: number,
-  preserveOrder?: boolean,
-): Exstream<InnerValue, InnerContext>
-```
-
 ## Example
 
 ```javascript
@@ -79,6 +70,15 @@ Record errors from the outer or any inner stream are forwarded in the selected o
 ## Forms
 
 `merge()` is available only as an instance method on the outer stream of Exstreams or stream factories. It is not a reusable-pipeline or standalone operator because it coordinates live inner stream instances.
+
+## Signature
+
+```typescript
+merge(
+  parallelism?: number,
+  preserveOrder?: boolean,
+): Exstream<InnerValue, InnerContext>
+```
 
 ## Related
 

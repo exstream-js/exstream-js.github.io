@@ -10,12 +10,6 @@
 
 <p class="lead">Emit no more than a fixed number of values per time window, delaying rather than dropping excess input.</p>
 
-## Signature
-
-```typescript
-ratelimit(num: number, milliseconds: number): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -46,6 +40,12 @@ stream.ratelimit(100, 60_000)
 exstream.pipeline().ratelimit(100, 60_000)
 exstream.ratelimit(100, 60_000, stream)
 stream.through(exstream.ratelimit(100, 60_000))
+```
+
+## Signature
+
+```typescript
+ratelimit(num: number, milliseconds: number): Exstream<T, C>
 ```
 
 ## Related

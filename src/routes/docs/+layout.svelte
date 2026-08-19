@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'
+  import DocsPagination from '$lib/components/DocsPagination.svelte'
   import TableOfContents from '$lib/components/TableOfContents.svelte'
   import { docsNavigation } from '$lib/content/navigation'
 
@@ -76,6 +77,7 @@
     {#key page.url.pathname}
       <div class="page-frame">
         {@render children()}
+        <DocsPagination />
       </div>
     {/key}
   </article>

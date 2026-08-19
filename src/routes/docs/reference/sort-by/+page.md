@@ -10,14 +10,6 @@
 
 <p class="lead">Buffer the complete stream and order it with a synchronous comparison function.</p>
 
-## Signature
-
-```typescript
-sortBy(
-  fn: (left: T, right: T, leftContext: C, rightContext: C) => number,
-): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -47,6 +39,14 @@ stream.sortBy(compare)
 exstream.pipeline().sortBy(compare)
 exstream.sortBy(compare, stream)
 stream.through(exstream.sortBy(compare))
+```
+
+## Signature
+
+```typescript
+sortBy(
+  fn: (left: T, right: T, leftContext: C, rightContext: C) => number,
+): Exstream<T, C>
 ```
 
 ## Related

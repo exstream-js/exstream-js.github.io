@@ -11,8 +11,6 @@
 
 # Quick start
 
-<p class="lead">Fetch a remote CSV, parse it while it arrives, transform its records, and write the result to a destination.</p>
-
 <QuickStartTabs />
 
 The Node.js example writes JSON Lines to a file. The browser examples write the same records into the page. Only the source and destination change.

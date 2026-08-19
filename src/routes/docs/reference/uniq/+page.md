@@ -10,12 +10,6 @@
 
 <p class="lead">Keep the first occurrence of every distinct value.</p>
 
-## Signature
-
-```typescript
-uniq(): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -37,6 +31,12 @@ Seen values are stored in a JavaScript `Set`, so equality follows SameValueZero:
 stream.uniq()
 exstream.pipeline().uniq()
 exstream.uniq(stream)
+```
+
+## Signature
+
+```typescript
+uniq(): Exstream<T, C>
 ```
 
 ## Related

@@ -10,6 +10,41 @@
 
 <p class="lead">Define a reusable terminal consumer without implementing a Node writable or Web WritableStream.</p>
 
+## Resource lifecycle
+
+Use `destination()` directly when every run needs setup and cleanup:
+
+```typescript
+const database = exstream.destination<Order>(async (source, { signal }) => {
+  const client = await connect({ signal })
+  try {
+    await source
+      .batch(200)
+      .mapAsync((orders, { signal }) => client.insertMany(orders, { signal }), {
+        concurrency: 4,
+        ordered: false,
+      })
+      .drain()
+  } finally {
+    await client.close()
+  }
+})
+
+await orders.pipeTo(database)
+```
+
+The callback receives an Exstream, not a low-level stream primitive. It must return a promise that represents complete consumption. Resolving without consuming the source rejects `pipeTo()` with `EXSTREAM_DESTINATION_INCOMPLETE`; returning a non-promise rejects with `EXSTREAM_DESTINATION_NO_PROMISE`.
+
+The same destination can be used more than once, including concurrently. Each call receives a separate source branch and signal, so per-run clients and other mutable state belong inside the callback.
+
+## Errors and cancellation
+
+Unhandled source and operator errors reject `pipeTo()` with their original provenance. An error thrown by the destination callback is marked as a sink failure at stage `destination` and aborts that source branch. Put resource cleanup in `finally` around the awaited input chain.
+
+An external `pipeTo(destination, { signal })` abort also cancels the source branch and the signal passed to the callback. Pass that signal to connection setup and other work that can still be pending before the input chain is attached.
+
+Retries can repeat a request after the remote service has already applied it. Bulk POST destinations should use an idempotency key or another deduplication mechanism when retry is enabled.
+
 ## Signature
 
 ```typescript
@@ -45,41 +80,6 @@ await source.pipeTo(ordersApi)
 ```
 
 `batch(200)` bounds each request, while `mapAsync()` controls how many requests may be active. Because no later value depends on request order, `ordered: false` lets completed batches release their slots immediately.
-
-## Resource lifecycle
-
-Use `destination()` directly when every run needs setup and cleanup:
-
-```typescript
-const database = exstream.destination<Order>(async (source, { signal }) => {
-  const client = await connect({ signal })
-  try {
-    await source
-      .batch(200)
-      .mapAsync((orders, { signal }) => client.insertMany(orders, { signal }), {
-        concurrency: 4,
-        ordered: false,
-      })
-      .drain()
-  } finally {
-    await client.close()
-  }
-})
-
-await orders.pipeTo(database)
-```
-
-The callback receives an Exstream, not a low-level stream primitive. It must return a promise that represents complete consumption. Resolving without consuming the source rejects `pipeTo()` with `EXSTREAM_DESTINATION_INCOMPLETE`; returning a non-promise rejects with `EXSTREAM_DESTINATION_NO_PROMISE`.
-
-The same destination can be used more than once, including concurrently. Each call receives a separate source branch and signal, so per-run clients and other mutable state belong inside the callback.
-
-## Errors and cancellation
-
-Unhandled source and operator errors reject `pipeTo()` with their original provenance. An error thrown by the destination callback is marked as a sink failure at stage `destination` and aborts that source branch. Put resource cleanup in `finally` around the awaited input chain.
-
-An external `pipeTo(destination, { signal })` abort also cancels the source branch and the signal passed to the callback. Pass that signal to connection setup and other work that can still be pending before the input chain is attached.
-
-Retries can repeat a request after the remote service has already applied it. Bulk POST destinations should use an idempotency key or another deduplication mechanism when retry is enabled.
 
 ## Related
 

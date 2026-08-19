@@ -10,15 +10,6 @@
 
 <p class="lead">Split successful values and recoverable record errors into two reliable branches.</p>
 
-## Signature
-
-```typescript
-routeErrors(): {
-  output: Exstream<T, C>
-  deadLetters: Exstream<{ error: ExstreamError<T>; input: T }, C>
-}
-```
-
 ## Example
 
 ```javascript
@@ -50,6 +41,15 @@ Fatal source, sink, lifecycle, and cancellation failures bypass dead-letter rout
 ```javascript
 stream.routeErrors()
 exstream.routeErrors(stream)
+```
+
+## Signature
+
+```typescript
+routeErrors(): {
+  output: Exstream<T, C>
+  deadLetters: Exstream<{ error: ExstreamError<T>; input: T }, C>
+}
 ```
 
 ## Related

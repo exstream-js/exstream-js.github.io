@@ -10,29 +10,6 @@
 
 <p class="lead">Run promise-returning work with bounded concurrency, optional completion-order output, retries, timeouts, and cancellation.</p>
 
-## Signature
-
-```typescript
-mapAsync<U>(
-  fn: (value: T, context: C) => U | PromiseLike<U>,
-  options?: MapAsyncOptions<T, C> | null,
-): Exstream<Awaited<U>, C>
-
-interface MapAsyncOptions<T, C extends object> {
-  concurrency?: number
-  ordered?: boolean
-  retry?: number | MapAsyncRetry<T, C> | null
-  timeout?: number | null
-  signal?: AbortSignal
-}
-
-interface MapAsyncRetry<T, C extends object> {
-  retries?: number
-  delay?: number | ((attempt: number, error: ExstreamError<T>, value: T, context: C) => number | PromiseLike<number>)
-  when?: (error: ExstreamError<T>, value: T, context: C, attempt: number) => boolean | PromiseLike<boolean>
-}
-```
-
 ## Example
 
 ```javascript
@@ -149,6 +126,29 @@ stream.mapAsync(fn, options)
 exstream.pipeline().mapAsync(fn, options)
 exstream.mapAsync(fn, null, stream)
 stream.through(exstream.mapAsync(fn, options))
+```
+
+## Signature
+
+```typescript
+mapAsync<U>(
+  fn: (value: T, context: C) => U | PromiseLike<U>,
+  options?: MapAsyncOptions<T, C> | null,
+): Exstream<Awaited<U>, C>
+
+interface MapAsyncOptions<T, C extends object> {
+  concurrency?: number
+  ordered?: boolean
+  retry?: number | MapAsyncRetry<T, C> | null
+  timeout?: number | null
+  signal?: AbortSignal
+}
+
+interface MapAsyncRetry<T, C extends object> {
+  retries?: number
+  delay?: number | ((attempt: number, error: ExstreamError<T>, value: T, context: C) => number | PromiseLike<number>)
+  when?: (error: ExstreamError<T>, value: T, context: C, attempt: number) => boolean | PromiseLike<boolean>
+}
 ```
 
 ## Related

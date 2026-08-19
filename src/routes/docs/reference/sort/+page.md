@@ -10,12 +10,6 @@
 
 <p class="lead">Buffer the complete stream and emit its values in ascending string order.</p>
 
-## Signature
-
-```typescript
-sort(): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -37,6 +31,12 @@ Values are compared using `String(value)` and ascending code-unit order, not num
 stream.sort()
 exstream.pipeline().sort()
 exstream.sort(stream)
+```
+
+## Signature
+
+```typescript
+sort(): Exstream<T, C>
 ```
 
 ## Related

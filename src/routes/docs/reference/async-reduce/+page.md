@@ -10,15 +10,6 @@
 
 <p class="lead">Combine all successful values into one accumulator while awaiting each reduction step.</p>
 
-## Signature
-
-```typescript
-asyncReduce<A>(
-  fn: (accumulator: A, value: T, context: C) => A | PromiseLike<A>,
-  initialValue: A,
-): Exstream<A, AggregateOutputContext<C, A>>
-```
-
 ## Example
 
 ```javascript
@@ -51,6 +42,15 @@ stream.asyncReduce(reducer, initialValue)
 exstream.pipeline().asyncReduce(reducer, initialValue)
 exstream.asyncReduce(reducer, initialValue, stream)
 stream.through(exstream.asyncReduce(reducer, initialValue))
+```
+
+## Signature
+
+```typescript
+asyncReduce<A>(
+  fn: (accumulator: A, value: T, context: C) => A | PromiseLike<A>,
+  initialValue: A,
+): Exstream<A, AggregateOutputContext<C, A>>
 ```
 
 ## Related

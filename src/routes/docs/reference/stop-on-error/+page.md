@@ -10,14 +10,6 @@
 
 <p class="lead">Pass successful values until the first record error, handle it once, then stop this branch.</p>
 
-## Signature
-
-```typescript
-stopOnError<U = T>(
-  fn: (error: ExstreamError<T>, push: Push<U, C>, context: C) => void,
-): Exstream<T | U, C>
-```
-
 ## Example
 
 ```javascript
@@ -51,6 +43,14 @@ stream.stopOnError(handler)
 exstream.pipeline().stopOnError(handler)
 exstream.stopOnError(handler, stream)
 stream.through(exstream.stopOnError(handler))
+```
+
+## Signature
+
+```typescript
+stopOnError<U = T>(
+  fn: (error: ExstreamError<T>, push: Push<U, C>, context: C) => void,
+): Exstream<T | U, C>
 ```
 
 ## Related

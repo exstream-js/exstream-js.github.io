@@ -10,23 +10,6 @@
 
 <p class="lead">Serialize each successful value as one compact JSON record followed by a line ending.</p>
 
-## Signature
-
-```typescript
-jsonlStringify(
-  options?: JsonlStringifyOptions | null,
-): Exstream<string | Uint8Array, C>
-
-interface JsonlStringifyOptions {
-  encoding?: string
-  lineEnding?: string
-  maxRecordBytes?: number
-  replacer?:
-    | readonly (number | string)[]
-    | ((this: unknown, key: string, value: unknown) => unknown)
-}
-```
-
 ## Example
 
 ```javascript
@@ -70,6 +53,23 @@ stream.through(exstream.jsonlStringify(options))
 ```
 
 Pass `null` in the direct standalone form to apply defaults.
+
+## Signature
+
+```typescript
+jsonlStringify(
+  options?: JsonlStringifyOptions | null,
+): Exstream<string | Uint8Array, C>
+
+interface JsonlStringifyOptions {
+  encoding?: string
+  lineEnding?: string
+  maxRecordBytes?: number
+  replacer?:
+    | readonly (number | string)[]
+    | ((this: unknown, key: string, value: unknown) => unknown)
+}
+```
 
 ## Related
 

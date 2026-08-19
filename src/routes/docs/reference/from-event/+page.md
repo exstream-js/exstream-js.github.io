@@ -6,23 +6,6 @@
 
 <p class="lead">Adapt repeated browser or Node events into a hot Exstream source with explicit overflow policy.</p>
 
-## Signature
-
-```typescript
-fromEvent<Args extends unknown[], T>(
-  target: EventTargetLike | EventEmitterLike,
-  event: string | symbol,
-  options?: FromEventOptions<Args, T> | null,
-): Exstream<T, RecordContext<T>> & { received: number }
-
-interface FromEventOptions<Args extends unknown[], T> extends StreamOptions {
-  map?: (...args: Args) => T
-  end?: string | symbol | false
-  error?: string | symbol | false
-  highWaterMark?: number
-}
-```
-
 ## Example
 
 ```javascript
@@ -43,7 +26,24 @@ const messages = exstream.fromEvent(socket, 'message', {
 
 ## Hot-source behavior
 
-`received` counts data events before mapping, including events later dropped or failed. Pausable targets are paused when `writeData()` reports pressure and resumed on `drain`. Non-pausable targets keep producing into the configured buffer. A mapping exception or configured error event is a fatal source failure. End, destroy, or abort removes every listener.
+`received` counts data events before mapping, including events later dropped or failed. Pausable targets are paused when the internal write reports pressure and resumed on `drain`. Non-pausable targets keep producing into the configured buffer. A mapping exception or configured error event is a fatal source failure. Normal completion or signal cancellation removes every listener.
+
+## Signature
+
+```typescript
+fromEvent<Args extends unknown[], T>(
+  target: EventTargetLike | EventEmitterLike,
+  event: string | symbol,
+  options?: FromEventOptions<Args, T> | null,
+): Exstream<T, RecordContext<T>> & { received: number }
+
+interface FromEventOptions<Args extends unknown[], T> extends StreamOptions {
+  map?: (...args: Args) => T
+  end?: string | symbol | false
+  error?: string | symbol | false
+  highWaterMark?: number
+}
+```
 
 ## Related
 

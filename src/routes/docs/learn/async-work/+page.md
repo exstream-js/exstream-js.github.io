@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: async-work
+---
 
 <svelte:head>
   <title>Async processing — Exstream</title>
@@ -57,8 +57,6 @@ const enrichedOrders = exstream(orders).mapAsync(
   },
 )
 ```
-
-<PlaygroundLink example="async-work" />
 
 This operator owns at most eight records: callbacks still running, retry delays, and completed results waiting for downstream. When the window is full it stops asking upstream for more input. A slow destination therefore reduces new work instead of creating a separate result queue.
 

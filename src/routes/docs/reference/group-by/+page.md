@@ -10,14 +10,6 @@
 
 <p class="lead">Collect the entire stream into an object whose keys map to arrays of matching values.</p>
 
-## Signature
-
-```typescript
-groupBy<K extends PropertyKey>(
-  selector: ((value: T, context: C) => K) | keyof T,
-): Exstream<Record<K, T[]>, AggregateContext<Record<K, T[]>, C>>
-```
-
 ## Example
 
 ```javascript
@@ -48,6 +40,14 @@ stream.groupBy('region')
 exstream.pipeline().groupBy('region')
 exstream.groupBy((row) => row.region, stream)
 stream.through(exstream.groupBy('region'))
+```
+
+## Signature
+
+```typescript
+groupBy<K extends PropertyKey>(
+  selector: ((value: T, context: C) => K) | keyof T,
+): Exstream<Record<K, T[]>, AggregateContext<Record<K, T[]>, C>>
 ```
 
 ## Related

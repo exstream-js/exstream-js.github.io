@@ -10,20 +10,6 @@
 
 <p class="lead">Parse newline-delimited JSON incrementally and emit one independent value per record.</p>
 
-## Signature
-
-```typescript
-jsonl<U = unknown>(options?: JsonlOptions | null): Exstream<U, C>
-
-interface JsonlOptions {
-  encoding?: string
-  maxDepth?: number
-  maxRecordBytes?: number
-  skipEmptyLines?: boolean
-  reviver?: (this: unknown, key: string, value: unknown) => unknown
-}
-```
-
 ## Example
 
 ```javascript
@@ -72,6 +58,20 @@ stream.through(exstream.jsonl(options))
 Pass `null` in the direct standalone form to apply defaults. Supply an output generic such as `stream.jsonl<Event>()` when the record shape is known.
 
 The generic is a compile-time assertion only. Each line is checked as JSON, not validated against a TypeScript interface or application schema.
+
+## Signature
+
+```typescript
+jsonl<U = unknown>(options?: JsonlOptions | null): Exstream<U, C>
+
+interface JsonlOptions {
+  encoding?: string
+  maxDepth?: number
+  maxRecordBytes?: number
+  skipEmptyLines?: boolean
+  reviver?: (this: unknown, key: string, value: unknown) => unknown
+}
+```
 
 ## Related
 

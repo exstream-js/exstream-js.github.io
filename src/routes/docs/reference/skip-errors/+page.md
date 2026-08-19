@@ -10,14 +10,6 @@
 
 <p class="lead">Drop every recoverable record error, or only errors accepted by a synchronous predicate.</p>
 
-## Signature
-
-```typescript
-skipErrors(
-  predicate?: ((error: ExstreamError<T>, input: T, context: C) => unknown) | null,
-): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -59,6 +51,14 @@ stream.skipErrors(predicate)
 exstream.pipeline().skipErrors(predicate)
 exstream.skipErrors(null, stream)
 stream.through(exstream.skipErrors(predicate))
+```
+
+## Signature
+
+```typescript
+skipErrors(
+  predicate?: ((error: ExstreamError<T>, input: T, context: C) => unknown) | null,
+): Exstream<T, C>
 ```
 
 ## Related

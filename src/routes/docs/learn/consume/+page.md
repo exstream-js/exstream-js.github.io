@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: consume
+---
 
 <svelte:head>
   <title>Consume a pipeline — Exstream</title>
@@ -33,8 +33,6 @@ Operators such as `map()`, `filter()`, `collect()`, and `reduce()` return anothe
 
 `start()` is different: it only releases a source whose automatic startup was disabled. Without a downstream consumer, there is still no demand.
 
-<PlaygroundLink example="consume" />
-
 ## Pick the boundary
 
 | You need                            | Use                                 | Result                                         |
@@ -45,6 +43,7 @@ Operators such as `map()`, `filter()`, `collect()`, and `reduce()` return anothe
 | Send values to a destination        | `await stream.pipeTo(destination)`  | `Promise<void>`                                |
 | Pull values one at a time           | `for await (const value of stream)` | Native async iteration                         |
 | Expose a Node readable              | `stream.toNodeReadable()`           | Node `Readable`                                |
+| Expose a reusable Node transform    | `pipeline.toNodeTransform()`        | Node `Transform`                               |
 | Expose a Web readable               | `stream.toWebReadable()`            | Web `ReadableStream`                           |
 
 ## Finish and await
@@ -129,6 +128,16 @@ await nodePipeline(
 )
 ```
 
+When the Exstream part is a reusable definition rather than a source-backed stream, convert it to a native Node transform:
+
+```javascript
+const normalize = exstream.pipeline().csv({ header: true }).map(normalizeOrder).jsonlStringify()
+
+await nodePipeline(input, normalize.toNodeTransform(), output)
+```
+
+The transform accepts pipeline input on its writable side and emits pipeline output on its readable side. Each call creates an independent native stream and snapshots the operators currently recorded in the definition.
+
 In a Web runtime, `toWebReadable()` can become a streaming response body:
 
 ```javascript
@@ -137,4 +146,4 @@ return new Response(exstream(rows).jsonlStringify().toWebReadable(), {
 })
 ```
 
-Both adapters pass demand and cancellation between Exstream and the native reader. See [`toNodeReadable()`](/docs/reference/to-node-readable/) and [`toWebReadable()`](/docs/reference/to-web-readable/).
+These adapters pass demand and cancellation across the native boundary. See [`toNodeReadable()`](/docs/reference/to-node-readable/), [`toNodeTransform()`](/docs/reference/to-node-transform/), and [`toWebReadable()`](/docs/reference/to-web-readable/).

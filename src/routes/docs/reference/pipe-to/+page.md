@@ -10,27 +10,6 @@
 
 <p class="lead">Send a stream to a reusable Exstream destination or a platform writable and await complete processing.</p>
 
-## Signature
-
-```typescript
-pipeTo(
-  destination: Destination<T>,
-  options?: { signal?: AbortSignal },
-): Promise<void>
-
-pipeTo(
-  destination: NodeWritableLike<T> | WritableStream<T>,
-  options?: PipeOptions,
-): Promise<void>
-
-interface PipeOptions {
-  end?: boolean
-  signal?: AbortSignal
-  preventAbort?: boolean
-  preventClose?: boolean
-}
-```
-
 ## Example
 
 ```javascript
@@ -111,6 +90,27 @@ Unhandled record errors, source failures, structural format failures, destinatio
 
 ```javascript
 await stream.pipeTo(destination, options)
+```
+
+## Signature
+
+```typescript
+pipeTo(
+  destination: Destination<T>,
+  options?: { signal?: AbortSignal },
+): Promise<void>
+
+pipeTo(
+  destination: NodeWritableLike<T> | WritableStream<T>,
+  options?: PipeOptions,
+): Promise<void>
+
+interface PipeOptions {
+  end?: boolean
+  signal?: AbortSignal
+  preventAbort?: boolean
+  preventClose?: boolean
+}
 ```
 
 ## Related

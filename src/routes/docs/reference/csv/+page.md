@@ -10,34 +10,6 @@
 
 <p class="lead">Parse strings or byte chunks incrementally. Emit each CSV record as a string array or, when headers are enabled, as an object.</p>
 
-## Signature
-
-```typescript
-csv<H extends readonly PropertyKey[] | boolean = false>(
-  options?: CsvOptions<H> | null,
-): Exstream<CsvRow<H>, C>
-
-interface CsvOptions<H extends readonly PropertyKey[] | boolean = false> {
-  encoding?: string
-  separator?: string
-  quote?: string
-  escape?: string
-  fastMode?: boolean
-  skipEmptyLines?: boolean
-  header?: H | ((row: string[]) => readonly PropertyKey[])
-  maxColumns?: number
-  maxRecordBytes?: number
-}
-
-type CsvRow<H> = H extends readonly (infer K extends PropertyKey)[]
-  ? Record<K, string>
-  : H extends true
-    ? Record<string, string>
-    : string[]
-```
-
-`options` is optional. Passing `null` or `undefined` applies every default below. Other non-object values and arrays are rejected when the operator is created.
-
 ## Example
 
 ```javascript
@@ -224,6 +196,34 @@ stream.through(exstream.csv(options))
 ```
 
 Pass `null` in the direct standalone form to apply defaults.
+
+## Signature
+
+```typescript
+csv<H extends readonly PropertyKey[] | boolean = false>(
+  options?: CsvOptions<H> | null,
+): Exstream<CsvRow<H>, C>
+
+interface CsvOptions<H extends readonly PropertyKey[] | boolean = false> {
+  encoding?: string
+  separator?: string
+  quote?: string
+  escape?: string
+  fastMode?: boolean
+  skipEmptyLines?: boolean
+  header?: H | ((row: string[]) => readonly PropertyKey[])
+  maxColumns?: number
+  maxRecordBytes?: number
+}
+
+type CsvRow<H> = H extends readonly (infer K extends PropertyKey)[]
+  ? Record<K, string>
+  : H extends true
+    ? Record<string, string>
+    : string[]
+```
+
+`options` is optional. Passing `null` or `undefined` applies every default below. Other non-object values and arrays are rejected when the operator is created.
 
 ## Related
 

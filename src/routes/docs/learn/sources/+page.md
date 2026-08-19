@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: sources
+---
 
 <svelte:head>
   <title>Create a source — Exstream</title>
@@ -59,8 +59,6 @@ async function* pages() {
 const orders = exstream(pages())
 ```
 
-<PlaygroundLink example="sources" />
-
 If the branch is cancelled early, Exstream calls the iterator's `return()` method when available.
 
 ## Platform streams
@@ -73,7 +71,7 @@ const response = await fetch('/orders.jsonl')
 const orders = exstream(response.body).jsonl().map(normalizeOrder)
 ```
 
-Exstream acquires a Web `ReadableStream` reader, reads on demand, and cancels the reader when the branch is destroyed. In Node.js, a readable stream can be passed in the same position:
+Exstream acquires a Web `ReadableStream` reader, reads on demand, and cancels the reader when the branch terminates early. In Node.js, a readable stream can be passed in the same position:
 
 ```javascript
 import { createReadStream } from 'node:fs'
@@ -126,7 +124,7 @@ const messages = exstream.fromEvent(socket, 'message', {
 
 By default, one event argument becomes the value and multiple arguments become an array. `map` can define a more useful record shape. Pausable emitters participate in backpressure; non-pausable hot sources use a finite `highWaterMark`—`1024` by default—and need an intentional overflow policy.
 
-Destroying or aborting the stream removes the listeners. An `Error` received on the data event remains ordinary data; the configured `error` event is a fatal source failure.
+Normal completion or cancellation through the supplied signal removes the listeners. An `Error` received on the data event remains ordinary data; the configured `error` event is a fatal source failure.
 
 ## Buffer and cancellation
 
@@ -143,7 +141,3 @@ const source = exstream(input, {
 `bufferLimit` defaults to `Infinity`; `overflow` defaults to `'error'`. The drop policies require a finite limit. Prefer pull-based sources and small, deliberate buffers over using a large queue to hide a pressure mismatch.
 
 An empty call, `exstream()`, creates a writable source. It is useful for adapters, but it makes production and shutdown your responsibility: respect the boolean returned by `write()`, call `end()`, and propagate cancellation.
-
-## Next
-
-Read the [pipeline model](/docs/learn/pipeline-model/), then follow demand through [backpressure](/docs/concepts/backpressure/) and choose a [terminal consumer](/docs/learn/consume/).

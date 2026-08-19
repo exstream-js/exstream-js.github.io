@@ -10,29 +10,6 @@
 
 <p class="lead">Run a synchronous callback for every successful input and emit exactly one result.</p>
 
-## Signature
-
-```typescript
-map<U>(
-  fn: (value: T, context: CallbackContext<T, C>) => U,
-  options: { wrap: true },
-): Exstream<
-  U extends PromiseLike<infer R>
-    ? Promise<{ input: T; output: Awaited<R> }>
-    : { input: T; output: U },
-  MaterializedContext<C, T>
->
-
-map<U>(
-  fn: (value: T, context: CallbackContext<T, C>) => U,
-  options?: MapOptions | null,
-): Exstream<U, NextContext<C, U>>
-
-interface MapOptions {
-  wrap?: boolean
-}
-```
-
 ## Example
 
 ```javascript
@@ -98,6 +75,29 @@ stream.map(fn, { wrap: true })
 exstream.pipeline().map(fn, { wrap: true })
 exstream.map(fn, null, stream)
 stream.through(exstream.map(fn, { wrap: true }))
+```
+
+## Signature
+
+```typescript
+map<U>(
+  fn: (value: T, context: CallbackContext<T, C>) => U,
+  options: { wrap: true },
+): Exstream<
+  U extends PromiseLike<infer R>
+    ? Promise<{ input: T; output: Awaited<R> }>
+    : { input: T; output: U },
+  MaterializedContext<C, T>
+>
+
+map<U>(
+  fn: (value: T, context: CallbackContext<T, C>) => U,
+  options?: MapOptions | null,
+): Exstream<U, NextContext<C, U>>
+
+interface MapOptions {
+  wrap?: boolean
+}
 ```
 
 ## Related

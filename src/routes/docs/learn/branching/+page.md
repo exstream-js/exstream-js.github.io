@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: branching
+---
 
 <svelte:head>
   <title>Branch and observe — Exstream</title>
@@ -23,8 +23,6 @@ const auditFile = source.fork()
 
 await Promise.all([database.pipeTo(databaseWriter), auditFile.jsonlStringify().pipeTo(auditWriter)])
 ```
-
-<PlaygroundLink example="branching" />
 
 Every `fork()` participates in backpressure. The shared source advances only when all reliable branches can make progress. A slow audit destination may therefore slow the database branch too.
 

@@ -10,12 +10,6 @@
 
 <p class="lead">Decode chunks incrementally and emit text separated by Unix or Windows line endings.</p>
 
-## Signature
-
-```typescript
-split(encoding?: string): Exstream<string, C>
-```
-
 ## Example
 
 ```javascript
@@ -43,6 +37,12 @@ stream.split()
 exstream.pipeline().split('utf8')
 exstream.split('utf8', stream)
 stream.through(exstream.split())
+```
+
+## Signature
+
+```typescript
+split(encoding?: string): Exstream<string, C>
 ```
 
 ## Related

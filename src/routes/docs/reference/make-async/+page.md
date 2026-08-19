@@ -10,12 +10,6 @@
 
 <p class="lead">Periodically yield a long synchronous pipeline to the next event-loop turn.</p>
 
-## Signature
-
-```typescript
-makeAsync(maxSyncExecutionTime: number): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -45,6 +39,12 @@ stream.makeAsync(8)
 exstream.pipeline().makeAsync(8)
 exstream.makeAsync(8, stream)
 stream.through(exstream.makeAsync(8))
+```
+
+## Signature
+
+```typescript
+makeAsync(maxSyncExecutionTime: number): Exstream<T, C>
 ```
 
 ## Related

@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: backpressure
+---
 
 <svelte:head>
   <title>Backpressure — Exstream</title>
@@ -49,8 +49,6 @@ const enriched = exstream(records).mapAsync(loadCustomer, {
 `fork()` is reliable: every branch participates in backpressure. If one branch is slow, the shared source must respect it.
 
 `observe()` is best-effort: it does not slow the main flow. Because a non-blocking observer can fall behind, it needs an explicit buffer limit and overflow policy. Use it for metrics, sampling, and diagnostics—not for data that must arrive.
-
-<PlaygroundLink example="backpressure" />
 
 ## Source limits
 

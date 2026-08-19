@@ -26,7 +26,7 @@ Node uses its native event base. Browser builds provide the same listed surface;
 | Event   | Arguments      | When                                                                                                             |
 | ------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `error` | `error`        | A record error has no downstream handler/consumer, or an abort/fatal reason is observed by a registered listener |
-| `fatal` | `error, input` | `fail()` propagates a non-recoverable graph failure                                                              |
+| `fatal` | `error, input` | A non-recoverable source, operator, format, or destination failure propagates through the graph                  |
 | `abort` | `reason`       | State transitions to aborted                                                                                     |
 | `end`   | none           | Readable stream reaches any terminal state                                                                       |
 | `drain` | none           | Writable root can accept production again                                                                        |
@@ -35,4 +35,4 @@ Platform adapters can also surface familiar events such as `finish` or `close`. 
 
 ## Related
 
-[`stream state`](/docs/reference/stream-state/), [`abort()`](/docs/reference/abort/), [`write()`](/docs/reference/write/), [`errors()`](/docs/reference/errors/)
+[`stream state`](/docs/reference/stream-state/), [`write()`](/docs/reference/write/), [`errors()`](/docs/reference/errors/), [`pipeTo()`](/docs/reference/pipe-to/)

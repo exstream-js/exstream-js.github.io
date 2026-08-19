@@ -10,12 +10,6 @@
 
 <p class="lead">Buffer all successful values and emit one array when the source ends.</p>
 
-## Signature
-
-```typescript
-collect(): Exstream<T[], AggregateOutputContext<C, T[]>>
-```
-
 ## Example
 
 ```javascript
@@ -53,6 +47,12 @@ Record errors pass through immediately and are excluded from the array. If handl
 stream.collect()
 exstream.pipeline().collect()
 exstream.collect(stream)
+```
+
+## Signature
+
+```typescript
+collect(): Exstream<T[], AggregateOutputContext<C, T[]>>
 ```
 
 ## Related

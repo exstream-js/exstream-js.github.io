@@ -10,14 +10,6 @@
 
 <p class="lead">Collect the complete stream into an object indexed by a unique key.</p>
 
-## Signature
-
-```typescript
-keyBy<K extends PropertyKey>(
-  selector: ((value: T, context: C) => K) | keyof T,
-): Exstream<Record<K, T>, AggregateContext<Record<K, T>, C>>
-```
-
 ## Example
 
 ```javascript
@@ -45,6 +37,14 @@ stream.keyBy('id')
 exstream.pipeline().keyBy('id')
 exstream.keyBy((row) => row.id, stream)
 stream.through(exstream.keyBy('id'))
+```
+
+## Signature
+
+```typescript
+keyBy<K extends PropertyKey>(
+  selector: ((value: T, context: C) => K) | keyof T,
+): Exstream<Record<K, T>, AggregateContext<Record<K, T>, C>>
 ```
 
 ## Related

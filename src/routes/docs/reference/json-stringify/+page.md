@@ -10,31 +10,6 @@
 
 <p class="lead">Stream values into one JSON array, optionally nested in an object envelope with leading and final properties.</p>
 
-## Signature
-
-```typescript
-jsonStringify<FinalProperties extends object = Record<string, unknown>>(
-  options?: JsonStringifyOptions<FinalProperties> | null,
-): Exstream<string | Uint8Array, C>
-
-interface JsonStringifyOptions<FinalProperties extends object> {
-  encoding?: string
-  path?: string
-  properties?: Record<string, unknown>
-  maxValueBytes?: number
-  replacer?:
-    | readonly (number | string)[]
-    | ((this: unknown, key: string, value: unknown) => unknown)
-  finalize?: (stats: JsonStringifyStats) => FinalProperties | PromiseLike<FinalProperties>
-}
-
-interface JsonStringifyStats {
-  readonly count: number
-  readonly bytesWritten: number
-  readonly signal: AbortSignal
-}
-```
-
 ## Example
 
 ```javascript
@@ -102,6 +77,31 @@ stream.through(exstream.jsonStringify(options))
 Pass `null` in the direct standalone form to apply defaults. The `FinalProperties` generic describes the object returned by `finalize()`.
 
 That generic improves compile-time checking of the finalizer only; it does not add runtime schema validation.
+
+## Signature
+
+```typescript
+jsonStringify<FinalProperties extends object = Record<string, unknown>>(
+  options?: JsonStringifyOptions<FinalProperties> | null,
+): Exstream<string | Uint8Array, C>
+
+interface JsonStringifyOptions<FinalProperties extends object> {
+  encoding?: string
+  path?: string
+  properties?: Record<string, unknown>
+  maxValueBytes?: number
+  replacer?:
+    | readonly (number | string)[]
+    | ((this: unknown, key: string, value: unknown) => unknown)
+  finalize?: (stats: JsonStringifyStats) => FinalProperties | PromiseLike<FinalProperties>
+}
+
+interface JsonStringifyStats {
+  readonly count: number
+  readonly bytesWritten: number
+  readonly signal: AbortSignal
+}
+```
 
 ## Related
 

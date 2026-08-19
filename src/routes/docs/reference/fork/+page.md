@@ -10,12 +10,6 @@
 
 <p class="lead">Create an independent reliable branch that participates in shared-source backpressure.</p>
 
-## Signature
-
-```typescript
-fork(disableAutostart?: boolean): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -48,7 +42,7 @@ Contexts are copied at the branch boundary. Mutating one branch's context does n
 
 ## Lifecycle
 
-Calling `fork()` after the source has started throws. A branch that is destroyed detaches from the shared source. A failure in one terminal destination cancels that fork; reliable siblings may continue, so application code awaiting several branches decides whether to abort them together.
+Calling `fork()` after the source has started throws. A branch that terminates early detaches from the shared source. A failure in one terminal destination cancels that fork; reliable siblings may continue, so application code awaiting several branches decides whether to cancel them together through their owning signals.
 
 With `disableAutostart: true`, terminal consumers may be attached to every fork first, but no source work begins until `source.start()` is called. `start()` releases the source and resolves after startup is scheduled; it is not a completion promise. Await the branch terminal operations for completion.
 
@@ -57,6 +51,12 @@ Use [`observe()`](/docs/reference/observe/) when observation must never slow the
 ## Forms
 
 `fork()` is a graph operation on a concrete stream. It is not available on reusable pipeline definitions and has no standalone operator form because it must attach to one live source instance.
+
+## Signature
+
+```typescript
+fork(disableAutostart?: boolean): Exstream<T, C>
+```
 
 ## Related
 

@@ -10,12 +10,6 @@
 
 <p class="lead">Run the stream to completion and resolve with every output value.</p>
 
-## Signature
-
-```typescript
-toArray(): Promise<T[]>
-```
-
 ## Example
 
 ```javascript
@@ -27,6 +21,12 @@ const rows = await exstream(response.body).csv({ header: true }).toArray()
 `toArray()` is terminal and starts demand immediately. It always returns a promise, including for a completely synchronous pipeline. Normal completion resolves with values in output order, or `[]` for an empty stream.
 
 Every value is retained until completion, so use `drain()`, `pipeTo()`, or async iteration for large or unbounded output. The promise rejects on the first unhandled record error, fatal failure, or abort.
+
+## Signature
+
+```typescript
+toArray(): Promise<T[]>
+```
 
 ## Related
 

@@ -6,12 +6,6 @@
 
 <p class="lead">Record a typed sequence of operators that can be attached to many independent sources.</p>
 
-## Signature
-
-```typescript
-pipeline<T = unknown>(): Pipeline<T, T, RecordContext<T>>
-```
-
 ## Example
 
 ```typescript
@@ -22,6 +16,12 @@ const normalize = exstream
 
 const firstRun = sourceA.through(normalize)
 const secondRun = sourceB.through(normalize)
+```
+
+In Node, the same definition can become a native transform with a writable input and readable output:
+
+```typescript
+const transform = normalize.toNodeTransform()
 ```
 
 A pipeline can instead be closed with `drain()` to define a reusable destination:
@@ -44,14 +44,24 @@ Calling an operator on a pipeline records its method name and arguments; it does
 
 Calling `drain()` on the definition takes a snapshot of its current operators and returns a `Destination<Input>`. It does not run the pipeline. Every later `pipeTo(destination)` builds a fresh chain from that snapshot.
 
+`toNodeTransform()` also snapshots the current definition, but returns one native Node `Transform`. Calling it again creates an independent transform with fresh operator state.
+
 ## Supported methods
 
-The typed pipeline surface contains reusable operators for transforms, selection, context, async work, error policies, parsers/stringifiers, range, aggregation, sorting, encoding, rate control, `sortedGroupBy()`, and nested `through()`. `drain()` closes the definition into a destination. Source, result-producing terminal, and graph-specific methods such as `fork()`, `merge()`, `toArray()`, `pipeTo()`, and `sortedJoin()` belong to instantiated Exstreams.
+The typed pipeline surface contains reusable operators for transforms, selection, context, async work, error policies, parsers/stringifiers, range, aggregation, sorting, encoding, rate control, `sortedGroupBy()`, and nested `through()`. `drain()` closes the definition into a destination, while `toNodeTransform()` adapts it to Node's native stream interface.
+
+Source, result-producing terminal, readable-adapter, and graph-specific methods such as `fork()`, `merge()`, `toArray()`, `pipeTo()`, `toNodeReadable()`, and `sortedJoin()` belong to instantiated Exstreams. Calling one on a pipeline definition throws immediately. TypeScript rejects the same invalid combinations before runtime.
 
 ## Errors
 
 Operator arguments are generally validated when an instance is generated, not when the definition is recorded. Reusing a pipeline therefore reproduces the same validation and runtime error behavior for each source.
 
+## Signature
+
+```typescript
+pipeline<T = unknown>(): Pipeline<T, T, RecordContext<T>>
+```
+
 ## Related
 
-[`through()`](/docs/reference/through/), [`destination()`](/docs/reference/destination/), [`drain()`](/docs/reference/drain/), [`map()`](/docs/reference/map/)
+[`through()`](/docs/reference/through/), [`toNodeTransform()`](/docs/reference/to-node-transform/), [`destination()`](/docs/reference/destination/), [`drain()`](/docs/reference/drain/), [`map()`](/docs/reference/map/)

@@ -6,12 +6,6 @@
 
 <p class="lead">Release a source whose automatic startup was disabled, typically after wiring reliable forks.</p>
 
-## Signature
-
-```typescript
-start(): Promise<void>
-```
-
 ## Example
 
 ```javascript
@@ -29,6 +23,12 @@ Startup is scheduled for the next turn so downstream pipes can finish attaching.
 
 `start()` is not a terminal consumer and creates no downstream demand. Calling it on a pipeline with no attached sink leaves that pipeline paused. Use `drain()` to run and await a side-effecting pipeline. Calls after termination resolve harmlessly.
 
+## Signature
+
+```typescript
+start(): Promise<void>
+```
+
 ## Related
 
-[`fork()`](/docs/reference/fork/), [`drain()`](/docs/reference/drain/), [`resume()`](/docs/reference/resume/)
+[`fork()`](/docs/reference/fork/), [`drain()`](/docs/reference/drain/)

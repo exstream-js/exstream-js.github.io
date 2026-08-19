@@ -10,12 +10,6 @@
 
 <p class="lead">Decode chunks incrementally and split the resulting text with a regular expression.</p>
 
-## Signature
-
-```typescript
-splitBy(separator: RegExp, encoding?: string): Exstream<string, C>
-```
-
 ## Example
 
 ```javascript
@@ -42,6 +36,12 @@ stream.splitBy(/\0/, 'utf8')
 exstream.pipeline().splitBy(/\0/)
 exstream.splitBy(/\0/, 'utf8', stream)
 stream.through(exstream.splitBy(/\0/))
+```
+
+## Signature
+
+```typescript
+splitBy(separator: RegExp, encoding?: string): Exstream<string, C>
 ```
 
 ## Related

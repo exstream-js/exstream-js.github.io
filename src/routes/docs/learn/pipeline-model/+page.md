@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: pipeline-model
+---
 
 <svelte:head>
   <title>Pipeline model — Exstream</title>
@@ -137,5 +137,3 @@ await activeOrders.pipeTo(destination)
 As the destination accepts records, the pipeline requests more data upstream. If the destination slows down, that pressure travels back through the operators toward the source. Operators process incrementally unless their job explicitly requires collection, as sorting does.
 
 Read [Backpressure](/docs/concepts/backpressure/) for how demand and bounded buffering behave across a connected pipeline.
-
-<PlaygroundLink example="pipeline-model" />

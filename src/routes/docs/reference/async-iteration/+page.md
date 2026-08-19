@@ -10,12 +10,6 @@
 
 <p class="lead">Pull one output value at a time through JavaScript's native async-iteration protocol.</p>
 
-## Signature
-
-```typescript
-[Symbol.asyncIterator](): AsyncIterableIterator<T>
-```
-
 ## Example
 
 ```javascript
@@ -28,7 +22,7 @@ for await (const record of pipeline) {
 
 Each `next()` requests one record. Concurrent reads are serialized in call order, and awaiting work inside a `for await` loop naturally holds downstream pressure.
 
-Breaking the loop calls the iterator's `return()` method and cancels that consumer branch. To cancel from elsewhere, retain the stream and call `stream.abort(reason)`, or attach an abort signal to the source.
+Breaking the loop calls the iterator's `return()` method and cancels that consumer branch. To cancel from elsewhere, attach an abort signal to the source or to the terminal operation that owns the iteration.
 
 The first unhandled record error or fatal graph failure rejects the pending read. Later reads report completion.
 
@@ -41,6 +35,12 @@ await iterator.return()
 ```
 
 Prefer `for await` unless you specifically need protocol-level control.
+
+## Signature
+
+```typescript
+[Symbol.asyncIterator](): AsyncIterableIterator<T>
+```
 
 ## Related
 

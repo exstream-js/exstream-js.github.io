@@ -10,27 +10,6 @@
 
 <p class="lead">Serialize each array or object as one CSV record and emit it incrementally.</p>
 
-## Signature
-
-```typescript
-csvStringify<H extends readonly PropertyKey[] | boolean = false>(
-  options?: CsvStringifyOptions<H> | null,
-): Exstream<string | Uint8Array, C>
-
-interface CsvStringifyOptions<H extends readonly PropertyKey[] | boolean = false> {
-  encoding?: string
-  separator?: string
-  quote?: string
-  escape?: string
-  lineEnding?: string
-  header?: H
-  quoted?: boolean
-  quotedEmpty?: boolean
-  maxColumns?: number
-  maxRecordBytes?: number
-}
-```
-
 ## Example
 
 ```javascript
@@ -97,6 +76,27 @@ stream.through(exstream.csvStringify(options))
 ```
 
 Pass `null` in the direct standalone form to apply defaults.
+
+## Signature
+
+```typescript
+csvStringify<H extends readonly PropertyKey[] | boolean = false>(
+  options?: CsvStringifyOptions<H> | null,
+): Exstream<string | Uint8Array, C>
+
+interface CsvStringifyOptions<H extends readonly PropertyKey[] | boolean = false> {
+  encoding?: string
+  separator?: string
+  quote?: string
+  escape?: string
+  lineEnding?: string
+  header?: H
+  quoted?: boolean
+  quotedEmpty?: boolean
+  maxColumns?: number
+  maxRecordBytes?: number
+}
+```
 
 ## Related
 

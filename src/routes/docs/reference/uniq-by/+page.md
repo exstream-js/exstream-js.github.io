@@ -10,13 +10,6 @@
 
 <p class="lead">Keep the first value associated with each selected key or composite field tuple.</p>
 
-## Signature
-
-```typescript
-uniqBy<K>(fn: (value: T, context: C) => K): Exstream<T, C>
-uniqBy<K extends keyof T>(fields: K | readonly K[]): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -56,6 +49,13 @@ stream.uniqBy('id')
 exstream.pipeline().uniqBy(['tenantId', 'id'])
 exstream.uniqBy((row) => row.id, stream)
 stream.through(exstream.uniqBy('id'))
+```
+
+## Signature
+
+```typescript
+uniqBy<K>(fn: (value: T, context: C) => K): Exstream<T, C>
+uniqBy<K extends keyof T>(fields: K | readonly K[]): Exstream<T, C>
 ```
 
 ## Related

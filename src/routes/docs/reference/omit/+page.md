@@ -10,12 +10,6 @@
 
 <p class="lead">Shallow-copy each record and remove one or more selected fields.</p>
 
-## Signature
-
-```typescript
-omit<K extends keyof T>(fields: K | readonly K[]): Exstream<Omit<T, K>, C>
-```
-
 ## Example
 
 ```javascript
@@ -51,6 +45,12 @@ stream.omit('password')
 exstream.pipeline().omit(['password', 'token'])
 exstream.omit(['password', 'token'], stream)
 stream.through(exstream.omit('password'))
+```
+
+## Signature
+
+```typescript
+omit<K extends keyof T>(fields: K | readonly K[]): Exstream<Omit<T, K>, C>
 ```
 
 ## Related

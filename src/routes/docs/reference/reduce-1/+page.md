@@ -10,14 +10,6 @@
 
 <p class="lead">Combine all successful values using the first one as the initial accumulator.</p>
 
-## Signature
-
-```typescript
-reduce1(
-  fn: (accumulator: T, value: T, context: C) => T,
-): Exstream<T, AggregateOutputContext<C, T>>
-```
-
 ## Example
 
 ```javascript
@@ -49,6 +41,14 @@ stream.reduce1(reducer)
 exstream.pipeline().reduce1(reducer)
 exstream.reduce1(reducer, stream)
 stream.through(exstream.reduce1(reducer))
+```
+
+## Signature
+
+```typescript
+reduce1(
+  fn: (accumulator: T, value: T, context: C) => T,
+): Exstream<T, AggregateOutputContext<C, T>>
 ```
 
 ## Related

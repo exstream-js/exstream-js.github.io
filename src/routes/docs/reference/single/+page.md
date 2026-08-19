@@ -10,12 +10,6 @@
 
 <p class="lead">Resolve with zero or one value, and reject when the stream produces more.</p>
 
-## Signature
-
-```typescript
-single(): Promise<T | undefined>
-```
-
 ## Example
 
 ```javascript
@@ -31,6 +25,12 @@ An empty stream resolves with `undefined`; one value resolves with that value. A
 `single()` always returns a promise and consumes through normal end to prove that no second value exists. Use `head().single()` when you want the first value without enforcing cardinality on the original output.
 
 Unhandled record errors, fatal failures, and aborts reject the promise.
+
+## Signature
+
+```typescript
+single(): Promise<T | undefined>
+```
 
 ## Related
 

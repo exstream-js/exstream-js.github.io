@@ -68,7 +68,7 @@ export const graphMethodNames = ['fork', 'merge', 'observe', 'routeErrors', 'sor
 export const terminalMethodNames = ['drain', 'single', 'toArray'] as const
 export const destinationMethodNames = ['pipeTo'] as const
 export const adapterMethodNames = ['toWebReadable'] as const
-export const lifecycleMethodNames = ['abort', 'start'] as const
+export const lifecycleMethodNames = ['start'] as const
 
 export const playgroundMethodNames = [
   ...Object.keys(operatorTelemetry),

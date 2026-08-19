@@ -10,17 +10,6 @@
 
 <p class="lead">Attach a reusable pipeline, transform function, Exstream, or Node stream to the current flow.</p>
 
-## Signature
-
-```typescript
-through<U>(
-  target: Pipeline<T, U> | Exstream<U> | ((stream: Exstream<T, C>) => Exstream<U>),
-  options?: { writable?: boolean },
-): Exstream<U>
-
-through(target?: null, options?: ThroughOptions): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -83,6 +72,17 @@ exstream.pipeline().through(reusablePipeline)
 ```
 
 There is no standalone `exstream.through()` operator.
+
+## Signature
+
+```typescript
+through<U>(
+  target: Pipeline<T, U> | Exstream<U> | ((stream: Exstream<T, C>) => Exstream<U>),
+  options?: { writable?: boolean },
+): Exstream<U>
+
+through(target?: null, options?: ThroughOptions): Exstream<T, C>
+```
 
 ## Related
 

@@ -390,17 +390,20 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
     return wrapStream(stream, sourceNodeId)
   }
 
-  async function* observedInput() {
-    for await (const value of input as AsyncIterable<unknown>) {
-      node.output += 1
-      scheduleTelemetry()
-      yield value
-    }
-  }
-
-  const stream = realExstream(observedInput(), options) as StreamTarget
-  watchNodeLifecycle(stream, sourceNodeId)
-  return wrapStream(stream, sourceNodeId)
+  const sourceInput =
+    input && typeof input === 'object' ? (proxyTargets.get(input as object) ?? input) : input
+  const stream = (
+    realExstream as unknown as (
+      source?: unknown,
+      streamOptions?: StreamOptions | null,
+    ) => StreamTarget
+  )(sourceInput, options)
+  const observed = callTargetMethod(stream, 'tap', () => {
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(observed, sourceNodeId)
+  return wrapStream(observed, sourceNodeId)
 }
 
 function extractMergeInputs(input: unknown): MergeInput[] | undefined {
@@ -471,7 +474,7 @@ function callStreamMethod(
   if (adapterMethods.has(methodName)) {
     return instrumentReadableAdapter(target, parentNodeId, methodName, unwrappedArguments)
   }
-  if (methodName === 'write' || methodName === 'writeData') {
+  if (methodName === 'write') {
     const result = Reflect.apply(method, target, unwrappedArguments)
     const node = graphNodes.get(parentNodeId)
     if (node) {
@@ -868,10 +871,7 @@ function formatOperator(name: string, arguments_: unknown[]) {
   ) {
     return `${name}(${String(arguments_[0] ?? '')})`
   }
-  if (
-    ['groupBy', 'keyBy', 'sortedGroupBy'].includes(name) &&
-    typeof arguments_[0] !== 'function'
-  ) {
+  if (['groupBy', 'keyBy', 'sortedGroupBy'].includes(name) && typeof arguments_[0] !== 'function') {
     return `${name}(${String(arguments_[0] ?? '')})`
   }
   return name

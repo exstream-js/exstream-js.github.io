@@ -10,12 +10,6 @@
 
 <p class="lead">Emit values from a zero-based start index up to, but not including, an end index.</p>
 
-## Signature
-
-```typescript
-slice(start: number, end?: number): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -49,6 +43,12 @@ stream.slice(10, 20)
 exstream.pipeline().slice(10, 20)
 exstream.slice(10, 20, stream)
 stream.through(exstream.slice(10, 20))
+```
+
+## Signature
+
+```typescript
+slice(start: number, end?: number): Exstream<T, C>
 ```
 
 ## Related

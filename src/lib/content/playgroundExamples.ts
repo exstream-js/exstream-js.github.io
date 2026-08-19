@@ -214,7 +214,7 @@ async function seedInput() {
 
   for await (const transaction of source('transactions')) {
     pending += 1
-    input.writeData({ ...transaction, attempt: 0 })
+    input.write({ ...transaction, attempt: 0 })
     count += 1
 
     if (count === 120) break
@@ -266,7 +266,7 @@ await Promise.all([
     .pipeTo(destination('processed')),
   retryable
     .tap((failure) => {
-      input.writeData({
+      input.write({
         ...failure.input,
         attempt: failure.input.attempt + 1,
       })

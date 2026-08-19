@@ -2,8 +2,23 @@
   import CopyButton from './CopyButton.svelte'
   import Prism from 'prismjs'
   import 'prismjs/components/prism-bash'
-  import 'prismjs/components/prism-markup'
   import 'prismjs/components/prism-javascript'
+  import 'prismjs/components/prism-markup'
+
+  type MarkupGrammar = Prism.Grammar & {
+    script?: Prism.GrammarValue
+    tag: Prism.GrammarValue & {
+      addInlined: (tagName: string, language: string) => void
+    }
+  }
+
+  const markupGrammar = Prism.languages.markup as MarkupGrammar
+
+  // Prism normally wires this up as a side effect of import order. During SSR,
+  // JavaScript may already be cached before markup loads, so register it explicitly.
+  if (!markupGrammar.script) {
+    markupGrammar.tag.addInlined('script', 'javascript')
+  }
 
   type Runtime = 'node' | 'vite' | 'cdn'
   type Language = 'bash' | 'javascript' | 'markup'
@@ -38,14 +53,13 @@ const countries = exstream(response.body)
   const browserDestination = `const output = document.querySelector('#app')
 output.replaceChildren()
 
-const destination = exstream
-  .pipeline()
-  .tap((row) => {
+const destination = new WritableStream({
+  write(row) {
     const line = document.createElement('p')
     line.textContent = \`\${row.country}: \${row.lifeExpectancy} years\`
     output.append(line)
-  })
-  .drain()`
+  },
+})`
 
   const examples: Record<Runtime, Example> = {
     node: {
@@ -140,7 +154,6 @@ await countries.pipeTo(destination)`,
 <section class="quick-start-tabs" aria-labelledby="quick-start-examples-title">
   <div class="quick-start-tabs-header">
     <div>
-      <h2 id="quick-start-examples-title">Choose where to run it</h2>
       <p>{example.description}</p>
     </div>
     <div class="segmented-control" aria-label="Runtime">

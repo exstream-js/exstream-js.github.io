@@ -84,13 +84,13 @@
 
 - [`pipeTo()`](/docs/reference/pipe-to/) — run an Exstream destination or write to a Node or Web writable
 - [Async iteration](/docs/reference/async-iteration/) — consume one value per `for await` demand
-- [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeReadable()`](/docs/reference/to-node-readable/) — expose platform readables
+- [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeReadable()`](/docs/reference/to-node-readable/) — expose platform readables from a source-backed Exstream
+- [`toNodeTransform()`](/docs/reference/to-node-transform/) — expose a reusable pipeline as a native Node transform
 - [`toArray()`](/docs/reference/to-array/), [`single()`](/docs/reference/single/), and [`drain()`](/docs/reference/drain/) — finish with uniform promise semantics
 
 ## Low-level API
 
-- [`write()`](/docs/reference/write/) and [`writeData()`](/docs/reference/write-data/) — implement manual sources
+- [`write()`](/docs/reference/write/) and [`end()`](/docs/reference/end/) — implement manual sources
 - [`consume()`](/docs/reference/consume/) and [`consumeSync()`](/docs/reference/consume-sync/) — build custom operators
-- [`start()`](/docs/reference/start/), [`pause()`](/docs/reference/pause/), and [`resume()`](/docs/reference/resume/) — control source gates and adapters
-- [`end()`](/docs/reference/end/), [`destroy()`](/docs/reference/destroy/), [`abort()`](/docs/reference/abort/), and [`fail()`](/docs/reference/fail/) — choose the correct terminal transition
-- [`extend()`](/docs/reference/extend/) and [Utilities](/docs/reference/utilities/) — extend the prototype or reuse exported helpers
+- [`start()`](/docs/reference/start/) — release an explicitly gated multi-branch source
+- [`extend()`](/docs/reference/extend/) — register a custom stream or pipeline operator

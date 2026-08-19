@@ -10,12 +10,6 @@
 
 <p class="lead">Keep objects whose listed properties strictly equal the requested values.</p>
 
-## Signature
-
-```typescript
-where(properties: Partial<T>): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -43,6 +37,12 @@ stream.where({ status: 'open' })
 exstream.pipeline().where({ status: 'open' })
 exstream.where({ status: 'open' }, stream)
 stream.through(exstream.where({ status: 'open' }))
+```
+
+## Signature
+
+```typescript
+where(properties: Partial<T>): Exstream<T, C>
 ```
 
 ## Related

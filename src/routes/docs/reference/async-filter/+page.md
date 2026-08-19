@@ -10,14 +10,6 @@
 
 <p class="lead">Await one predicate at a time and keep values whose result is truthy.</p>
 
-## Signature
-
-```typescript
-asyncFilter(
-  fn: (value: T, context: C) => unknown | PromiseLike<unknown>,
-): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -47,6 +39,14 @@ stream.asyncFilter(predicate)
 exstream.pipeline().asyncFilter(predicate)
 exstream.asyncFilter(predicate, stream)
 stream.through(exstream.asyncFilter(predicate))
+```
+
+## Signature
+
+```typescript
+asyncFilter(
+  fn: (value: T, context: C) => unknown | PromiseLike<unknown>,
+): Exstream<T, C>
 ```
 
 ## Related

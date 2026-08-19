@@ -10,12 +10,6 @@
 
 <p class="lead">Drop values for which a synchronous predicate returns a truthy result.</p>
 
-## Signature
-
-```typescript
-reject(fn: (value: T, context: C) => unknown): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -49,6 +43,12 @@ stream.reject(predicate)
 exstream.pipeline().reject(predicate)
 exstream.reject(predicate, stream)
 stream.through(exstream.reject(predicate))
+```
+
+## Signature
+
+```typescript
+reject(fn: (value: T, context: C) => unknown): Exstream<T, C>
 ```
 
 ## Related

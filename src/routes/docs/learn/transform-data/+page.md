@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: transform-data
+---
 
 <svelte:head>
   <title>Transform data — Exstream</title>
@@ -62,8 +62,6 @@ const pricedLines = invoiceLines.mapAsync(loadCurrentPrice, {
   ordered: true,
 })
 ```
-
-<PlaygroundLink example="transform-data" />
 
 See the [operator index](/docs/reference/) for the complete list of transformations and [Async processing](/docs/learn/async-work/) for `mapAsync()` behavior.
 

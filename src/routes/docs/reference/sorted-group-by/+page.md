@@ -10,14 +10,6 @@
 
 <p class="lead">Group adjacent equal keys while retaining only the current group.</p>
 
-## Signature
-
-```typescript
-sortedGroupBy<K>(
-  selector: ((value: T, context: C) => K) | keyof T,
-): Exstream<{ key: K; values: T[] }, AggregateContext<{ key: K; values: T[] }, C>>
-```
-
 ## Example
 
 ```javascript
@@ -45,6 +37,14 @@ stream.sortedGroupBy('customerId')
 exstream.pipeline().sortedGroupBy('customerId')
 exstream.sortedGroupBy('customerId', stream)
 stream.through(exstream.sortedGroupBy('customerId'))
+```
+
+## Signature
+
+```typescript
+sortedGroupBy<K>(
+  selector: ((value: T, context: C) => K) | keyof T,
+): Exstream<{ key: K; values: T[] }, AggregateContext<{ key: K; values: T[] }, C>>
 ```
 
 ## Related

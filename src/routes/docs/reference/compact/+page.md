@@ -10,12 +10,6 @@
 
 <p class="lead">Remove JavaScript falsy values while preserving every other value unchanged.</p>
 
-## Signature
-
-```typescript
-compact(): Exstream<Exclude<T, false | 0 | '' | null | undefined>, C>
-```
-
 ## Example
 
 ```javascript
@@ -41,6 +35,12 @@ Available on streams and reusable pipelines. The standalone form takes the strea
 stream.compact()
 exstream.pipeline().compact()
 exstream.compact(stream)
+```
+
+## Signature
+
+```typescript
+compact(): Exstream<Exclude<T, false | 0 | '' | null | undefined>, C>
 ```
 
 ## Related
