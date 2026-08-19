@@ -86,4 +86,4 @@ through(target?: null, options?: ThroughOptions): Exstream<T, C>
 
 ## Related
 
-[`pipeTo()`](/docs/reference/pipe-to/), [`fork()`](/docs/reference/fork/), [`merge()`](/docs/reference/merge/)
+[Extensibility and composition](/docs/learn/extensibility/), [`pipeTo()`](/docs/reference/pipe-to/), [`fork()`](/docs/reference/fork/), [`merge()`](/docs/reference/merge/)

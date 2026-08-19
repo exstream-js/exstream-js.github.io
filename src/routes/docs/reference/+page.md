@@ -94,4 +94,3 @@
 - [`write()`](/docs/reference/write/) and [`end()`](/docs/reference/end/) — implement manual sources
 - [`consume()`](/docs/reference/consume/) and [`consumeSync()`](/docs/reference/consume-sync/) — build custom operators
 - [`start()`](/docs/reference/start/) — freeze and activate an explicitly gated source graph
-- [`extend()`](/docs/reference/extend/) — register a custom stream or pipeline operator

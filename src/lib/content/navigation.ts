@@ -13,6 +13,7 @@ export const docsNavigation = [
       { href: '/docs/learn/pipeline-model/', label: 'Pipeline model' },
       { href: '/docs/learn/sources/', label: 'Create a source' },
       { href: '/docs/learn/transform-data/', label: 'Transform data' },
+      { href: '/docs/learn/extensibility/', label: 'Extensibility & composition' },
       { href: '/docs/learn/async-work/', label: 'Async processing' },
       { href: '/docs/learn/consume/', label: 'Consume a pipeline' },
       { href: '/docs/concepts/backpressure/', label: 'Backpressure' },
@@ -166,7 +167,6 @@ export const docsNavigation = [
       { href: '/docs/reference/consume-sync/', label: 'consumeSync()' },
       { href: '/docs/reference/start/', label: 'start()' },
       { href: '/docs/reference/end/', label: 'end()' },
-      { href: '/docs/reference/extend/', label: 'extend()' },
     ],
   },
 ] as const

@@ -30,4 +30,4 @@ consumeSync<U = T, C2 extends object = C>(
 
 ## Related
 
-[`consume()`](/docs/reference/consume/), [`errors()`](/docs/reference/errors/), [`flatMap()`](/docs/reference/flat-map/)
+[Extensibility and composition](/docs/learn/extensibility/), [`consume()`](/docs/reference/consume/), [`errors()`](/docs/reference/errors/), [`flatMap()`](/docs/reference/flat-map/)

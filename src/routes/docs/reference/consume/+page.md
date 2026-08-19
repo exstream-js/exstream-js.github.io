@@ -31,4 +31,4 @@ consume<U = T, C2 extends object = C>(
 
 ## Related
 
-[`consumeSync()`](/docs/reference/consume-sync/), [async iteration](/docs/reference/async-iteration/), [`mapAsync()`](/docs/reference/map-async/)
+[Extensibility and composition](/docs/learn/extensibility/), [`consumeSync()`](/docs/reference/consume-sync/), [async iteration](/docs/reference/async-iteration/), [`mapAsync()`](/docs/reference/map-async/)
