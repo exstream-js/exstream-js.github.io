@@ -2,7 +2,7 @@ export const docsNavigation = [
   {
     label: 'Overview',
     items: [
-      { href: '/docs/project/what-is-exstream/', label: 'What is Exstream' },
+      { href: '/docs/', label: 'What is Exstream' },
       { href: '/docs/project/when-not-to-use/', label: 'When to use it' },
       { href: '/docs/project/origin/', label: 'History' },
     ],
@@ -34,6 +34,7 @@ export const docsNavigation = [
       { href: '/docs/reference/exstream/', label: 'exstream()' },
       { href: '/docs/reference/from-event/', label: 'fromEvent()' },
       { href: '/docs/reference/pipeline/', label: 'pipeline()' },
+      { href: '/docs/reference/destination/', label: 'destination()' },
       { href: '/docs/reference/data/', label: 'data() & nil' },
     ],
   },

@@ -1,4 +1,11 @@
 import realExstream from 'exstream.js'
+import {
+  adapterMethodNames,
+  destinationMethodNames,
+  operatorTelemetry,
+  terminalMethodNames,
+  type OperatorTelemetry,
+} from '$lib/playgroundOperators'
 
 const firstNames = [
   'Ada',
@@ -99,42 +106,9 @@ const products = [
   'Webhook Delivery',
 ] as const
 
-const instrumentedOperators = new Set([
-  'batch',
-  'compact',
-  'errors',
-  'failOnError',
-  'filter',
-  'flatMap',
-  'flatten',
-  'map',
-  'mapAsync',
-  'omit',
-  'pick',
-  'pluck',
-  'reject',
-  'resolve',
-  'ratelimit',
-  'slice',
-  'skipErrors',
-  'stopWhen',
-  'take',
-  'tap',
-  'throttle',
-  'uniq',
-  'uniqBy',
-])
-
-const recordDroppingOperators = new Set([
-  'compact',
-  'filter',
-  'reject',
-  'slice',
-  'throttle',
-  'uniq',
-  'uniqBy',
-])
-const recordErrorOperators = new Set(['map', 'mapAsync'])
+const terminalMethods = new Set<string>(terminalMethodNames)
+const destinationMethods = new Set<string>(destinationMethodNames)
+const adapterMethods = new Set<string>(adapterMethodNames)
 
 type DestinationConfig = {
   name: string
@@ -474,19 +448,28 @@ function callStreamMethod(
     (argument) => proxyTargets.get(argument as object) ?? argument,
   )
 
-  if (methodName === 'merge' && mergeInputs) {
-    return instrumentMerge(mergeInputs, unwrappedArguments)
+  if ((methodName === 'merge' || methodName === 'sortedJoin') && mergeInputs) {
+    return instrumentCombinedStreams(methodName, mergeInputs, unwrappedArguments)
   }
   if (!parentNodeId) {
     throw new Error('A stream collection must be consumed with merge() before other operators.')
   }
 
   if (methodName === 'fork') return instrumentFork(target, parentNodeId, unwrappedArguments)
+  if (methodName === 'observe') {
+    return instrumentObserve(target, parentNodeId, method, unwrappedArguments)
+  }
   if (methodName === 'routeErrors') {
     return instrumentRouteErrors(target, parentNodeId, method, unwrappedArguments)
   }
-  if (methodName === 'pipe' || methodName === 'pipeTo') {
-    return instrumentPipe(target, parentNodeId, method, unwrappedArguments)
+  if (methodName === 'pipe' || destinationMethods.has(methodName)) {
+    return instrumentPipe(target, parentNodeId, methodName, unwrappedArguments)
+  }
+  if (terminalMethods.has(methodName)) {
+    return instrumentTerminal(target, parentNodeId, methodName, unwrappedArguments)
+  }
+  if (adapterMethods.has(methodName)) {
+    return instrumentReadableAdapter(target, parentNodeId, methodName, unwrappedArguments)
   }
   if (methodName === 'write' || methodName === 'writeData') {
     const result = Reflect.apply(method, target, unwrappedArguments)
@@ -498,7 +481,8 @@ function callStreamMethod(
     return result
   }
 
-  if (!instrumentedOperators.has(methodName)) {
+  const telemetry = (operatorTelemetry as Record<string, OperatorTelemetry>)[methodName]
+  if (!telemetry) {
     const result = Reflect.apply(method, target, unwrappedArguments)
     return isStream(result) ? wrapStream(result, parentNodeId) : result
   }
@@ -508,16 +492,12 @@ function callStreamMethod(
     'transform',
     formatOperator(methodName, arguments_),
     parent.depth + 1,
-    recordDroppingOperators.has(methodName)
-      ? 'dropped'
-      : recordErrorOperators.has(methodName)
-        ? 'errors'
-        : undefined,
+    telemetry.metric,
   )
   const node = graphNodes.get(nodeId)!
   addEdge(parentNodeId, nodeId)
 
-  if (methodName === 'mapAsync' && typeof unwrappedArguments[0] === 'function') {
+  if (telemetry.capacity === 'mapAsync' && typeof unwrappedArguments[0] === 'function') {
     node.capacity = mapAsyncCapacity(unwrappedArguments[1])
     const operation = unwrappedArguments[0] as (...values: unknown[]) => unknown
     unwrappedArguments[0] = async (...values: unknown[]) => {
@@ -575,10 +555,19 @@ function mapAsyncCapacity(options: unknown) {
   return undefined
 }
 
-function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
+function instrumentCombinedStreams(
+  methodName: 'merge' | 'sortedJoin',
+  inputs: MergeInput[],
+  arguments_: unknown[],
+) {
   const parentNodes = inputs.map((input) => graphNodes.get(input.nodeId)!).filter(Boolean)
   const depth = Math.max(...parentNodes.map((node) => node.depth)) + 1
-  const nodeId = addNode('transform', formatOperator('merge', arguments_), depth)
+  const nodeId = addNode(
+    'transform',
+    formatOperator(methodName, arguments_),
+    depth,
+    methodName === 'sortedJoin' ? 'errors' : undefined,
+  )
   const node = graphNodes.get(nodeId)!
 
   const countedInputs = inputs.map((input) => {
@@ -590,11 +579,19 @@ function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
     })
   })
   const carrier = realExstream(countedInputs) as StreamTarget
-  const merge = Reflect.get(carrier, 'merge', carrier) as (...values: unknown[]) => unknown
-  const result = Reflect.apply(merge, carrier, arguments_)
+  const combine = Reflect.get(carrier, methodName, carrier) as (...values: unknown[]) => unknown
+  const result = Reflect.apply(combine, carrier, arguments_)
   if (!isStream(result)) return result
 
-  const countedOutput = callTargetMethod(result, 'tap', () => {
+  const errorCountedResult =
+    node.metric === 'errors'
+      ? callTargetMethod(result, 'errors', (error: unknown, push: (error: unknown) => void) => {
+          node.errors += 1
+          scheduleTelemetry()
+          push(error)
+        })
+      : result
+  const countedOutput = callTargetMethod(errorCountedResult, 'tap', () => {
     node.output += 1
     scheduleTelemetry()
   })
@@ -626,6 +623,29 @@ function instrumentFork(target: StreamTarget, parentNodeId: string, arguments_: 
   const branch = Reflect.apply(branchMethod, fork.stream, arguments_)
   if (!isStream(branch)) return branch
   return wrapStream(branch, fork.nodeId)
+}
+
+function instrumentObserve(
+  target: StreamTarget,
+  parentNodeId: string,
+  method: (...arguments_: unknown[]) => unknown,
+  arguments_: unknown[],
+) {
+  const branch = Reflect.apply(method, target, arguments_)
+  if (!isStream(branch)) return branch
+
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('fork', 'observe', parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+
+  const counted = callTargetMethod(branch, 'tap', () => {
+    node.input += 1
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(counted, nodeId)
+  return wrapStream(counted, nodeId)
 }
 
 function instrumentRouteErrors(
@@ -677,7 +697,7 @@ function instrumentRouteErrors(
 function instrumentPipe(
   target: StreamTarget,
   parentNodeId: string,
-  method: (...arguments_: unknown[]) => unknown,
+  methodName: string,
   arguments_: unknown[],
 ) {
   const writable = arguments_[0]
@@ -689,10 +709,65 @@ function instrumentPipe(
     const destinationNode = graphNodes.get(runtime.nodeId)!
     destinationNode.depth = Math.max(destinationNode.depth, parent.depth + 1)
     addEdge(parentNodeId, runtime.nodeId)
+    flushTelemetry()
+    return callTargetMethod(target, methodName, ...arguments_)
   }
 
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('destination', methodName, parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+  const counted = observeDestinationInput(target, node)
+  const result = callTargetMethod(counted, methodName, ...arguments_)
+  watchPromiseLifecycle(result, nodeId)
   flushTelemetry()
-  return Reflect.apply(method, target, arguments_)
+  return result
+}
+
+function instrumentTerminal(
+  target: StreamTarget,
+  parentNodeId: string,
+  methodName: string,
+  arguments_: unknown[],
+) {
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('destination', methodName, parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+
+  const counted = observeDestinationInput(target, node)
+  const result = callTargetMethod(counted, methodName, ...arguments_)
+  watchPromiseLifecycle(result, nodeId)
+  return result
+}
+
+function instrumentReadableAdapter(
+  target: StreamTarget,
+  parentNodeId: string,
+  methodName: string,
+  arguments_: unknown[],
+) {
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('destination', methodName, parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+
+  const counted = observeDestinationInput(target, node)
+  watchNodeLifecycle(counted, nodeId)
+  return callTargetMethod(counted, methodName, ...arguments_)
+}
+
+function observeDestinationInput(target: StreamTarget, node: GraphNode) {
+  const counted = callTargetMethod(target, 'tap', () => {
+    node.input += 1
+    node.output += 1
+    scheduleTelemetry()
+  })
+  return callTargetMethod(counted, 'errors', (error: unknown, push: (error: unknown) => void) => {
+    node.errors += 1
+    scheduleTelemetry()
+    push(error)
+  })
 }
 
 function callTargetMethod(target: StreamTarget, name: string, ...arguments_: unknown[]) {
@@ -751,17 +826,54 @@ function watchCombinedLifecycle(targets: StreamTarget[], nodeId: string) {
   }
 }
 
+function watchPromiseLifecycle(result: unknown, nodeId: string) {
+  if (!result || typeof (result as { then?: unknown }).then !== 'function') return
+
+  void Promise.resolve(result).then(
+    () => {
+      const node = graphNodes.get(nodeId)
+      if (!node || node.status !== 'open') return
+      node.status = 'closed'
+      flushTelemetry()
+    },
+    () => {
+      const node = graphNodes.get(nodeId)
+      if (!node) return
+      node.status = 'aborted'
+      flushTelemetry()
+    },
+  )
+}
+
 function isStream(value: unknown): value is StreamTarget {
   return value instanceof StreamConstructor
 }
 
 function formatOperator(name: string, arguments_: unknown[]) {
-  if (name === 'take') return `take(${String(arguments_[0] ?? '')})`
-  if (name === 'slice') return `slice(${arguments_.map(String).join(', ')})`
-  if (name === 'batch') return `batch(${String(arguments_[0] ?? '')})`
-  if (name === 'throttle') return `throttle(${String(arguments_[0] ?? '')})`
-  if (name === 'ratelimit') return `ratelimit(${arguments_.map(String).join(', ')})`
-  if (name === 'merge') return `merge(${arguments_.map(String).join(', ')})`
+  if (['slice', 'ratelimit', 'merge'].includes(name)) {
+    return `${name}(${arguments_.map(String).join(', ')})`
+  }
+  if (
+    [
+      'batch',
+      'decode',
+      'drop',
+      'encode',
+      'makeAsync',
+      'pluck',
+      'split',
+      'take',
+      'throttle',
+    ].includes(name)
+  ) {
+    return `${name}(${String(arguments_[0] ?? '')})`
+  }
+  if (
+    ['groupBy', 'keyBy', 'sortedGroupBy'].includes(name) &&
+    typeof arguments_[0] !== 'function'
+  ) {
+    return `${name}(${String(arguments_[0] ?? '')})`
+  }
   return name
 }
 

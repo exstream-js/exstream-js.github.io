@@ -42,7 +42,7 @@ Operators such as `map()`, `filter()`, `collect()`, and `reduce()` return anothe
 | Collect every value                 | `await stream.toArray()`            | `Promise<T[]>`                                 |
 | Require zero or one value           | `await stream.single()`             | <code>Promise&lt;T &#124; undefined&gt;</code> |
 | Run side effects and discard output | `await stream.drain()`              | `Promise<void>`                                |
-| Write to a Node or Web destination  | `await stream.pipeTo(destination)`  | `Promise<void>`                                |
+| Send values to a destination        | `await stream.pipeTo(destination)`  | `Promise<void>`                                |
 | Pull values one at a time           | `for await (const value of stream)` | Native async iteration                         |
 | Expose a Node readable              | `stream.toNodeReadable()`           | Node `Readable`                                |
 | Expose a Web readable               | `stream.toWebReadable()`            | Web `ReadableStream`                           |
@@ -81,7 +81,23 @@ Consumes to completion without retaining output. Use it when the useful work hap
 await pipeline.pipeTo(destination)
 ```
 
-Writes to a Node writable or Web `WritableStream`, propagates destination backpressure, and settles after the transfer completes. [Reference →](/docs/reference/pipe-to/)
+Runs a reusable Exstream destination or writes to a Node writable or Web `WritableStream`. It propagates destination backpressure and settles after processing completes. [Reference →](/docs/reference/pipe-to/)
+
+## Define a reusable destination
+
+For an application writer, close a reusable pipeline with `drain()` and keep its internals outside the calling flow:
+
+```javascript
+const ordersApi = exstream
+  .pipeline()
+  .batch(200)
+  .mapAsync(postOrders, { concurrency: 4, ordered: false })
+  .drain()
+
+await source.through(transform).pipeTo(ordersApi)
+```
+
+Here `drain()` does not start any work because it is called on a pipeline definition. It returns a reusable destination; the later `pipeTo()` call creates a fresh chain and starts it. Use [`destination()`](/docs/reference/destination/) when a run also needs to open and close a database client, transaction, or similar resource.
 
 ## Stream output
 

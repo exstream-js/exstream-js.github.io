@@ -15,6 +15,7 @@
 - [`exstream()`](/docs/reference/exstream/) — adapt iterables, promises, platform streams, generators, or a writable source
 - [`fromEvent()`](/docs/reference/from-event/) — adapt hot EventTarget and EventEmitter sources
 - [`pipeline()`](/docs/reference/pipeline/) — define a reusable typed operator chain
+- [`destination()`](/docs/reference/destination/) — define a reusable terminal consumer with setup and cleanup
 - [`data()` and `nil`](/docs/reference/data/) — distinguish data from error and end control records
 
 ## Context
@@ -81,7 +82,7 @@
 
 ## Consume
 
-- [`pipeTo()`](/docs/reference/pipe-to/) — write to a Node or Web destination and await completion
+- [`pipeTo()`](/docs/reference/pipe-to/) — run an Exstream destination or write to a Node or Web writable
 - [Async iteration](/docs/reference/async-iteration/) — consume one value per `for await` demand
 - [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeReadable()`](/docs/reference/to-node-readable/) — expose platform readables
 - [`toArray()`](/docs/reference/to-array/), [`single()`](/docs/reference/single/), and [`drain()`](/docs/reference/drain/) — finish with uniform promise semantics

@@ -13,7 +13,8 @@
 ## Signature
 
 ```typescript
-drain(): Promise<void>
+Exstream<T>.drain(): Promise<void>
+Pipeline<Input, Output>.drain(): Destination<Input>
 ```
 
 ## Example
@@ -37,8 +38,22 @@ Unlike `start()`, `drain()` creates an actual downstream consumer and returns an
 
 The first unhandled record error rejects the promise and aborts this branch. Fatal graph failures and cancellation also reject with their reason. Handle or route recoverable errors before `drain()` when processing should continue.
 
-`drain()` is an instance-only terminal and cannot be placed in a reusable pipeline definition.
+## Pipeline form
+
+On a reusable `Pipeline`, `drain()` closes the operator definition into a `Destination` instead of running it:
+
+```javascript
+const destination = exstream
+  .pipeline()
+  .batch(200)
+  .mapAsync(postBatch, { concurrency: 4, ordered: false })
+  .drain()
+
+await source.pipeTo(destination)
+```
+
+The destination consumes the pipeline's original input type. It keeps no source or running state; each `pipeTo()` call creates an independent operator chain. See [`destination()`](/docs/reference/destination/) for destinations that also need resource setup and cleanup.
 
 ## Related
 
-[`tap()`](/docs/reference/tap/), [`pipeTo()`](/docs/reference/pipe-to/), [`collect()`](/docs/reference/collect/), [consume a pipeline](/docs/learn/consume/)
+[`destination()`](/docs/reference/destination/), [`pipeline()`](/docs/reference/pipeline/), [`pipeTo()`](/docs/reference/pipe-to/), [consume a pipeline](/docs/learn/consume/)
