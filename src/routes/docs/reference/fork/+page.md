@@ -48,4 +48,4 @@ fork(): Exstream<T, C>
 
 ## Related
 
-[`observe()`](/docs/reference/observe/), [`merge()`](/docs/reference/merge/), [branch and observe](/docs/learn/branching/)
+[`observe()`](/docs/reference/observe/), [`merge()`](/docs/reference/merge/), [Fork and observe](/docs/learn/branching/)

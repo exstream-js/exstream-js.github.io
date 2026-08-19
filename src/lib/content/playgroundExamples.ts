@@ -125,7 +125,7 @@ await Promise.all([
 ])`,
   },
   branching: {
-    title: 'Branch and observe',
+    title: 'Fork and observe',
     sourcePath: '/docs/learn/branching/',
     description: BranchingDescription,
     code: `const transactions = exstream(source('transactions'))

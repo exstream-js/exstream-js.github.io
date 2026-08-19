@@ -3,14 +3,14 @@ playground: branching
 ---
 
 <svelte:head>
-  <title>Branch and observe — Exstream</title>
+  <title>Fork and observe — Exstream</title>
   <meta name="description" content="Choose reliable forks or non-blocking observers in an Exstream pipeline." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/learn/branching/" />
 </svelte:head>
 
 <p class="eyebrow">Learn · Pipeline graphs</p>
 
-# Branch and observe
+# Fork and observe
 
 <p class="lead">Use a reliable branch when every record must arrive. Use an observer when the main pipeline must never wait for it.</p>
 

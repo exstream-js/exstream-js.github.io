@@ -25,8 +25,9 @@ playground: sources
 | Node readable           | `exstream(readable)`                | Uses Node stream pressure          |
 | Custom producer         | `exstream((write, next) => …)`      | Producer advances with `next()`    |
 | Existing Exstream       | `exstream(stream)`                  | Returns the same stream            |
-| Deferred source         | `exstream.defer(() => source)`      | Creates it on activation           |
 | Event target or emitter | `exstream.fromEvent(target, event)` | Hot; buffer explicitly when needed |
+| Writable source         | `exstream()`                        | Application-controlled writes      |
+| Deferred source         | `exstream.defer(() => source)`      | Creates it on activation           |
 
 All source forms work with the same operators. What changes is the boundary where Exstream asks for more work.
 
@@ -63,61 +64,6 @@ const orders = exstream(pages())
 If the branch is cancelled early, Exstream calls the iterator's `return()` method when available.
 
 Exstream does not acquire a synchronous or asynchronous iterator while the graph is only being built. Iterator acquisition and the first `next()` happen after downstream demand activates the source.
-
-## Why deferred sources exist
-
-Backpressure can postpone reading from an existing source, but it cannot undo work that happened while that source was created. In this expression, `fetch()` runs before Exstream sees its result:
-
-```javascript
-const orders = exstream(fetch('/orders.jsonl'))
-```
-
-The same distinction applies to opening a file, database cursor, browser reader, or any source whose construction acquires a resource. Use `defer()` when creation itself must belong to the pipeline lifecycle:
-
-```javascript
-const orders = exstream
-  .defer(async () => {
-    const response = await fetch('/orders.jsonl')
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    return response.body
-  })
-  .jsonl()
-```
-
-The factory may return any supported source or a promise for one. Exstream invokes it exactly once, only after the graph is activated and has downstream demand. Building operators, attaching forks, or cancelling before activation does not invoke it. Factory failures enter the error protocol with source provenance.
-
-`defer()` creates one single-use Exstream execution; it does not cache or replay records. When the same recipe must run independently more than once, wrap it in an application factory:
-
-```javascript
-const loadOrders = () => exstream.defer(() => fetchOrders())
-
-const morning = await loadOrders().toArray()
-const afternoon = await loadOrders().toArray()
-```
-
-This is different from `fork()`: forks share one execution and one backpressure boundary.
-
-### Deferred creation and manual activation
-
-Deferred creation answers “when is the source acquired?”. Manual activation answers “when is the graph complete?”. They meet at the same activation boundary but remain separate choices.
-
-Automatic activation is the default and covers linear pipelines and forks built synchronously. If reliable forks must be discovered in different turns, keep the root graph in its building phase explicitly:
-
-```javascript
-const source = exstream.defer(() => openOrders(), {
-  start: 'manual',
-})
-
-const database = source.fork().pipeTo(databaseWriter)
-
-await discoverAuditDestination()
-const audit = source.fork().pipeTo(auditWriter)
-
-await source.start()
-await Promise.all([database, audit])
-```
-
-Until `start()`, no deferred factory is called and reliable forks may still be attached—even after transforms and across timers or awaited work. `start()` is idempotent: it freezes fork registration and authorizes the root source to run, but it supplies no downstream demand and does not wait for completion.
 
 ## Platform streams
 
@@ -168,6 +114,19 @@ const ticks = exstream((write, next) => {
 
 `next(otherSource)` can hand production to another iterable, async iterable, readable stream, or generator without building a second pipeline.
 
+## Existing Exstreams
+
+Passing an Exstream returns that same stream rather than wrapping or cloning it:
+
+```javascript
+const source = exstream(records)
+const sameSource = exstream(source)
+
+console.log(source === sameSource) // true
+```
+
+The existing graph keeps its source options, lifecycle, and consumers. Options passed with the second call are not applied again.
+
 ## Events
 
 An `EventTarget` or `EventEmitter` produces values whether downstream is ready or not, so it uses a separate adapter:
@@ -186,6 +145,75 @@ By default, one event argument becomes the value and multiple arguments become a
 
 Normal completion or cancellation through the supplied signal removes the listeners. An `Error` received on the data event remains ordinary data; the configured `error` event is a fatal source failure.
 
+## Writable sources
+
+An empty call creates a source that application code can feed manually:
+
+```javascript
+const source = exstream()
+
+source.write(firstRecord)
+source.write(secondRecord)
+source.end()
+```
+
+This form is useful for adapters, but production and shutdown become your responsibility: respect the boolean returned by `write()`, call `end()`, and propagate cancellation.
+
+## Deferred sources
+
+Backpressure can postpone reading from an existing source, but it cannot undo work that happened while that source was created. In this expression, `fetch()` runs before Exstream sees its result:
+
+```javascript
+const orders = exstream(fetch('/orders.jsonl'))
+```
+
+The same distinction applies to opening a file, database cursor, browser reader, or any source whose construction acquires a resource. Use `defer()` when creation itself must belong to the pipeline lifecycle:
+
+```javascript
+const orders = exstream
+  .defer(async () => {
+    const response = await fetch('/orders.jsonl')
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    return response.body
+  })
+  .jsonl()
+```
+
+The factory may return any supported source or a promise for one. Exstream invokes it exactly once, only after the graph is activated and has downstream demand. Building operators or cancelling before activation does not invoke it. Factory failures enter the error protocol with source provenance.
+
+`defer()` creates one single-use Exstream execution; it does not cache or replay records. When the same recipe must run independently more than once, wrap it in an application factory:
+
+```javascript
+const loadOrders = () => exstream.defer(() => fetchOrders())
+
+const morning = await loadOrders().toArray()
+const afternoon = await loadOrders().toArray()
+```
+
+### Deferred creation and manual activation
+
+Deferred creation answers “when is the source acquired?”. Manual activation answers “when is the graph complete?”. They meet at the same activation boundary but remain separate choices.
+
+> **Forks are introduced in the next chapter.** The example below anticipates them only to show why manual activation exists. Their delivery and backpressure semantics are covered in [Fork & observe](/docs/learn/branching/).
+
+Automatic activation is the default and covers linear pipelines and forks built synchronously. If reliable forks must be discovered in different turns, keep the root graph in its building phase explicitly:
+
+```javascript
+const source = exstream.defer(() => openOrders(), {
+  start: 'manual',
+})
+
+const database = source.fork().pipeTo(databaseWriter)
+
+await discoverAuditDestination()
+const audit = source.fork().pipeTo(auditWriter)
+
+await source.start()
+await Promise.all([database, audit])
+```
+
+Until `start()`, no deferred factory is called and reliable forks may still be attached—even after transforms and across timers or awaited work. `start()` is idempotent: it freezes fork registration and authorizes the root source to run, but it supplies no downstream demand and does not wait for completion.
+
 ## Buffer and cancellation
 
 Directly constructed source boundaries accept the same buffer and cancellation options:
@@ -202,5 +230,3 @@ const source = exstream(input, {
 `bufferLimit` defaults to `Infinity`; `overflow` defaults to `'error'`. The drop policies require a finite limit. Prefer pull-based sources and small, deliberate buffers over using a large queue to hide a pressure mismatch.
 
 `start` defaults to `'auto'`. Use `'manual'` only when graph construction crosses an asynchronous boundary, then call `start()` after every reliable fork has been attached.
-
-An empty call, `exstream()`, creates a writable source. It is useful for adapters, but it makes production and shutdown your responsibility: respect the boolean returned by `write()`, call `end()`, and propagate cancellation.

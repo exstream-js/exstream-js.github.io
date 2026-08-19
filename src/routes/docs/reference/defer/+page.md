@@ -58,4 +58,4 @@ function defer<T, C extends object>(
 
 ## Related
 
-[`exstream()`](/docs/reference/exstream/), [`start()`](/docs/reference/start/), [`fork()`](/docs/reference/fork/), [Create a source](/docs/learn/sources/#why-deferred-sources-exist)
+[`exstream()`](/docs/reference/exstream/), [`start()`](/docs/reference/start/), [`fork()`](/docs/reference/fork/), [Create a source](/docs/learn/sources/#deferred-sources)

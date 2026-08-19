@@ -16,7 +16,7 @@ export const docsNavigation = [
       { href: '/docs/learn/async-work/', label: 'Async processing' },
       { href: '/docs/learn/consume/', label: 'Consume a pipeline' },
       { href: '/docs/concepts/backpressure/', label: 'Backpressure' },
-      { href: '/docs/learn/branching/', label: 'Branch & observe' },
+      { href: '/docs/learn/branching/', label: 'Fork & observe' },
       { href: '/docs/learn/errors/', label: 'Errors & lifecycle' },
     ],
   },

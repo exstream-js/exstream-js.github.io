@@ -103,7 +103,7 @@ const archive = processedOrders.fork()
 
 Each branch ends at a terminal consumer. A reliable branch participates in backpressure; an observer is used when a secondary branch must not slow the main flow.
 
-Read [Branch and observe](/docs/learn/branching/) for reliable forks, non-blocking observers, and their different delivery guarantees.
+Read [Fork and observe](/docs/learn/branching/) for reliable forks, non-blocking observers, and their different delivery guarantees.
 
 ## Destinations
 

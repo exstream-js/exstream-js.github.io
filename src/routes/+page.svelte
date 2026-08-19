@@ -175,7 +175,7 @@
           <code>fork()</code> creates a reliable branch: every record must reach every active fork.
           <code>merge()</code> consumes streams with a limit on active inputs and an explicit order choice.
         </p>
-        <a class="topic-link" href="/docs/learn/branching/">Branch and observe →</a>
+        <a class="topic-link" href="/docs/learn/branching/">Fork and observe →</a>
       </div>
       <div class="topic-detail">
         <div class="topic-code"><pre><code>{@html branchCode}</code></pre></div>
