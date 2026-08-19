@@ -22,18 +22,6 @@ await Promise.all([database.pipeTo(databaseWriter), audit.jsonlStringify().pipeT
 
 Create all branches synchronously, before the source starts.
 
-## Parameters
-
-<dl class="parameter-list">
-  <div>
-    <dt><code>disableAutostart</code></dt>
-    <dd>
-      <p class="parameter-meta"><span><strong>Type</strong> <code>boolean</code></span><span><strong>Default</strong> <code>false</code></span></p>
-      <p>By default, Exstream schedules the shared source to start after the current synchronous setup turn. Pass <code>true</code> to wire branches without that scheduled start, then call <code>source.start()</code> explicitly. The runtime uses truthiness; the public TypeScript API accepts booleans.</p>
-    </dd>
-  </div>
-</dl>
-
 ## Delivery
 
 Every fork receives every source record in order. The shared source advances only after each active reliable branch can accept the record, so the slowest fork controls throughput. No drop policy is available on a reliable fork.
@@ -42,9 +30,9 @@ Contexts are copied at the branch boundary. Mutating one branch's context does n
 
 ## Lifecycle
 
-Calling `fork()` after the source has started throws. A branch that terminates early detaches from the shared source. A failure in one terminal destination cancels that fork; reliable siblings may continue, so application code awaiting several branches decides whether to cancel them together through their owning signals.
+Calling `fork()` after the root source has started throws. A branch that terminates early detaches from the shared source. A failure in one terminal destination cancels that fork; reliable siblings may continue, so application code awaiting several branches decides whether to cancel them together through their owning signals.
 
-With `disableAutostart: true`, terminal consumers may be attached to every fork first, but no source work begins until `source.start()` is called. `start()` releases the source and resolves after startup is scheduled; it is not a completion promise. Await the branch terminal operations for completion.
+For branches registered in different turns, create the root source with `{ start: 'manual' }`. Terminal consumers may then be attached before or after awaited setup without starting source work. Call `start()` after the final reliable fork; await the branch terminal operations for completion.
 
 Use [`observe()`](/docs/reference/observe/) when observation must never slow the reliable flow and data loss is acceptable.
 
@@ -55,7 +43,7 @@ Use [`observe()`](/docs/reference/observe/) when observation must never slow the
 ## Signature
 
 ```typescript
-fork(disableAutostart?: boolean): Exstream<T, C>
+fork(): Exstream<T, C>
 ```
 
 ## Related

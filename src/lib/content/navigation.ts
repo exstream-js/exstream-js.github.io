@@ -32,6 +32,7 @@ export const docsNavigation = [
     label: 'API · Create',
     items: [
       { href: '/docs/reference/exstream/', label: 'exstream()' },
+      { href: '/docs/reference/defer/', label: 'defer()' },
       { href: '/docs/reference/from-event/', label: 'fromEvent()' },
       { href: '/docs/reference/pipeline/', label: 'pipeline()' },
       { href: '/docs/reference/destination/', label: 'destination()' },

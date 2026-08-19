@@ -28,6 +28,23 @@ Every `fork()` participates in backpressure. The shared source advances only whe
 
 That behavior is correct when both outputs are required.
 
+### Registering forks later
+
+Automatic activation supports ordinary synchronous graph construction. If branch setup crosses a timer or `await`, make the root source manual and activate it explicitly:
+
+```javascript
+const source = exstream.defer(() => openRecords(), { start: 'manual' })
+const database = source.fork().pipeTo(databaseWriter)
+
+await prepareAuditWriter()
+const audit = source.fork().pipeTo(auditWriter)
+
+await source.start()
+await Promise.all([database, audit])
+```
+
+Every fork still receives the complete shared execution. A fork created after `start()` is rejected; use a new deferred source execution when a later consumer needs to read independently.
+
 ## Non-blocking observer
 
 ```javascript

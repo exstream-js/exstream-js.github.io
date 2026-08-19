@@ -16,11 +16,12 @@ Accepted sources are existing Exstreams, promises, synchronous and asynchronous 
   <div><dt><code>bufferLimit</code></dt><dd><p class="parameter-meta"><span><strong>Type</strong> non-negative integer or <code>Infinity</code></span><span><strong>Default</strong> <code>Infinity</code></span></p><p>Maximum queued data/error records. The end marker does not count toward this limit.</p></dd></div>
   <div><dt><code>overflow</code></dt><dd><p class="parameter-meta"><span><strong>Allowed</strong> <code>'error' | 'drop-oldest' | 'drop-newest'</code></span><span><strong>Default</strong> <code>'error'</code></span></p><p>Error throws <code>BufferOverflowError</code>. Drop policies require a finite limit and update <code>dropped</code>.</p></dd></div>
   <div><dt><code>signal</code></dt><dd><p class="parameter-meta"><span><strong>Type</strong> <code>AbortSignal</code></span><span><strong>Default</strong> none</span></p><p>Aborts the stream with the signal reason; an already-aborted signal creates an already-aborted stream.</p></dd></div>
+  <div><dt><code>start</code></dt><dd><p class="parameter-meta"><span><strong>Allowed</strong> <code>'auto' | 'manual'</code></span><span><strong>Default</strong> <code>'auto'</code></span></p><p>Automatic mode activates from downstream demand. Manual mode keeps the root graph open for reliable fork registration until <code>start()</code>.</p></dd></div>
 </dl>
 
 ## Errors and runtimes
 
-Invalid source types throw synchronously. Iterator/read failures enter the record-error protocol with source provenance. Node stream support is selected by the Node entry; browser builds use Web streams and portable codecs. The constructor is lazy: a consumer supplies demand before pull-based sources advance.
+Invalid source types throw synchronously. Iterator/read failures enter the record-error protocol with source provenance. Node stream support is selected by the Node entry; browser builds use Web streams and portable codecs. Source adapters acquire iterators and platform readers on demand. Use [`defer()`](/docs/reference/defer/) to postpone creation of the source object itself.
 
 ## Signature
 
@@ -35,9 +36,10 @@ interface StreamOptions {
   bufferLimit?: number
   overflow?: 'error' | 'drop-oldest' | 'drop-newest'
   signal?: AbortSignal
+  start?: 'auto' | 'manual'
 }
 ```
 
 ## Related
 
-[`fromEvent()`](/docs/reference/from-event/), [`write()`](/docs/reference/write/), [`stream state`](/docs/reference/stream-state/), [Create a source](/docs/learn/sources/)
+[`defer()`](/docs/reference/defer/), [`fromEvent()`](/docs/reference/from-event/), [`write()`](/docs/reference/write/), [`stream state`](/docs/reference/stream-state/), [Create a source](/docs/learn/sources/)

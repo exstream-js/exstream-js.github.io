@@ -31,7 +31,7 @@ setTimeout(async () => {
 
 Operators such as `map()`, `filter()`, `collect()`, and `reduce()` return another lazy Exstream. Work begins when you call `toArray()`, `single()`, `drain()`, or `pipeTo()`, or when a reader asks for data through async iteration or a platform adapter. See the [pipeline model](/docs/learn/pipeline-model/#when-work-starts) for the complete source → operators → consumer picture.
 
-`start()` is different: it only releases a source whose automatic startup was disabled. Without a downstream consumer, there is still no demand.
+`start()` is different: it only activates a graph created with `{ start: 'manual' }`. Without a downstream consumer, there is still no demand.
 
 ## Pick the boundary
 

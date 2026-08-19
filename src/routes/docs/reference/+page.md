@@ -13,6 +13,7 @@
 ## Create
 
 - [`exstream()`](/docs/reference/exstream/) — adapt iterables, promises, platform streams, generators, or a writable source
+- [`defer()`](/docs/reference/defer/) — create or acquire a source only when its graph is activated
 - [`fromEvent()`](/docs/reference/from-event/) — adapt hot EventTarget and EventEmitter sources
 - [`pipeline()`](/docs/reference/pipeline/) — define a reusable typed operator chain
 - [`destination()`](/docs/reference/destination/) — define a reusable terminal consumer with setup and cleanup
@@ -92,5 +93,5 @@
 
 - [`write()`](/docs/reference/write/) and [`end()`](/docs/reference/end/) — implement manual sources
 - [`consume()`](/docs/reference/consume/) and [`consumeSync()`](/docs/reference/consume-sync/) — build custom operators
-- [`start()`](/docs/reference/start/) — release an explicitly gated multi-branch source
+- [`start()`](/docs/reference/start/) — freeze and activate an explicitly gated source graph
 - [`extend()`](/docs/reference/extend/) — register a custom stream or pipeline operator

@@ -186,6 +186,7 @@ type StreamOptions = {
   bufferLimit?: number
   overflow?: 'error' | 'drop-oldest' | 'drop-newest'
   signal?: AbortSignal
+  start?: 'auto' | 'manual'
 }
 
 const AsyncFunction = Object.getPrototypeOf(async function () {})
