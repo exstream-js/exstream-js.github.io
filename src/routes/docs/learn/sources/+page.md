@@ -23,7 +23,6 @@ playground: sources
 | Promise                 | `exstream(promise)`                 | Emits one asynchronous value       |
 | Web `ReadableStream`    | `exstream(readable)`                | Reads through its reader on demand |
 | Node readable           | `exstream(readable)`                | Uses Node stream pressure          |
-| Custom producer         | `exstream((write, next) => …)`      | Producer advances with `next()`    |
 | Existing Exstream       | `exstream(stream)`                  | Returns the same stream            |
 | Event target or emitter | `exstream.fromEvent(target, event)` | Hot; buffer explicitly when needed |
 | Writable source         | `exstream()`                        | Application-controlled writes      |
@@ -96,23 +95,6 @@ const settings = exstream(loadSettings()).map(validateSettings)
 The promise rejection enters the error protocol. The promise itself cannot be cancelled, but cancelling the Exstream branch prevents later output from being consumed.
 
 Because promises are eager, use `defer(() => promise)` when creating the promise must wait for pipeline activation.
-
-## Custom producers
-
-Use a generator source when an API does not already expose an iterable or readable stream:
-
-```javascript
-const ticks = exstream((write, next) => {
-  setTimeout(() => {
-    write(Date.now())
-    next()
-  }, 1000)
-})
-```
-
-`write(value)` emits a value. Call `next()` only when this production step is complete; Exstream invokes the producer again when downstream asks for another value. End the source with `write(exstream.nil)`.
-
-`next(otherSource)` can hand production to another iterable, async iterable, readable stream, or generator without building a second pipeline.
 
 ## Existing Exstreams
 
