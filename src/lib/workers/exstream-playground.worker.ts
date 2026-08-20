@@ -407,6 +407,11 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
   return wrapStream(observed, sourceNodeId)
 }
 
+Object.assign(instrumentedExstream, {
+  nil: realExstream.nil,
+  pipeline: realExstream.pipeline,
+})
+
 function extractMergeInputs(input: unknown): MergeInput[] | undefined {
   if (!Array.isArray(input) || input.length === 0) return undefined
 

@@ -1,82 +1,39 @@
+---
+playground: extensibility
+---
+
 <svelte:head>
-  <title>Extensibility and composition — Exstream</title>
-  <meta name="description" content="Build reusable Exstream pipelines and custom operators with through(), consumeSync(), and consume()." />
+  <title>Extensibility — Exstream</title>
+  <meta name="description" content="Build custom Exstream operators with consumeSync() and consume(), including protocol records, backpressure, context, and cleanup." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/learn/extensibility/" />
 </svelte:head>
 
-<p class="eyebrow">Learn · Composition</p>
+<p class="eyebrow">Learn · Advanced</p>
 
-# Extensibility and composition
+# Extensibility
 
-<p class="lead">In Exstream, an extension is an ordinary function from one stream to another. It stays local, composes with <code>through()</code>, and can use the same public primitives as the built-in operators.</p>
+<p class="lead">When existing operators cannot express a transformation, <code>consumeSync()</code> and <code>consume()</code> expose Exstream's record protocol so you can implement a new one.</p>
 
-## One extension model
-
-A custom operator does not need registration or prototype mutation. Write a function that receives an Exstream and returns the transformed Exstream:
+This is the lowest-level part of the public transformation API. Before using it, prefer combining built-ins into an operator function or reusable pipeline as described in [Composition](/docs/learn/composition/). The result of a custom operator is still an ordinary `stream => stream` function attached with `through()`:
 
 ```javascript
-const multiply = (factor) => (stream) => stream.map((value) => value * factor)
+const customOperator = (options) => (source) => {
+  // Return a new Exstream built from source.
+}
 
-const totalsInCents = totals.through(multiply(100))
+const output = input.through(customOperator(options))
 ```
 
-`through()` calls the function with the current stream and returns its result. It adds no queue, scheduler, error boundary, or lifecycle of its own, so the operator's normal backpressure and cancellation behavior stays visible.
+Choose the consumer according to when the operator can accept another input:
 
-This makes extensions ordinary JavaScript modules:
-
-```javascript
-// order-operators.js
-export const paidOnly = (stream) => stream.filter((order) => order.status === 'paid')
-
-export const enrichCustomers = (loadCustomer) => (stream) =>
-  stream.mapAsync(async (order) => ({ ...order, customer: await loadCustomer(order.customerId) }), {
-    concurrency: 8,
-  })
-```
-
-Callers import only what they use, and two libraries cannot overwrite each other's methods.
-
-## Reusable pipelines
-
-Use `pipeline()` when a reusable piece is made entirely from existing operators:
-
-```javascript
-const normalizeOrder = exstream
-  .pipeline()
-  .filter((order) => order.total != null)
-  .map((order) => ({ ...order, total: Number(order.total) }))
-
-const fromApi = exstream(apiOrders).through(normalizeOrder)
-const fromFile = exstream(csvRows).through(normalizeOrder)
-```
-
-The pipeline is a recipe, not a live stream. Every attachment creates fresh operator state, so the same definition can safely be reused.
-
-Functions and pipelines compose through the same method:
-
-```javascript
-const prepareOrders = exstream
-  .pipeline()
-  .through(paidOnly)
-  .through(normalizeOrder)
-  .through(enrichCustomers(loadCustomer))
-
-await exstream(orders).through(prepareOrders).pipeTo(orderWriter)
-```
-
-Choose the smallest abstraction that expresses the behavior:
-
-| Goal                                     | Primitive              |
-| ---------------------------------------- | ---------------------- |
-| Reuse a chain of existing operators      | `pipeline()`           |
-| Package or parameterize a transformation | function + `through()` |
-| Transform each input synchronously       | `consumeSync()`        |
-| Delay when the next input may arrive     | `consume()`            |
-| Package terminal behavior                | `destination()`        |
+| Primitive       | Use it when                                                  |
+| --------------- | ------------------------------------------------------------ |
+| `consumeSync()` | every input is handled completely during the callback        |
+| `consume()`     | the operator may delay before it is ready for the next input |
 
 ## Build a synchronous operator with `consumeSync()`
 
-`consumeSync()` exposes Exstream's record protocol directly. The callback receives either a value, a record error, or `exstream.nil`, and must explicitly emit what should continue downstream.
+`consumeSync()` exposes three protocol cases. Each callback receives either a value, a record error, or `exstream.nil`, and must explicitly emit what should continue downstream.
 
 Here is a deliberately small implementation of `map()`:
 
@@ -105,7 +62,7 @@ const labels = exstream(products).through(mapSimple((product) => product.label))
 
 There is no `next()` because this consumer cannot hold upstream: after the callback returns, the source may deliver another record. Use it for synchronous transformations, validation, parsing, or state machines. A production operator may also add richer error provenance and context behavior; the built-in `map()` already does that work.
 
-The three protocol cases matter. Dropping the error branch silently loses record errors. Failing to push `exstream.nil` leaves downstream open forever.
+All three protocol cases matter. Dropping the error branch silently loses record errors. Failing to push `exstream.nil` leaves downstream open forever.
 
 ## Control progress with `consume()`
 
@@ -132,7 +89,9 @@ const delayEach = (milliseconds) => (source) =>
   })
 ```
 
-Call `next()` exactly once for every non-terminal input, and only when the operator is ready for another one. Returning a promise does not release upstream; `next()` is the progress signal. Do not call it after `exstream.nil`. Downstream backpressure still wins: `next()` releases this operator's hold, but cannot force a paused destination to accept more data.
+Call `next()` exactly once for every non-terminal input, and only when the operator is ready for another one. Returning a promise does not release upstream; `next()` is the progress signal. Do not call it after `exstream.nil`.
+
+Downstream backpressure still wins. `next()` releases this operator's internal hold, but it cannot force a paused destination to accept more data.
 
 ## Example: batch by time or count
 
@@ -203,7 +162,7 @@ This example is intentionally compact. A library-grade version may define clock 
 
 ## Boundaries and conventions
 
-A well-behaved reusable operator:
+A well-behaved custom operator:
 
 - returns an Exstream and does not start terminal consumption internally;
 - preserves or deliberately transforms errors and record context;
@@ -211,8 +170,8 @@ A well-behaved reusable operator:
 - cleans up timers, listeners, and external resources when its output ends;
 - leaves terminal choice, forks, observation, and cancellation to the caller.
 
-Prefer a built-in operator when it already expresses the behavior. `consume()` and `consumeSync()` are intentionally low-level: they make new behavior possible, but validation, protocol forwarding, errors, context, and cleanup become the extension author's responsibility.
+`consume()` and `consumeSync()` deliberately expose more responsibility than ordinary operators. Validation, protocol forwarding, errors, context, and cleanup all become part of the custom operator's contract. That is why extensibility comes last: these primitives make more sense after the graph, lifecycle, backpressure, and error model are familiar.
 
 ## Related
 
-[`through()`](/docs/reference/through/), [`pipeline()`](/docs/reference/pipeline/), [`consumeSync()`](/docs/reference/consume-sync/), [`consume()`](/docs/reference/consume/), [`destination()`](/docs/reference/destination/)
+[Composition](/docs/learn/composition/), [`through()`](/docs/reference/through/), [`consumeSync()`](/docs/reference/consume-sync/), [`consume()`](/docs/reference/consume/)

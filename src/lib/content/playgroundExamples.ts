@@ -2,8 +2,10 @@ import type { Component } from 'svelte'
 import AsyncWorkDescription from './playground-examples/async-work.md'
 import BackpressureDescription from './playground-examples/backpressure.md'
 import BranchingDescription from './playground-examples/branching.md'
+import CompositionDescription from './playground-examples/composition.md'
 import ConsumeDescription from './playground-examples/consume.md'
 import ErrorsDescription from './playground-examples/errors.md'
+import ExtensibilityDescription from './playground-examples/extensibility.md'
 import MergeSourcesDescription from './playground-examples/merge-sources.md'
 import PipelineModelDescription from './playground-examples/pipeline-model.md'
 import SourcesDescription from './playground-examples/sources.md'
@@ -63,6 +65,31 @@ await activeOrders.pipeTo(destination('active-orders'))`,
   }))
 
 await settlementBatches.pipeTo(destination('settlement-batches'))`,
+  },
+  composition: {
+    title: 'Composition',
+    sourcePath: '/docs/learn/composition/',
+    description: CompositionDescription,
+    code: `const normalizeTransaction = exstream
+  .pipeline()
+  .filter((transaction) => transaction.amount >= 1000)
+  .map((transaction) => ({
+    ...transaction,
+    amountInCents: Math.round(transaction.amount * 100),
+  }))
+
+const addReviewBand = (stream) =>
+  stream.map((transaction) => ({
+    ...transaction,
+    reviewBand: transaction.amount >= 7500 ? 'manual' : 'automatic',
+  }))
+
+const prepared = exstream(source('transactions'))
+  .take(80)
+  .through(normalizeTransaction)
+  .through(addReviewBand)
+
+await prepared.pipeTo(destination('prepared-transactions'))`,
   },
   'async-work': {
     title: 'Async processing',
@@ -277,6 +304,95 @@ await Promise.all([
     .pipeTo(destination('dead-letter')),
   seedInput(),
 ])`,
+  },
+  extensibility: {
+    title: 'Extensibility',
+    sourcePath: '/docs/learn/extensibility/',
+    description: ExtensibilityDescription,
+    code: `const wait = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds))
+
+const mapSimple = (project) => (source) =>
+  source.consumeSync((error, value, push) => {
+    if (error) return push(error)
+    if (value === exstream.nil) return push(null, exstream.nil)
+
+    try {
+      push(null, project(value))
+    } catch (error) {
+      push(error)
+    }
+  })
+
+const batchWithTimeOrCount = ({ count, milliseconds }) => (source) => {
+  let batch = []
+  let emitBatch
+  let timer
+
+  const clearTimer = () => {
+    if (timer !== undefined) clearTimeout(timer)
+    timer = undefined
+  }
+
+  const flush = () => {
+    if (batch.length === 0) return
+
+    clearTimer()
+    const values = batch
+    const push = emitBatch
+    batch = []
+    emitBatch = undefined
+    push(null, values)
+  }
+
+  const output = source.consume((error, value, push, next) => {
+    if (error) {
+      push(error)
+      next()
+      return
+    }
+
+    if (value === exstream.nil) {
+      flush()
+      push(null, exstream.nil)
+      return
+    }
+
+    if (batch.length === 0) {
+      emitBatch = push
+      timer = setTimeout(flush, milliseconds)
+    }
+
+    batch.push(value)
+    if (batch.length >= count) flush()
+    next()
+  })
+
+  output.once('end', clearTimer)
+  return output
+}
+
+async function* pacedTransactions(limit, delay) {
+  let emitted = 0
+
+  for await (const transaction of source('transactions')) {
+    yield transaction
+    emitted += 1
+    if (emitted === limit) return
+    await wait(delay)
+  }
+}
+
+const batches = exstream(pacedTransactions(30, 60))
+  .through(
+    mapSimple((transaction) => ({
+      ...transaction,
+      amountInCents: Math.round(transaction.amount * 100),
+    })),
+  )
+  .through(batchWithTimeOrCount({ count: 10, milliseconds: 250 }))
+
+await batches.pipeTo(destination('batches', { speed: Infinity }))`,
   },
 } satisfies Record<string, PlaygroundExample>
 

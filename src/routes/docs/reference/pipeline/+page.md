@@ -64,4 +64,4 @@ pipeline<T = unknown>(): Pipeline<T, T, RecordContext<T>>
 
 ## Related
 
-[`through()`](/docs/reference/through/), [`toNodeTransform()`](/docs/reference/to-node-transform/), [`destination()`](/docs/reference/destination/), [`drain()`](/docs/reference/drain/), [`map()`](/docs/reference/map/)
+[Composition](/docs/learn/composition/), [`through()`](/docs/reference/through/), [`toNodeTransform()`](/docs/reference/to-node-transform/), [`destination()`](/docs/reference/destination/), [`drain()`](/docs/reference/drain/), [`map()`](/docs/reference/map/)
