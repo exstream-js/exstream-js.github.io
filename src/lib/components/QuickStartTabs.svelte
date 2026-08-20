@@ -53,13 +53,14 @@ const countries = exstream(response.body)
   const browserDestination = `const output = document.querySelector('#app')
 output.replaceChildren()
 
-const destination = new WritableStream({
-  write(row) {
+const renderCountries = exstream
+  .pipeline()
+  .tap((row) => {
     const line = document.createElement('p')
     line.textContent = \`\${row.country}: \${row.lifeExpectancy} years\`
     output.append(line)
-  },
-})`
+  })
+  .drain()`
 
   const examples: Record<Runtime, Example> = {
     node: {
@@ -102,7 +103,7 @@ ${browserDestination}
 
 ${pipeline}
 
-await countries.pipeTo(destination)`,
+await countries.pipeTo(renderCountries)`,
       language: 'javascript',
       run: 'npm run dev',
     },
@@ -130,7 +131,7 @@ await countries.pipeTo(destination)`,
 
       ${pipeline.replaceAll('\n', '\n      ')}
 
-      await countries.pipeTo(destination)
+      await countries.pipeTo(renderCountries)
     ${'</' + 'script>'}
   </body>
 </html>`,

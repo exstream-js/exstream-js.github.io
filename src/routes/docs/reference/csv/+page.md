@@ -227,4 +227,4 @@ type CsvRow<H> = H extends readonly (infer K extends PropertyKey)[]
 
 ## Related
 
-[`csvStringify()`](/docs/reference/csv-stringify/), [`json()`](/docs/reference/json/), [fetch a large CSV](/docs/examples/browser-csv/)
+[`csvStringify()`](/docs/reference/csv-stringify/), [`json()`](/docs/reference/json/)

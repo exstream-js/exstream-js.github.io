@@ -135,7 +135,7 @@
           pressure through asynchronous operators and reliable branches instead of creating an
           unbounded queue between them.
         </p>
-        <a class="topic-link" href="/docs/concepts/backpressure/">Backpressure in the graph →</a>
+        <a class="topic-link" href="/docs/learn/backpressure/">Backpressure in the graph →</a>
       </div>
       <div class="topic-detail">
         <div class="pressure-path" aria-label="A slow writer reduces demand through the pipeline">

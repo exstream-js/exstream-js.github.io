@@ -27,7 +27,13 @@ const byRegion = await exstream(customers).groupBy('region').single()
 
 All successful input is consumed before one grouped object is emitted. Values inside each group retain input order. A `null`, `undefined`, or missing key is stored under Exstream's `nil` symbol, so it is accessible through symbol enumeration but omitted by ordinary JSON serialization.
 
-`groupBy()` retains every successful value and is unsuitable for unbounded input. Its result carries an aggregate context. Existing record errors pass through and are not included.
+The result carries an aggregate context. Existing record errors pass through and are not included.
+
+## Buffering
+
+`groupBy()` retains every successful value in its group until the source ends. It needs the end signal before it can know that the grouped object is complete, so memory use grows with the entire input and unbounded streams never produce a result.
+
+Use [`sortedGroupBy()`](/docs/reference/sorted-group-by/) when equal keys are adjacent: it emits each completed group incrementally and only retains the current group.
 
 ## Errors
 

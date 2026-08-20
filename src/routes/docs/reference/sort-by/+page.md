@@ -24,9 +24,15 @@ const ranked = exstream(products).sortBy((left, right) => right.score - left.sco
 
 ## Behavior
 
-All successful values and contexts are retained until upstream ends. Sorting is stable for equal comparisons and each emitted value keeps its original context. No output is available before completion, and infinite input never finishes. Existing record errors pass through immediately and are excluded from sorting.
+Sorting is stable for equal comparisons and each emitted value keeps its original context. Existing record errors pass through immediately and are excluded from sorting.
 
 The comparator is synchronous. Promise results are coerced by the platform sort algorithm and are not useful.
+
+## Buffering
+
+`sortBy()` retains every successful value and its context until upstream ends. The comparator cannot determine the first output without the complete input, so memory grows with the entire stream and no output is available before completion. Infinite input never finishes.
+
+For large inputs, prefer a source that can provide the required order or an external sort designed to spill to disk.
 
 ## Errors
 

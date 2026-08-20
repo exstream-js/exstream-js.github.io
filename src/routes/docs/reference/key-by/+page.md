@@ -24,7 +24,13 @@ const usersById = await exstream(users).keyBy('id').single()
 
 ## Behavior
 
-All values are retained until upstream ends, then one object is emitted. A `null`, `undefined`, or missing key becomes Exstream's `nil` symbol. Number keys follow JavaScript object-key coercion. The result has an aggregate context; existing record errors pass through and are excluded.
+A `null`, `undefined`, or missing key becomes Exstream's `nil` symbol. Number keys follow JavaScript object-key coercion. The result has an aggregate context; existing record errors pass through and are excluded.
+
+## Buffering
+
+`keyBy()` retains every successful value in the index until upstream ends, then emits the complete object. It cannot emit a partial index because a duplicate key discovered later invalidates the aggregation. Memory therefore grows with the entire input, and an unbounded stream never produces a result.
+
+For incremental processing, keep records in stream form and perform the keyed write or lookup downstream instead of building one in-memory index.
 
 ## Duplicate keys
 

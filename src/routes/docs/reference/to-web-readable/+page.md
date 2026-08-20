@@ -4,7 +4,7 @@
   <link rel="canonical" href="https://exstream-js.github.io/docs/reference/to-web-readable/" />
 </svelte:head>
 
-<p class="eyebrow">API · Consume</p>
+<p class="eyebrow">API · Interop</p>
 
 # `toWebReadable()`
 

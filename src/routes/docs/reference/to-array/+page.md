@@ -20,7 +20,13 @@ const rows = await exstream(response.body).csv({ header: true }).toArray()
 
 `toArray()` is terminal and starts demand immediately. It always returns a promise, including for a completely synchronous pipeline. Normal completion resolves with values in output order, or `[]` for an empty stream.
 
-Every value is retained until completion, so use `drain()`, `pipeTo()`, or async iteration for large or unbounded output. The promise rejects on the first unhandled record error, fatal failure, or abort.
+The promise rejects on the first unhandled record error, fatal failure, or abort.
+
+## Buffering
+
+`toArray()` retains every output value until the stream ends because the resolved result is one complete array. Memory grows linearly with output size, and an unbounded stream can neither resolve nor release that accumulated output.
+
+Use [`drain()`](/docs/reference/drain/) when values can be discarded, [`pipeTo()`](/docs/reference/pipe-to/) when they have a destination, or [async iteration](/docs/reference/async-iteration/) to process them incrementally.
 
 ## Signature
 

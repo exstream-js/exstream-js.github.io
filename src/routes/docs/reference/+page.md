@@ -49,7 +49,7 @@
 
 ## Async work
 
-- [`mapAsync()`](/docs/reference/map-async/) — transform with concurrency, ordering, retry, timeout, and cancellation controls
+- [`mapAsync()`](/docs/reference/map-async/) — transform with concurrency, ordering, retry, local recovery, timeout, and cancellation controls
 - [`asyncFilter()`](/docs/reference/async-filter/) and [`asyncReduce()`](/docs/reference/async-reduce/) — await sequential selection or aggregation
 - [`makeAsync()`](/docs/reference/make-async/) — yield long synchronous pipelines to the event loop
 
@@ -85,9 +85,12 @@
 
 - [`pipeTo()`](/docs/reference/pipe-to/) — run an Exstream destination or write to a Node or Web writable
 - [Async iteration](/docs/reference/async-iteration/) — consume one value per `for await` demand
+- [`toArray()`](/docs/reference/to-array/), [`single()`](/docs/reference/single/), and [`drain()`](/docs/reference/drain/) — finish with uniform promise semantics
+
+## Interop
+
 - [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeReadable()`](/docs/reference/to-node-readable/) — expose platform readables from a source-backed Exstream
 - [`toNodeTransform()`](/docs/reference/to-node-transform/) — expose a reusable pipeline as a native Node transform
-- [`toArray()`](/docs/reference/to-array/), [`single()`](/docs/reference/single/), and [`drain()`](/docs/reference/drain/) — finish with uniform promise semantics
 
 ## Low-level API
 

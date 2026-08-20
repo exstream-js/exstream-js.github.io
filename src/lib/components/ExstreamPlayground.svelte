@@ -105,6 +105,7 @@ await Promise.all([
   let nextConsoleEntryId = 1
   let lastDestinationScript = ''
   let codeUrlReady = $state(false)
+  let forwardMouseMoves = false
   let playgroundExample = $state<ReturnType<typeof getPlaygroundExample>>()
   let worker: Worker | undefined
 
@@ -226,11 +227,13 @@ await Promise.all([
     nextConsoleEntryId = 1
     errorMessage = ''
     runState = 'running'
+    forwardMouseMoves = /\bsource\s*\(\s*(['"])mousemove\1\s*\)/.test(code)
     createWorker()
     worker?.postMessage({ type: 'run', code, destinations: configurations })
   }
 
   function stop() {
+    forwardMouseMoves = false
     worker?.terminate()
     worker = undefined
     runState = 'stopped'
@@ -238,6 +241,7 @@ await Promise.all([
   }
 
   function reset() {
+    forwardMouseMoves = false
     worker?.terminate()
     worker = undefined
     code = playgroundExample?.code ?? starterCode
@@ -324,10 +328,12 @@ await Promise.all([
       })
       consoleEntries = [...consoleEntries, ...entries].slice(-500)
     } else if (message.type === 'complete') {
+      forwardMouseMoves = false
       runState = 'complete'
       worker?.terminate()
       worker = undefined
     } else if (message.type === 'error') {
+      forwardMouseMoves = false
       runState = 'error'
       errorMessage = typeof message.message === 'string' ? message.message : 'The run failed.'
       stopOpenDestinations('aborted')
@@ -351,6 +357,20 @@ await Promise.all([
 
   function clearConsole() {
     consoleEntries = []
+  }
+
+  function sendMouseMove(event: MouseEvent) {
+    if (!forwardMouseMoves || !isRunning) return
+
+    worker?.postMessage({
+      type: 'source:event',
+      name: 'mousemove',
+      value: {
+        buttons: event.buttons,
+        x: event.clientX,
+        y: event.clientY,
+      },
+    })
   }
 
   function formatValue(value: unknown) {
@@ -469,8 +489,12 @@ await Promise.all([
     restoreCodeFromUrl()
     codeUrlReady = true
     window.addEventListener('hashchange', restoreCodeFromUrl)
+    window.addEventListener('mousemove', sendMouseMove)
 
-    return () => window.removeEventListener('hashchange', restoreCodeFromUrl)
+    return () => {
+      window.removeEventListener('hashchange', restoreCodeFromUrl)
+      window.removeEventListener('mousemove', sendMouseMove)
+    }
   })
 
   onDestroy(() => worker?.terminate())

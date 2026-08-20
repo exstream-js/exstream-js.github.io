@@ -19,6 +19,7 @@
   --line: #e4e0dc;
   --accent: #e85d38;
   --accent-ink: #7f2a15;
+  --warning: #a66b00;
   --code: #111916;
   --code-ink: #e7eee9;
   --success: #bde8d1;
@@ -39,6 +40,7 @@
   --line: #34423b;
   --accent: #ff7653;
   --accent-ink: #ffc0ad;
+  --warning: #f2c14e;
   --code: #0a0f0d;
   --code-ink: #eaf2ed;
   --success: #295943;
@@ -57,6 +59,7 @@
     --line: #34423b;
     --accent: #ff7653;
     --accent-ink: #ffc0ad;
+    --warning: #f2c14e;
     --code: #0a0f0d;
     --code-ink: #eaf2ed;
     --success: #295943;

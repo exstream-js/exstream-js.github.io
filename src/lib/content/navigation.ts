@@ -16,15 +16,11 @@ export const docsNavigation = [
       { href: '/docs/learn/composition/', label: 'Composition' },
       { href: '/docs/learn/async-work/', label: 'Async processing' },
       { href: '/docs/learn/consume/', label: 'Consume a pipeline' },
-      { href: '/docs/concepts/backpressure/', label: 'Backpressure' },
+      { href: '/docs/learn/backpressure/', label: 'Backpressure' },
       { href: '/docs/learn/branching/', label: 'Fork & observe' },
       { href: '/docs/learn/errors/', label: 'Errors & lifecycle' },
       { href: '/docs/learn/extensibility/', label: 'Extensibility' },
     ],
-  },
-  {
-    label: 'Guides',
-    items: [{ href: '/docs/examples/browser-csv/', label: 'Fetch a large CSV' }],
   },
   {
     label: 'API reference',
@@ -85,13 +81,13 @@ export const docsNavigation = [
   {
     label: 'API · Aggregate',
     items: [
-      { href: '/docs/reference/collect/', label: 'collect()' },
+      { href: '/docs/reference/collect/', label: 'collect()', fullStreamBuffer: true },
       { href: '/docs/reference/reduce/', label: 'reduce()' },
       { href: '/docs/reference/reduce-1/', label: 'reduce1()' },
-      { href: '/docs/reference/group-by/', label: 'groupBy()' },
-      { href: '/docs/reference/key-by/', label: 'keyBy()' },
-      { href: '/docs/reference/sort/', label: 'sort()' },
-      { href: '/docs/reference/sort-by/', label: 'sortBy()' },
+      { href: '/docs/reference/group-by/', label: 'groupBy()', fullStreamBuffer: true },
+      { href: '/docs/reference/key-by/', label: 'keyBy()', fullStreamBuffer: true },
+      { href: '/docs/reference/sort/', label: 'sort()', fullStreamBuffer: true },
+      { href: '/docs/reference/sort-by/', label: 'sortBy()', fullStreamBuffer: true },
       { href: '/docs/reference/sorted-group-by/', label: 'sortedGroupBy()' },
     ],
   },
@@ -152,12 +148,17 @@ export const docsNavigation = [
     items: [
       { href: '/docs/reference/pipe-to/', label: 'pipeTo()' },
       { href: '/docs/reference/async-iteration/', label: 'Async iteration' },
+      { href: '/docs/reference/to-array/', label: 'toArray()', fullStreamBuffer: true },
+      { href: '/docs/reference/drain/', label: 'drain()' },
+      { href: '/docs/reference/single/', label: 'single()' },
+    ],
+  },
+  {
+    label: 'API · Interop',
+    items: [
       { href: '/docs/reference/to-web-readable/', label: 'toWebReadable()' },
       { href: '/docs/reference/to-node-readable/', label: 'toNodeReadable()' },
       { href: '/docs/reference/to-node-transform/', label: 'toNodeTransform()' },
-      { href: '/docs/reference/to-array/', label: 'toArray()' },
-      { href: '/docs/reference/drain/', label: 'drain()' },
-      { href: '/docs/reference/single/', label: 'single()' },
     ],
   },
   {

@@ -18,7 +18,6 @@
       </p>
       <div class="examples-actions">
         <a class="button" href="/examples/playground/">Open the playground</a>
-        <a href="/docs/examples/browser-csv/">Or run the browser CSV guide →</a>
       </div>
     </div>
 
@@ -74,13 +73,6 @@
           <a href="/examples/playground/?example=merge-sources">
             <span class="tutorial-number">07</span><strong>Merge sources</strong><small
               >parallel inputs and output order</small
-            ><span class="tutorial-arrow" aria-hidden="true">→</span>
-          </a>
-        </li>
-        <li>
-          <a href="/docs/examples/browser-csv/">
-            <span class="tutorial-number">08</span><strong>Stream a remote CSV</strong><small
-              >Web Streams, pressure, and cancellation</small
             ><span class="tutorial-arrow" aria-hidden="true">→</span>
           </a>
         </li>

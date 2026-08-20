@@ -14,7 +14,7 @@ playground: transform-data
 
 Transformation chains look similar to native array operations, but their input can be a file, response body, async iterable, or another stream. Records pass through the chain as downstream asks for them; the complete source is not turned into an array first.
 
-## Familiar record operations
+## Example
 
 This pipeline keeps paid orders, expands their items into invoice lines, removes empty quantities, and calculates each line total:
 

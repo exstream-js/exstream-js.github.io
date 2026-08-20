@@ -1,6 +1,6 @@
 <svelte:head>
   <title>mapAsync() — Exstream</title>
-  <meta name="description" content="Run asynchronous Exstream transforms with complete concurrency, ordering, retry, timeout, signal, and error semantics." />
+  <meta name="description" content="Run asynchronous Exstream transforms with bounded concurrency, retries, local onFail recovery, timeouts, cancellation, and record-error propagation." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/reference/map-async/" />
 </svelte:head>
 
@@ -8,7 +8,7 @@
 
 # `mapAsync()`
 
-<p class="lead">Run promise-returning work with bounded concurrency, optional completion-order output, retries, timeouts, and cancellation.</p>
+<p class="lead">Run promise-returning work with bounded concurrency, optional completion-order output, retries, local failure recovery, timeouts, and cancellation.</p>
 
 ## Example
 
@@ -78,6 +78,13 @@ const profiles = exstream(userIds).mapAsync(fetchProfile, {
     </dd>
   </div>
   <div>
+    <dt><code>onFail</code></dt>
+    <dd>
+      <p class="parameter-meta"><span><strong>Type</strong> <code>(error, input, push, attempt, retry, context) =&gt; void | PromiseLike&lt;void&gt;</code></span><span><strong>Default</strong> <code>null</code></span></p>
+      <p>Handles one failed attempt inside the current record's concurrency slot. Call <code>retry()</code> to run <code>fn</code> again with the current input, <code>retry(nextInput)</code> to run it with a replacement input, <code>push(null, output)</code> to emit a successful fallback, or <code>push(error, input)</code> to propagate a record error. The failed attempt number is one-based. The handler may be asynchronous and cannot be combined with <code>retry</code>.</p>
+    </dd>
+  </div>
+  <div>
     <dt><code>timeout</code></dt>
     <dd>
       <p class="parameter-meta"><span><strong>Type</strong> <code>non-negative finite number | null</code></span><span><strong>Default</strong> <code>null</code></span></p>
@@ -103,17 +110,36 @@ The JavaScript runtime normalizes numeric policy fields with `Number()`, so any 
 
 Upstream demand pauses while the window is full. In ordered mode, completed results may wait in memory behind a slower earlier input; unordered mode avoids that head-of-line delay and emits completion order. Both modes use the same sliding-window refill rule.
 
-The callback context exposes `context.input`, `context.signal`, and custom upstream fields. It is created lazily when `fn` declares its second parameter, `retry.when` declares its third, or a dynamic `retry.delay` declares its fourth. Declare those positional parameters rather than retrieving them through rest arguments when a materialized context is required. The context remains the same object across attempts and continues with the emitted result. During a timed attempt, only its `signal` is temporarily replaced with an attempt-specific signal and restored afterward.
+The callback context exposes `context.input`, `context.signal`, and custom upstream fields. It is created lazily when `fn` declares its second parameter, `retry.when` declares its third, a dynamic `retry.delay` declares its fourth, or `onFail` declares its sixth. Declare those positional parameters rather than retrieving them through rest arguments when a materialized context is required. The context remains the same object across attempts and continues with the emitted result. During a timed attempt, only its `signal` is temporarily replaced with an attempt-specific signal and restored afterward.
 
-## Retries
+## Retries and local recovery
 
 Retry policy applies per input and per failed attempt. The callback receives the same value and record context each time. Delay and policy evaluation happen inside the same concurrency slot, so a large retry delay reduces available throughput.
 
 Timeouts are also per attempt. Exstream aborts the attempt context signal when the deadline expires. JavaScript promises themselves are not cancellable, so the callback must forward that signal to `fetch`, database clients, or other cancellable APIs.
 
+`onFail` is the programmable alternative to automatic `retry`. It is useful when recovery must await more I/O, when the next attempt needs enriched input, or when a failure should produce a fallback output:
+
+```javascript
+const processed = exstream(orders).mapAsync(processOrder, {
+  concurrency: 8,
+  onFail: async (error, input, push, attempt, retry, context) => {
+    if (error.code === 'MISSING_CUSTOMER' && attempt < 3) {
+      const customer = await recoverCustomer(input.customerId, context.signal)
+      retry({ ...input, customer })
+      return
+    }
+
+    push(error, input)
+  },
+})
+```
+
+The handler must settle at most once. Returning without calling `retry` or `push` propagates the original failure. Throwing or rejecting replaces it with the handler failure. `retry` repeats the complete `fn` callback, so any side effects inside that callback must be safe to repeat.
+
 ## Errors
 
-A thrown callback error, rejected promise, exhausted retry policy, invalid dynamic delay, or timeout becomes a contextual record error. If handled downstream, later tasks continue. Fatal graph failures and external cancellation abort the operator immediately and bypass retry policy.
+A thrown callback error, rejected promise, exhausted retry policy, propagated `onFail` decision, invalid dynamic delay, or timeout becomes a contextual record error. If handled downstream, later tasks continue. If it reaches a terminal, that terminal rejects. Fatal graph failures and external cancellation abort the operator immediately and bypass retry and `onFail` policy.
 
 Cancelling the branch stops new scheduling and ignores late completions from work that could not be cancelled.
 
@@ -133,15 +159,33 @@ stream.through(exstream.mapAsync(fn, options))
 ```typescript
 mapAsync<U>(
   fn: (value: T, context: C) => U | PromiseLike<U>,
-  options?: MapAsyncOptions<T, C> | null,
+  options?: MapAsyncOptions<T, C, Awaited<U>> | null,
 ): Exstream<Awaited<U>, C>
 
-interface MapAsyncOptions<T, C extends object> {
+interface MapAsyncOptions<T, C extends object, Output = unknown> {
   concurrency?: number
   ordered?: boolean
   retry?: number | MapAsyncRetry<T, C> | null
+  onFail?: (
+    error: ExstreamError<T>,
+    input: T,
+    push: MapAsyncFailurePush<T, Output>,
+    attempt: number,
+    retry: MapAsyncRetryAttempt<T>,
+    context: C,
+  ) => void | PromiseLike<void>
   timeout?: number | null
   signal?: AbortSignal
+}
+
+interface MapAsyncFailurePush<Input, Output> {
+  (error: null | undefined, value: Output): void
+  (error: unknown, input?: Input): void
+}
+
+interface MapAsyncRetryAttempt<Input> {
+  (): void
+  (input: Input): void
 }
 
 interface MapAsyncRetry<T, C extends object> {

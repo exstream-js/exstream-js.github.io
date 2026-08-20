@@ -9,8 +9,7 @@ Exstream is intended for backend JavaScript and TypeScript jobs that process lar
 - [What is Exstream?](https://exstream-js.github.io/docs/): framework scope, runtimes, and core pipeline problems
 - [Quick start](https://exstream-js.github.io/quick-start/): install and build a bounded pipeline
 - [Examples](https://exstream-js.github.io/examples/): browser-native interactive learning
-- [Browser CSV demo](https://exstream-js.github.io/docs/examples/browser-csv/): run Exstream against a public streaming source
-- [Backpressure](https://exstream-js.github.io/docs/concepts/backpressure/): how demand moves through the graph
+- [Backpressure](https://exstream-js.github.io/docs/learn/backpressure/): how demand moves through the graph
 - [Destinations](https://exstream-js.github.io/docs/reference/destination/): define reusable application writers without low-level stream APIs
 - [When not to use Exstream](https://exstream-js.github.io/docs/project/when-not-to-use/): alternatives and honest boundaries
 

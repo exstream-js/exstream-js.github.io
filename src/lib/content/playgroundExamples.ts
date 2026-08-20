@@ -138,18 +138,19 @@ await pipeline.pipeTo(destination('processed'))`,
   },
   backpressure: {
     title: 'Backpressure',
-    sourcePath: '/docs/concepts/backpressure/',
+    sourcePath: '/docs/learn/backpressure/',
     description: BackpressureDescription,
-    code: `const transactions = exstream(source('transactions'))
-  .take(200)
+    code: `const mouseMoves = exstream
+  .fromEvent(source('mousemove'), 'mousemove', {
+    map: (event) => event.detail,
+    highWaterMark: 1,
+    overflow: 'drop-oldest',
+  })
+  .throttle(200)
 
-const primary = transactions.fork()
-const audit = transactions.fork()
-
-await Promise.all([
-  primary.take(130).pipeTo(destination('primary', { speed: 5 })),
-  audit.slice(100).pipeTo(destination('slow-audit', { speed: 1 })),
-])`,
+await mouseMoves.pipeTo(
+  destination('sampled-pointer', { speed: Infinity }),
+)`,
   },
   branching: {
     title: 'Fork and observe',
@@ -214,95 +215,51 @@ await decisions.pipeTo(destination('decisions', { speed: Infinity }))`,
     title: 'Errors and lifecycle',
     sourcePath: '/docs/learn/errors/',
     description: ErrorsDescription,
-    code: `const MAX_RETRIES = 2
-const input = exstream(null, { bufferLimit: 256 })
+    code: `const attempts = new Map()
 
-let originalSourceEnded = false
-let pending = 0
-let closeScheduled = false
+const validated = exstream(source('transactions'))
+  .take(120)
+  .mapAsync(
+    async (transaction) => {
+      const attempt = (attempts.get(transaction.id) ?? 0) + 1
+      attempts.set(transaction.id, attempt)
+      const sequence = Number(transaction.id.slice(-2))
 
-function closeInputWhenIdle() {
-  if (!originalSourceEnded || pending !== 0 || closeScheduled) return
+      if (sequence % 17 === 0 && attempt < 3) {
+        const error = new Error('Risk service timed out')
+        error.code = 'RISK_TIMEOUT'
+        throw error
+      }
 
-  closeScheduled = true
-  queueMicrotask(() => {
-    closeScheduled = false
-    if (originalSourceEnded && pending === 0 && !input.ended) input.end()
-  })
-}
+      if (sequence % 11 === 0) {
+        const error = new Error('Customer validation failed')
+        error.code = 'INVALID_CUSTOMER'
+        throw error
+      }
 
-function settle() {
-  pending -= 1
-  closeInputWhenIdle()
-}
-
-async function seedInput() {
-  let count = 0
-
-  for await (const transaction of source('transactions')) {
-    pending += 1
-    input.write({ ...transaction, attempt: 0 })
-    count += 1
-
-    if (count === 120) break
-  }
-
-  originalSourceEnded = true
-  closeInputWhenIdle()
-}
-
-const validated = input
-  .map((transaction) => {
-    const sequence = Number(transaction.id.slice(-2))
-
-    if (sequence % 17 === 0 && transaction.attempt < MAX_RETRIES) {
-      const error = new Error('Risk service timed out')
-      error.code = 'RISK_TIMEOUT'
-      throw error
-    }
-
-    if (sequence % 11 === 0) {
-      const error = new Error('Customer validation failed')
-      error.code = 'INVALID_CUSTOMER'
-      throw error
-    }
-
-    return { ...transaction, status: 'validated' }
-  })
+      return { ...transaction, status: 'validated', attempt }
+    },
+    {
+      concurrency: 8,
+      retry: {
+        retries: 2,
+        when: (error) => error.code === 'RISK_TIMEOUT',
+      },
+    },
+  )
 
 const { output, deadLetters } = validated.routeErrors()
 
-const failures = deadLetters.map(({ error, input }) => ({
+const rejected = deadLetters.map(({ error, input }) => ({
   code: error.code ?? 'UNKNOWN',
   message: error.message,
-  retryable: error.code === 'RISK_TIMEOUT' && input.attempt < MAX_RETRIES,
+  attempts: attempts.get(input.id),
   input,
 }))
 
-const retryable = failures
-  .fork()
-  .filter((failure) => failure.retryable)
-
-const rejected = failures
-  .fork()
-  .filter((failure) => !failure.retryable)
-
 await Promise.all([
-  output
-    .tap(settle)
-    .pipeTo(destination('processed')),
-  retryable
-    .tap((failure) => {
-      input.write({
-        ...failure.input,
-        attempt: failure.input.attempt + 1,
-      })
-    })
-    .pipeTo(destination('retry-queue')),
-  rejected
-    .tap(settle)
-    .pipeTo(destination('dead-letter')),
-  seedInput(),
+  output.pipeTo(destination('processed')),
+  rejected.pipeTo(destination('dead-letter')),
 ])`,
   },
   extensibility: {

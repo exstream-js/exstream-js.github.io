@@ -132,7 +132,13 @@ type ConfigureDestinationMessage = {
   delay: number
 }
 
-type PlaygroundMessage = RunMessage | ConfigureDestinationMessage
+type SourceEventMessage = {
+  type: 'source:event'
+  name: 'mousemove'
+  value: unknown
+}
+
+type PlaygroundMessage = RunMessage | ConfigureDestinationMessage | SourceEventMessage
 
 type GraphNode = {
   id: string
@@ -196,6 +202,7 @@ const StreamConstructor = realExstream([]).constructor as new (...arguments_: un
 let graphNodes = new Map<string, GraphNode>()
 let graphEdges: GraphEdge[] = []
 let destinations = new Map<string, DestinationRuntime>()
+let eventSources = new Map<string, EventTarget>()
 let forkStates = new WeakMap<StreamTarget, { stream: StreamTarget; nodeId: string }>()
 let proxyTargets = new WeakMap<object, StreamTarget>()
 let proxyNodeIds = new WeakMap<object, string>()
@@ -273,11 +280,17 @@ async function* transactionSource() {
 }
 
 function source(name: string) {
-  if (name !== 'transactions') {
-    throw new Error(`Unknown source "${name}". Available sources: transactions.`)
+  if (name === 'transactions') return transactionSource()
+  if (name === 'mousemove') {
+    let target = eventSources.get(name)
+    if (!target) {
+      target = new EventTarget()
+      eventSources.set(name, target)
+    }
+    return target
   }
 
-  return transactionSource()
+  throw new Error(`Unknown source "${name}". Available sources: transactions, mousemove.`)
 }
 
 function destination(name: string, options: DestinationOptions = {}) {
@@ -408,9 +421,27 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
 }
 
 Object.assign(instrumentedExstream, {
+  fromEvent: instrumentedFromEvent,
   nil: realExstream.nil,
   pipeline: realExstream.pipeline,
 })
+
+function instrumentedFromEvent(target: unknown, eventName: string, options?: unknown) {
+  const sourceNodeId = addNode('source', `${eventName} (hot)`, 0)
+  const node = graphNodes.get(sourceNodeId)!
+  const fromEvent = realExstream.fromEvent as unknown as (
+    target: unknown,
+    eventName: string,
+    options?: unknown,
+  ) => StreamTarget
+  const stream = fromEvent(target, eventName, options)
+  const observed = callTargetMethod(stream, 'tap', () => {
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(observed, sourceNodeId)
+  return wrapStream(observed, sourceNodeId)
+}
 
 function extractMergeInputs(input: unknown): MergeInput[] | undefined {
   if (!Array.isArray(input) || input.length === 0) return undefined
@@ -975,6 +1006,7 @@ function resetRuntime(configurations: DestinationConfig[]) {
       { ...configuration, count: 0, values: [], state: 'idle' as const },
     ]),
   )
+  eventSources = new Map()
   forkStates = new WeakMap()
   proxyTargets = new WeakMap()
   proxyNodeIds = new WeakMap()
@@ -1036,6 +1068,13 @@ function flushConsole() {
 }
 
 self.addEventListener('message', async (event: MessageEvent<PlaygroundMessage>) => {
+  if (event.data.type === 'source:event') {
+    eventSources
+      .get(event.data.name)
+      ?.dispatchEvent(new CustomEvent(event.data.name, { detail: event.data.value }))
+    return
+  }
+
   if (event.data.type === 'destination:configure') {
     configureDestination(event.data)
     return

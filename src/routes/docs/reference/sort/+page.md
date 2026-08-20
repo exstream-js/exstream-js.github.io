@@ -21,9 +21,11 @@ await exstream([10, 2, 1]).sort().toArray()
 
 Values are compared using `String(value)` and ascending code-unit order, not numeric order. `undefined` is always placed after defined values. Sorting is stable when values compare equally. Symbols cannot be converted by this operator and cause a record error for the collected input. Use [`sortBy()`](/docs/reference/sort-by/) for numeric, locale-aware, or field ordering.
 
-## Memory and pressure
+## Buffering
 
-`sort()` retains every successful value and its context until upstream ends, then emits the sorted sequence. No output appears early, so it cannot operate on an infinite source. During final emission, downstream buffering and pressure rules still apply. Existing record errors pass through immediately and are not sorted.
+`sort()` retains every successful value and its context until upstream ends. Sorting requires seeing the complete input before the first position is known, so memory grows with the entire stream and no output appears early. It cannot operate on an infinite source.
+
+For large inputs, prefer a source that can provide the required order, such as a database query, or use an external sort designed to spill to disk. During final emission, normal downstream pressure still applies. Existing record errors pass through immediately and are not sorted.
 
 ## Forms
 

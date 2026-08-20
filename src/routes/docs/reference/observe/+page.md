@@ -79,4 +79,4 @@ interface ObserveOptions {
 
 ## Related
 
-[`fork()`](/docs/reference/fork/), [backpressure](/docs/concepts/backpressure/), [Fork and observe](/docs/learn/branching/)
+[`fork()`](/docs/reference/fork/), [backpressure](/docs/learn/backpressure/), [Fork and observe](/docs/learn/branching/)

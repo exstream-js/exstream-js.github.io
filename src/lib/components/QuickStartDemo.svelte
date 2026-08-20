@@ -26,12 +26,6 @@
         throw new Error(`Download failed: ${response.status}`)
       }
 
-      const destination = new WritableStream<Country>({
-        write(country) {
-          countries = [...countries, country]
-        },
-      })
-
       await exstream(response.body)
         .csv({ header: true })
         .filter((row) => row.year === '2007')
@@ -41,7 +35,10 @@
           lifeExpectancy: Number(row.lifeExp),
         }))
         .take(8)
-        .pipeTo(destination)
+        .tap((country) => {
+          countries = [...countries, country]
+        })
+        .drain()
 
       status = 'complete'
     } catch (error) {
