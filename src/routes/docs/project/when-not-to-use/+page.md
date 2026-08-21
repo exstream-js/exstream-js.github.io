@@ -8,57 +8,56 @@
 
 # When to use Exstream
 
-<p class="lead">Use Exstream when a data flow needs bounded memory, controlled I/O, multiple branches, and coordinated failure or cleanup. For a small collection or a simple loop, use the platform directly.</p>
+<p class="lead">Use Exstream when a data flow needs explicit operational behavior, advanced error handling, or one high-level API across Node.js and modern browsers.</p>
 
-## Strong fit
+## Choose Exstream when coordination matters
 
-Exstream is a strong fit when several of these are true:
+Exstream is a strong choice when several of these are true:
 
-- records can number in the millions;
-- memory must remain bounded;
-- I/O should run concurrently but not without limit;
-- more than one reliable destination needs the same flow;
-- failure and cancellation must clean up the complete graph;
-- CSV, JSON Lines, or streamed JSON must be processed incrementally;
-- one pipeline crosses iterables, Node streams, and Web Streams.
+- the input may be large or unbounded and processing must remain incremental;
+- asynchronous I/O needs bounded concurrency and explicit output order;
+- slow destinations must control how quickly the source produces more data;
+- several destinations need defined delivery guarantees;
+- retries, timeouts, recovery, dead letters, and fatal failures need distinct policies;
+- cancellation and cleanup must cover the complete flow;
+- one uniform API should connect iterables, Node streams, and Web Streams across Node.js and the browser;
+- high-level record operations are preferable to stream plumbing.
 
-The value is not shorter syntax for `map()`. It is one explicit contract for the system those operations form.
+The syntax matters: it keeps sophisticated pipelines readable, composable, and easier to review. The deeper value is that flow control, error policy, and lifecycle semantics travel with the same API.
 
-## Data fits in memory
+Coordination is not the only source of value. If Exstream already defines the data-flow boundary in a project, using it for a smaller source-to-terminal job can preserve one mental model, separate responsibilities, and make reusable transformations easier to compose. Those benefits remain real even when the input has only a hundred records.
 
-For a small collection already in memory, native methods are clearer and familiar:
+## Input size is not the deciding factor
 
-```javascript
-const activeNames = users.filter((user) => user.active).map((user) => user.name)
-```
-
-You do not need streaming semantics when there is no meaningful stream.
-
-## One straight path
-
-A single source, one or two transformations, and one destination may only need a loop:
+Use native JavaScript for local collection manipulation when it says exactly what the code does:
 
 ```javascript
-for await (const record of source) {
-  if (!record.active) continue
-  await destination.write(normalize(record))
-}
+const activeNames = users.filter(isActive).map(({ name }) => name)
 ```
 
-Reach for Exstream when the loop starts accumulating concurrency pools, ordering queues, retries, fan-out, cancellation, format parsing, and cleanup rules.
+A finite job can still be conceptually streaming when it crosses a source, a reusable transformation chain, and a destination:
 
-## Native stream boundaries
+```javascript
+await exstream(source).filter(isActive).map(normalizeUser).pipeTo(destination)
+```
 
-If an existing Node.js or Web Streams pipeline already expresses the behavior safely, wrapping it brings little value. Exstream matters when you want one operator model across streams, iterables, async iterables, and multiple sinks.
+The second form is justified by the data-flow boundary, not by pretending that a small input needs sophisticated flow control. It becomes especially reasonable when Exstream is already a project dependency and the same operators, terminal semantics, and review vocabulary are used by related pipelines.
 
-## Analytical workloads
+## A simpler or more specialized tool may fit better
 
-DuckDB, Polars, and Arrow are often better for large analytical joins, aggregations, scans, and columnar computation. Exstream is a record-oriented JavaScript pipeline, not a replacement for a query optimizer or a vectorized execution engine.
+Start with the platform when several of these are true:
 
-## Hot sources are not promises
+- the complete dataset comfortably fits in memory;
+- the flow has one source, a few transformations, and one destination;
+- sequential `await`s provide enough throughput;
+- an existing Node.js or Web Streams pipeline already expresses the required behavior;
+- a uniform API across runtimes is not important;
+- ordinary `try`/`catch` provides the required error policy;
+- Exstream would be a new dependency used only for this isolated job;
+- the code is local collection manipulation rather than a source-to-terminal data flow.
 
-An `EventEmitter` or `EventTarget` can produce events whether the consumer is ready or not. If the producer cannot pause and losing events is unacceptable, put a durable queue or broker at the boundary. An in-process library cannot manufacture backpressure that the source does not support.
+If those conditions describe the job, arrays, async iteration, or native streams will usually be clearer. This is an argument against paying for an abstraction that adds no value, not a rule that small inputs must avoid Exstream.
 
-## Decision test
+Some workloads need a different category of tool altogether. DuckDB, Polars, and Arrow are often better for large analytical joins, aggregations, scans, and columnar computation. If a hot source cannot pause and losing events is unacceptable, use a durable queue or broker at that boundary.
 
-Ask what code you would otherwise need to write: a concurrency pool, ordering queue, retry policy, fan-out coordinator, parser, cancellation graph, or cleanup protocol. If the answer is “none of those,” start with the platform. You can move to Exstream when the pipeline—not the syntax—becomes the problem.
+If Exstream is not otherwise part of the system and the alternative is one clear loop, use the loop. If Exstream already provides the project's data-flow vocabulary, consistency and composition may earn it a place before advanced coordination appears. And if the alternative is a concurrency pool, ordering queue, retry policy, fan-out coordinator, cancellation graph, or cleanup protocol, Exstream has clearly earned its place.

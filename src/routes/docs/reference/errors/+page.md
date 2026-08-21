@@ -10,20 +10,6 @@
 
 <p class="lead">Handle recoverable record errors synchronously and optionally emit replacement values.</p>
 
-## Signature
-
-```typescript
-errors<U = T>(
-  fn: (error: ExstreamError<T>, push: Push<U, C>, context: C) => void,
-): Exstream<T | U, C>
-
-type Push<U, C> = (
-  error?: unknown | null,
-  value?: U | Nil | null,
-  context?: C,
-) => boolean | void
-```
-
 ## Example
 
 ```javascript
@@ -71,13 +57,25 @@ Use `failOnError()` for the opposite policy: promote the first record error to a
 
 ## Forms
 
-`errors()` is available on streams and reusable pipelines. Its standalone form accepts the stream directly or returns a curried operator:
+`errors()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.errors(handler)
 exstream.pipeline().errors(handler)
-exstream.errors(handler, stream)
-stream.through(exstream.errors(handler))
+```
+
+## Signature
+
+```typescript
+errors<U = T>(
+  fn: (error: ExstreamError<T>, push: Push<U, C>, context: C) => void,
+): Exstream<T | U, C>
+
+type Push<U, C> = (
+  error?: unknown | null,
+  value?: U | Nil | null,
+  context?: C,
+) => boolean | void
 ```
 
 ## Related

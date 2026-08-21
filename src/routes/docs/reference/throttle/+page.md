@@ -10,12 +10,6 @@
 
 <p class="lead">Emit the leading value, then drop values arriving before the configured interval expires.</p>
 
-## Signature
-
-```typescript
-throttle(milliseconds: number): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -43,10 +37,14 @@ Negative values, `NaN`, and `Infinity` are rejected at construction. Numeric str
 ```javascript
 stream.throttle(1_000)
 exstream.pipeline().throttle(1_000)
-exstream.throttle(1_000, stream)
-stream.through(exstream.throttle(1_000))
+```
+
+## Signature
+
+```typescript
+throttle(milliseconds: number): Exstream<T, C>
 ```
 
 ## Related
 
-[`ratelimit()`](/docs/reference/ratelimit/), [`makeAsync()`](/docs/reference/make-async/), [`observe()`](/docs/reference/observe/)
+[`rateLimit()`](/docs/reference/rate-limit/), [`makeAsync()`](/docs/reference/make-async/), [`observe()`](/docs/reference/observe/)

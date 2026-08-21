@@ -10,15 +10,6 @@
 
 <p class="lead">Split successful values and recoverable record errors into two reliable branches.</p>
 
-## Signature
-
-```typescript
-routeErrors(): {
-  output: Exstream<T, C>
-  deadLetters: Exstream<{ error: ExstreamError<T>; input: T }, C>
-}
-```
-
 ## Example
 
 ```javascript
@@ -45,11 +36,19 @@ Fatal source, sink, lifecycle, and cancellation failures bypass dead-letter rout
 
 ## Forms
 
-`routeErrors()` operates on a live stream and returns live branches. Use the instance method or pass the stream to the standalone function; it is not available on reusable pipeline definitions:
+`routeErrors()` operates on a live stream and returns live branches:
 
 ```javascript
 stream.routeErrors()
-exstream.routeErrors(stream)
+```
+
+## Signature
+
+```typescript
+routeErrors(): {
+  output: Exstream<T, C>
+  deadLetters: Exstream<{ error: ExstreamError<T>; input: T }, C>
+}
 ```
 
 ## Related

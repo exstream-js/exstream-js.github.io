@@ -10,14 +10,6 @@
 
 <p class="lead">Group adjacent equal keys while retaining only the current group.</p>
 
-## Signature
-
-```typescript
-sortedGroupBy<K>(
-  selector: ((value: T, context: C) => K) | keyof T,
-): Exstream<{ key: K; values: T[] }, AggregateContext<{ key: K; values: T[] }, C>>
-```
-
 ## Example
 
 ```javascript
@@ -43,10 +35,16 @@ Selector failures become contextual record errors. Existing errors pass through 
 ```javascript
 stream.sortedGroupBy('customerId')
 exstream.pipeline().sortedGroupBy('customerId')
-exstream.sortedGroupBy('customerId', stream)
-stream.through(exstream.sortedGroupBy('customerId'))
+```
+
+## Signature
+
+```typescript
+sortedGroupBy<K>(
+  selector: ((value: T, context: C) => K) | keyof T,
+): Exstream<{ key: K; values: T[] }, AggregateContext<{ key: K; values: T[] }, C>>
 ```
 
 ## Related
 
-[`groupBy()`](/docs/reference/group-by/), [`sortedJoin()`](/docs/reference/sorted-join/), [`sortBy()`](/docs/reference/sort-by/)
+[`groupBy()`](/docs/reference/group-by/), [`sortedJoin()`](/docs/reference/sorted-join/), [`sort()`](/docs/reference/sort/)

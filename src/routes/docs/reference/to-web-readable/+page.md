@@ -4,22 +4,11 @@
   <link rel="canonical" href="https://exstream-js.github.io/docs/reference/to-web-readable/" />
 </svelte:head>
 
-<p class="eyebrow">API · Consume</p>
+<p class="eyebrow">API · Interop</p>
 
 # `toWebReadable()`
 
 <p class="lead">Expose Exstream output as a pull-based Web `ReadableStream`.</p>
-
-## Signature
-
-```typescript
-interface ToWebReadableOptions {
-  signal?: AbortSignal
-  strategy?: QueuingStrategy<unknown>
-}
-
-toWebReadable(options?: ToWebReadableOptions | null): ReadableStream<T>
-```
 
 ## Example
 
@@ -42,6 +31,17 @@ Each native `pull()` requests one value through Exstream's async iterator, so re
 The method requires a global `ReadableStream` constructor and otherwise throws. It works in modern browsers and compatible Node runtimes.
 
 `toWebReadable()` is an instance-only adapter.
+
+## Signature
+
+```typescript
+interface ToWebReadableOptions {
+  signal?: AbortSignal
+  strategy?: QueuingStrategy<unknown>
+}
+
+toWebReadable(options?: ToWebReadableOptions | null): ReadableStream<T>
+```
 
 ## Related
 

@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: transform-data
+---
 
 <svelte:head>
   <title>Transform data — Exstream</title>
@@ -14,7 +14,7 @@
 
 Transformation chains look similar to native array operations, but their input can be a file, response body, async iterable, or another stream. Records pass through the chain as downstream asks for them; the complete source is not turned into an array first.
 
-## Familiar record operations
+## Example
 
 This pipeline keeps paid orders, expands their items into invoice lines, removes empty quantities, and calculates each line total:
 
@@ -63,8 +63,6 @@ const pricedLines = invoiceLines.mapAsync(loadCurrentPrice, {
 })
 ```
 
-<PlaygroundLink example="transform-data" />
-
 See the [operator index](/docs/reference/) for the complete list of transformations and [Async processing](/docs/learn/async-work/) for `mapAsync()` behavior.
 
 ## Reusable pipelines
@@ -80,7 +78,7 @@ const normalizePayments = exstream
     accountId: payment.accountId,
     amountInCents: Math.round(payment.amount * 100),
   }))
-  .uniqBy('id')
+  .uniq('id')
 ```
 
 Attach it to any compatible Exstream with `through()`:
@@ -90,6 +88,6 @@ const webPayments = exstream(webPaymentSource).through(normalizePayments)
 const retailPayments = exstream(retailPaymentSource).through(normalizePayments)
 ```
 
-Each call to `through()` creates an independent operator chain. State held by operators such as `uniqBy()` or `batch()` is not shared between attachments. The resulting values are ordinary Exstreams and can continue through more operators or a terminal destination.
+Each call to `through()` creates an independent operator chain. State held by operators such as `uniq()` or `batch()` is not shared between attachments. The resulting values are ordinary Exstreams and can continue through more operators or a terminal destination.
 
 Read the [`pipeline()`](/docs/reference/pipeline/) and [`through()`](/docs/reference/through/) references for supported operators, composition, types, and attachment behavior.

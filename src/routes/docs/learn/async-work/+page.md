@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: async-work
+---
 
 <svelte:head>
   <title>Async processing — Exstream</title>
@@ -58,8 +58,6 @@ const enrichedOrders = exstream(orders).mapAsync(
 )
 ```
 
-<PlaygroundLink example="async-work" />
-
 This operator owns at most eight records: callbacks still running, retry delays, and completed results waiting for downstream. When the window is full it stops asking upstream for more input. A slow destination therefore reduces new work instead of creating a separate result queue.
 
 `ordered: true` emits enriched orders in source order. If every record is independent and lower latency matters more than order, allow each result to leave when it finishes:
@@ -89,7 +87,7 @@ Fatal source, destination, and lifecycle failures still abort the flow; they are
 
 ## Throttle and rate limit
 
-`throttle()` and `ratelimit()` also control processing over time, but they have different delivery rules.
+`throttle()` and `rateLimit()` also control processing over time, but they have different delivery rules.
 
 Use `throttle()` when intermediate updates may be discarded. This emits at most one progress snapshot per second and drops snapshots that arrive inside the window:
 
@@ -97,12 +95,12 @@ Use `throttle()` when intermediate updates may be discarded. This emits at most 
 const visibleProgress = progressEvents.throttle(1_000)
 ```
 
-Use `ratelimit()` when every record must be kept but may need to wait. This starts no more than 100 API calls per minute, while `mapAsync()` separately limits simultaneous requests:
+Use `rateLimit()` when every record must be kept but may need to wait. This starts no more than 100 API calls in each local burst window, while `mapAsync()` separately limits simultaneous requests:
 
 ```javascript
 const responses = requests
-  .ratelimit(100, 60_000)
+  .rateLimit({ limit: 100, interval: 60_000 })
   .mapAsync(sendRequest, { concurrency: 8, ordered: false })
 ```
 
-`ratelimit()` turns the delay into upstream backpressure instead of accumulating all waiting requests. Read the [`throttle()`](/docs/reference/throttle/) and [`ratelimit()`](/docs/reference/ratelimit/) references for their exact window behavior.
+`rateLimit()` turns the delay into upstream backpressure instead of accumulating all waiting requests. It is a per-pipeline burst limiter, not a shared or rolling-window quota. Read the [`throttle()`](/docs/reference/throttle/) and [`rateLimit()`](/docs/reference/rate-limit/) references for their exact window behavior.

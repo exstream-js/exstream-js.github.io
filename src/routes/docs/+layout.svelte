@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'
+  import DocsPagination from '$lib/components/DocsPagination.svelte'
   import TableOfContents from '$lib/components/TableOfContents.svelte'
   import { docsNavigation } from '$lib/content/navigation'
 
@@ -63,7 +64,16 @@
                   aria-current={page.url.pathname === item.href ? 'page' : undefined}
                   onclick={() => (navigationOpen = false)}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {#if 'fullStreamBuffer' in item}
+                    <span
+                      class="buffer-warning"
+                      title="Retains the complete stream in memory until it ends"
+                    >
+                      <span class="buffer-dot" aria-hidden="true"></span>
+                      <span class="sr-only"> — retains the complete stream in memory</span>
+                    </span>
+                  {/if}
                 </a>
               </li>
             {/each}
@@ -76,8 +86,33 @@
     {#key page.url.pathname}
       <div class="page-frame">
         {@render children()}
+        <DocsPagination />
       </div>
     {/key}
   </article>
   <TableOfContents />
 </div>
+
+<style>
+  .buffer-dot {
+    display: block;
+    width: 0.45rem;
+    height: 0.45rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--warning);
+  }
+
+  :global(.docs-sidebar a:has(.buffer-warning)) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .buffer-warning {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+  }
+</style>

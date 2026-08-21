@@ -10,18 +10,6 @@
 
 <p class="lead">Create a best-effort branch that never applies backpressure to the reliable flow.</p>
 
-## Signature
-
-```typescript
-observe(options?: ObserveOptions | null): Exstream<T, C>
-
-interface ObserveOptions {
-  bufferLimit?: number
-  overflow?: 'error' | 'drop-oldest' | 'drop-newest'
-  signal?: AbortSignal
-}
-```
-
 ## Example
 
 ```javascript
@@ -75,8 +63,20 @@ Observer overflow with the default policy and failures inside the observer abort
 
 ## Forms
 
-`observe()` is a graph operation on a concrete stream. It is not available on reusable pipeline definitions and has no standalone operator form.
+`observe()` is a graph operation on a concrete stream. It is not available on reusable pipeline definitions.
+
+## Signature
+
+```typescript
+observe(options?: ObserveOptions | null): Exstream<T, C>
+
+interface ObserveOptions {
+  bufferLimit?: number
+  overflow?: 'error' | 'drop-oldest' | 'drop-newest'
+  signal?: AbortSignal
+}
+```
 
 ## Related
 
-[`fork()`](/docs/reference/fork/), [backpressure](/docs/concepts/backpressure/), [branch and observe](/docs/learn/branching/)
+[`fork()`](/docs/reference/fork/), [backpressure](/docs/learn/backpressure/), [Fork and observe](/docs/learn/branching/)

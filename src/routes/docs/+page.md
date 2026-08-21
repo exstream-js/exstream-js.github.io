@@ -1,45 +1,62 @@
 <svelte:head>
-  <title>Documentation — Exstream</title>
-  <meta name="description" content="Learn the Exstream pipeline model, solve streaming ETL problems, and look up operator contracts." />
+  <title>What is Exstream?</title>
+  <meta name="description" content="What Exstream is, the sources and destinations it connects, and the streaming pipeline problems it handles." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/" />
 </svelte:head>
 
-<p class="eyebrow">Documentation</p>
+<p class="eyebrow">Overview</p>
 
-# Choose what you need
+# What is Exstream?
 
-<p class="lead">Learn the model in order, solve a concrete ETL problem, or look up the exact contract of one operator.</p>
+<p class="lead">Exstream is a JavaScript framework for building record-oriented streaming data pipelines in Node.js and modern browsers.</p>
 
-## New to Exstream?
+A pipeline reads values from an iterable, async iterable, Node stream, Web Stream, generator, or promise; applies a chain of operators; and sends the results to a terminal consumer or destination.
 
-Start with the [quick start](/quick-start/) if you have not run a pipeline yet. Then read the [pipeline model](/docs/learn/pipeline-model/) and [backpressure](/docs/concepts/backpressure/). Together they explain when work starts, who controls the pace, and why the pipeline stays bounded.
+It is meant for flows that should be processed incrementally and need more coordination than a simple loop provides: bounded asynchronous work, backpressure from slow destinations, branching and merging, streaming formats, and consistent error and cancellation handling.
 
-```text
-source → transformations → terminal consumer
-   ↑                              │
-   └──────────── demand ──────────┘
+## The same Node pipeline
+
+Suppose `source` and `destination` are Node.js object-mode streams. Keeping approved transactions and reshaping them with native streams requires a `Transform` implementation:
+
+```javascript
+import { Transform } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+
+const selectApproved = new Transform({
+  objectMode: true,
+  transform(transaction, _encoding, callback) {
+    if (transaction.status !== 'approved') {
+      callback()
+      return
+    }
+
+    callback(null, {
+      id: transaction.id,
+      amountInCents: Math.round(transaction.amount * 100),
+    })
+  },
+})
+
+await pipeline(source, selectApproved, destination)
 ```
 
-## Solving a problem?
+Exstream accepts those same Node streams and expresses the record operations directly:
 
-Guides begin with a real task and end with a complete pipeline. The first one [fetches and transforms a public CSV in the browser](/docs/examples/browser-csv/) without a server or upload.
+```javascript
+await exstream(source)
+  .filter((transaction) => transaction.status === 'approved')
+  .map((transaction) => ({
+    id: transaction.id,
+    amountInCents: Math.round(transaction.amount * 100),
+  }))
+  .pipeTo(destination)
+```
 
-More guides will cover bounded enrichment, multiple writers, paginated APIs, dead-letter flows, and hot event sources. They belong here only when their code can be verified against a released package.
+## What Exstream adds
 
-## Looking up an operator?
+- **One API across runtimes.** Pipelines accept iterables, async iterables, promises, Node streams, and Web Streams, and can write to Node or Web destinations.
+- **Record operations without stream plumbing.** Selection, transformation, aggregation, streaming formats, joins, grouping, and sorting are regular operators rather than custom stream classes.
+- **Explicit flow control.** Slow destinations propagate backpressure; `mapAsync()` bounds asynchronous work and controls output order; `fork()`, `observe()`, and `merge()` describe how data moves between branches.
+- **One lifecycle for the complete flow.** Errors retain their input and stage, cancellation propagates through connected work, and terminal methods expose completion as promises.
 
-Use the [operator index](/docs/reference/). Reference pages state the details production code depends on: input and output, sync or async execution, order, concurrency, buffering, backpressure, errors, cancellation, and runtime support.
-
-## Deciding whether to adopt it?
-
-Read [when to use Exstream](/docs/project/when-not-to-use/). Native arrays, a small `for await` loop, Web Streams, or a columnar engine can all be the better answer. Exstream is useful when coordinating the complete pipeline is the difficult part.
-
-## Runtime baseline
-
-- Node.js 22 or newer
-- ESM and CommonJS entry points
-- Portable core for modern browsers
-- Zero runtime dependencies
-- TypeScript declarations included
-
-The default import selects the Node.js or browser implementation through package exports. Explicit entry points are available as `exstream.js/node`, `exstream.js/core`, and `exstream.js/web`.
+Exstream is not a database, a message broker, or a faster replacement for native array methods. See [when to use it](/docs/project/when-not-to-use/) for the cases where those pipeline mechanics are useful.

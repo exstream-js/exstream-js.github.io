@@ -10,12 +10,6 @@
 
 <p class="lead">Buffer all successful values and emit one array when the source ends.</p>
 
-## Signature
-
-```typescript
-collect(): Exstream<T[], AggregateOutputContext<C, T[]>>
-```
-
 ## Example
 
 ```javascript
@@ -33,9 +27,11 @@ await exstream([]).collect().toArray()
 
 It is an intermediate operator, not a terminal consumer. The returned stream still needs demand from `toArray()`, `drain()`, `pipeTo()`, or another consumer.
 
-## Memory
+## Buffering
 
-The complete successful input remains in memory until the source ends, so memory use grows linearly with input size and has no built-in limit. Prefer [`batch()`](/docs/reference/batch/) when work can be processed incrementally, and reserve `collect()` for datasets whose maximum size is known and acceptable.
+`collect()` must retain every successful value because its only output is one complete array. It cannot emit that array until the source ends, so memory use grows linearly with input size and has no built-in limit.
+
+Use it only when the maximum input size is known and acceptable. Prefer [`batch()`](/docs/reference/batch/) when the work can be processed incrementally.
 
 ## Context
 
@@ -47,12 +43,17 @@ Record errors pass through immediately and are excluded from the array. If handl
 
 ## Forms
 
-`collect()` is available on streams, reusable pipelines, and as a standalone operator. It takes no configuration, so the standalone form receives the stream directly:
+`collect()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.collect()
 exstream.pipeline().collect()
-exstream.collect(stream)
+```
+
+## Signature
+
+```typescript
+collect(): Exstream<T[], AggregateOutputContext<C, T[]>>
 ```
 
 ## Related

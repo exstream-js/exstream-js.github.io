@@ -1,5 +1,8 @@
 <script lang="ts">
   import { afterNavigate, goto } from '$app/navigation'
+  import { page } from '$app/state'
+  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
+  import type { DocsMetadata } from '$lib/content/docsMetadataTypes'
   import { onDestroy, onMount } from 'svelte'
 
   type TocItem = {
@@ -12,6 +15,7 @@
   let activeId = $state('')
   let headings: HTMLElement[] = []
   let updateFrame = 0
+  const playground = $derived((page.data.docsMetadata as DocsMetadata | undefined)?.playground)
 
   function slugify(value: string) {
     return value
@@ -114,7 +118,7 @@
   })
 </script>
 
-<aside class="docs-toc" aria-label="On this page">
+<aside class="docs-toc" class:has-playground={playground} aria-label="Page tools">
   {#if items.length > 0}
     <p>On this page</p>
     <nav>
@@ -131,4 +135,27 @@
       </ol>
     </nav>
   {/if}
+  {#if playground}
+    <div class="docs-playground">
+      <p>Try it</p>
+      <PlaygroundLink example={playground} compact />
+    </div>
+  {/if}
 </aside>
+
+<style>
+  .docs-playground {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+  }
+
+  .docs-playground > p {
+    margin: 0 0 0.65rem;
+    color: var(--ink-soft);
+    font-size: 0.68rem;
+    font-weight: 720;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+</style>

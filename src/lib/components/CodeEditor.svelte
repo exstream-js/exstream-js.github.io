@@ -29,6 +29,7 @@
     lineNumbers,
   } from '@codemirror/view'
   import { tags } from '@lezer/highlight'
+  import { playgroundMethodNames, playgroundStaticNames } from '$lib/playgroundOperators'
   import { EditorView } from 'codemirror'
   import { onDestroy, onMount } from 'svelte'
 
@@ -57,78 +58,16 @@
     { label: 'console', type: 'variable', detail: 'Playground console' },
   ]
 
-  const methodNames = [
-    'abort',
-    'asyncFilter',
-    'asyncReduce',
-    'batch',
-    'collect',
-    'compact',
-    'consume',
-    'consumeSync',
-    'csv',
-    'csvStringify',
-    'decode',
-    'drain',
-    'drop',
-    'encode',
-    'errors',
-    'failOnError',
-    'filter',
-    'find',
-    'findWhere',
-    'flatMap',
-    'flatten',
-    'fork',
-    'groupBy',
-    'head',
-    'json',
-    'jsonl',
-    'jsonlStringify',
-    'jsonStringify',
-    'keyBy',
-    'last',
-    'makeAsync',
-    'map',
-    'mapAsync',
-    'merge',
-    'observe',
-    'omit',
-    'pick',
-    'pipeTo',
-    'pluck',
-    'ratelimit',
-    'reduce',
-    'reduce1',
-    'reject',
-    'routeErrors',
-    'single',
-    'skipErrors',
-    'slice',
-    'sort',
-    'sortBy',
-    'sortedGroupBy',
-    'sortedJoin',
-    'split',
-    'splitBy',
-    'start',
-    'stopOnError',
-    'stopWhen',
-    'take',
-    'tap',
-    'throttle',
-    'through',
-    'toArray',
-    'toWebReadable',
-    'uniq',
-    'uniqBy',
-    'where',
-    'withContext',
-  ]
-  const methodCompletions = methodNames.map((label) => ({
+  const methodCompletions = playgroundMethodNames.map((label) => ({
     label,
     type: 'method',
     detail: 'Exstream operator',
+  }))
+
+  const staticCompletions = playgroundStaticNames.map((label) => ({
+    label,
+    type: 'property',
+    detail: 'Exstream public API',
   }))
 
   function playgroundCompletions(context: Parameters<typeof completionPath>[0]) {
@@ -137,7 +76,12 @@
 
     return {
       from: context.pos - path.name.length,
-      options: path.path.length > 0 ? methodCompletions : globalCompletions,
+      options:
+        path.path.length === 1 && path.path[0] === 'exstream'
+          ? staticCompletions
+          : path.path.length > 0
+            ? methodCompletions
+            : globalCompletions,
       validFor: /^\w*$/,
     }
   }

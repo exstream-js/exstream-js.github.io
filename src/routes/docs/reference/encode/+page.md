@@ -10,12 +10,6 @@
 
 <p class="lead">Convert byte-like input chunks into a continuous base64 text stream.</p>
 
-## Signature
-
-```typescript
-encode(encoding: 'base64'): Exstream<string, C>
-```
-
 ## Example
 
 ```javascript
@@ -42,8 +36,12 @@ Unsupported encoding throws immediately. A value that cannot be converted to byt
 ```javascript
 stream.encode('base64')
 exstream.pipeline().encode('base64')
-exstream.encode('base64', stream)
-stream.through(exstream.encode('base64'))
+```
+
+## Signature
+
+```typescript
+encode(encoding: 'base64'): Exstream<string, C>
 ```
 
 ## Related

@@ -1,49 +1,8 @@
 <script lang="ts">
-  const heroCode = `<span class="token keyword">const</span> orders <span class="token operator">=</span> <span class="token function">exstream</span>(response.body)
-  .<span class="token function">json</span>(<span class="token punctuation">{</span> path<span class="token operator">:</span> <span class="token string">'$.orders[*]'</span> <span class="token punctuation">}</span>)
-  .<span class="token function">mapAsync</span>(enrichOrder<span class="token punctuation">,</span> <span class="token punctuation">{</span>
-    concurrency<span class="token operator">:</span> <span class="token number">8</span>
-  <span class="token punctuation">}</span>)
-  .<span class="token function">filter</span>(isActive)
+  import Play from '@lucide/svelte/icons/play'
+  import type { PageProps } from './$types'
 
-<span class="token keyword">await</span> orders
-  .<span class="token function">jsonlStringify</span>()
-  .<span class="token function">pipeTo</span>(destination)`
-
-  const asyncCode = `<span class="token keyword">const</span> profiles <span class="token operator">=</span> users.<span class="token function">mapAsync</span>(fetchProfile<span class="token punctuation">,</span> <span class="token punctuation">{</span>
-  concurrency<span class="token operator">:</span> <span class="token number">8</span><span class="token punctuation">,</span>
-  ordered<span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
-  retry<span class="token operator">:</span> <span class="token number">2</span><span class="token punctuation">,</span>
-  timeout<span class="token operator">:</span> <span class="token number">5_000</span><span class="token punctuation">,</span>
-<span class="token punctuation">}</span>)`
-
-  const branchCode = `<span class="token keyword">const</span> database <span class="token operator">=</span> source.<span class="token function">fork</span>()
-<span class="token keyword">const</span> audit <span class="token operator">=</span> source.<span class="token function">fork</span>()
-
-<span class="token keyword">await</span> Promise.<span class="token function">all</span>(<span class="token punctuation">[</span>
-  database.<span class="token function">pipeTo</span>(databaseWriter)<span class="token punctuation">,</span>
-  audit.<span class="token function">pipeTo</span>(auditWriter)<span class="token punctuation">,</span>
-<span class="token punctuation">]</span>)
-
-<span class="token keyword">const</span> rows <span class="token operator">=</span> pageStreams.<span class="token function">merge</span>(<span class="token number">4</span><span class="token punctuation">,</span> <span class="token boolean">false</span>)`
-
-  const operationsCode = `<span class="token keyword">const</span> groups <span class="token operator">=</span> rowsByCustomer
-  .<span class="token function">sortedGroupBy</span>(<span class="token string">'customerId'</span>)
-
-<span class="token keyword">const</span> joined <span class="token operator">=</span> <span class="token function">exstream</span>(<span class="token punctuation">[</span>customers<span class="token punctuation">,</span> orders<span class="token punctuation">]</span>)
-  .<span class="token function">sortedJoin</span>(
-    <span class="token string">'id'</span><span class="token punctuation">,</span>
-    <span class="token string">'customerId'</span><span class="token punctuation">,</span>
-    <span class="token string">'left'</span>
-  )`
-
-  const errorsCode = `<span class="token keyword">const</span> <span class="token punctuation">{</span> output<span class="token punctuation">,</span> deadLetters <span class="token punctuation">}</span> <span class="token operator">=</span>
-  pipeline.<span class="token function">routeErrors</span>()
-
-<span class="token keyword">await</span> Promise.<span class="token function">all</span>(<span class="token punctuation">[</span>
-  output.<span class="token function">pipeTo</span>(destination)<span class="token punctuation">,</span>
-  deadLetters.<span class="token function">pipeTo</span>(rejects)<span class="token punctuation">,</span>
-<span class="token punctuation">]</span>)`
+  let { data }: PageProps = $props()
 </script>
 
 <svelte:head>
@@ -80,9 +39,23 @@
       <div class="pipeline-panel" aria-label="Example Exstream pipeline">
         <div class="panel-bar">
           <span>orders.pipeline.js</span>
-          <span>source → transforms → destination</span>
+          <div class="panel-bar-actions">
+            <span>source → transforms → destination</span>
+            <a
+              class="hero-play-button"
+              href="/examples/playground/?example=orders-pipeline"
+              aria-label="Open this orders pipeline in the playground"
+              title="Open in playground"
+            >
+              <Play size={15} strokeWidth={2.2} fill="currentColor" aria-hidden="true" />
+            </a>
+          </div>
         </div>
-        <pre class="pipeline-code"><code>{@html heroCode}</code></pre>
+        <div class="code-block-shell">
+          <pre class="pipeline-code language-javascript" data-copy-ready="true"><code
+              class="language-javascript">{@html data.heroCode}</code
+            ></pre>
+        </div>
         <div class="pipeline-contract" aria-label="Pipeline contract">
           <div><span>input</span><strong>pulled on demand</strong></div>
           <div><span>async processing</span><strong>8 at a time</strong></div>
@@ -92,195 +65,117 @@
     </div>
   </section>
 
-  <div class="topics" aria-label="Exstream capabilities">
-    <section class="topic-card" id="async-processing">
-      <div class="topic-copy">
-        <p class="topic-index">01 / Async processing</p>
-        <h2>Set the amount of work and the output order.</h2>
-        <p>
-          <code>mapAsync()</code> runs promise-returning transforms with an explicit concurrency limit.
-          Results stay in input order by default, or can leave as soon as they complete.
-        </p>
-        <a class="topic-link" href="/docs/learn/async-work/">Async processing →</a>
-      </div>
-      <div class="topic-detail">
-        <div class="topic-code"><pre><code>{@html asyncCode}</code></pre></div>
-        <dl class="topic-facts">
-          <div>
-            <dt>Concurrency</dt>
-            <dd>Finite and explicit</dd>
-          </div>
-          <div>
-            <dt>Order</dt>
-            <dd>Input or completion</dd>
-          </div>
-          <div>
-            <dt>Failure policy</dt>
-            <dd>Retry and timeout per attempt</dd>
-          </div>
-          <div>
-            <dt>Cancellation</dt>
-            <dd>Available through AbortSignal</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
+  <section class="coordination-case">
+    <div class="coordination-copy">
+      <p class="eyebrow">Why Exstream</p>
+      <h2>The easy pipeline is rarely the one that reaches production.</h2>
+      <p>
+        A loop can read, transform, and write records. Production turns that local sequence into a
+        system: several parts now have to agree about pace, delivery, and completion. The hard part
+        is no longer any individual callback. It is coordination.
+      </p>
+      <a class="text-link" href="/docs/">Compare the same pipeline in native Node.js →</a>
+    </div>
 
-    <section class="topic-card" id="backpressure">
-      <div class="topic-copy">
-        <p class="topic-index">02 / Backpressure</p>
-        <h2>Demand travels from the destination back to the source.</h2>
-        <p>
-          When a writer slows down, transforms stop asking for more input. Exstream propagates that
-          pressure through asynchronous operators and reliable branches instead of creating an
-          unbounded queue between them.
-        </p>
-        <a class="topic-link" href="/docs/concepts/backpressure/">Backpressure in the graph →</a>
-      </div>
-      <div class="topic-detail">
-        <div class="pressure-path" aria-label="A slow writer reduces demand through the pipeline">
-          <div><span>source</span><strong>async iterator</strong></div>
-          <i aria-hidden="true">→</i>
-          <div><span>transform</span><strong>mapAsync(8)</strong></div>
-          <i aria-hidden="true">→</i>
-          <div><span>destination</span><strong>slow writer</strong></div>
-          <p><span aria-hidden="true">←</span> capacity propagates upstream</p>
+    <ol class="coordination-steps" aria-label="How a simple loop becomes a coordinated pipeline">
+      <li>
+        <span>01</span>
+        <div>
+          <strong>Work starts to overlap</strong>
+          <p>Use the available I/O capacity without starting more work than the system can hold.</p>
         </div>
-        <dl class="topic-facts">
-          <div>
-            <dt>Pull sources</dt>
-            <dd>Pause naturally between reads</dd>
-          </div>
-          <div>
-            <dt>Async operators</dt>
-            <dd>Stop pulling when slots are full</dd>
-          </div>
-          <div>
-            <dt>Reliable forks</dt>
-            <dd>All destinations set the pace</dd>
-          </div>
-          <div>
-            <dt>Hot sources</dt>
-            <dd>Need an overflow policy</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
+      </li>
+      <li>
+        <span>02</span>
+        <div>
+          <strong>The destination falls behind</strong>
+          <p>Make the source wait instead of turning a temporary slowdown into a growing queue.</p>
+        </div>
+      </li>
+      <li>
+        <span>03</span>
+        <div>
+          <strong>The flow branches or fails</strong>
+          <p>Keep delivery, cancellation, and cleanup part of the same run.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
 
-    <section class="topic-card" id="fork-merge">
-      <div class="topic-copy">
-        <p class="topic-index">03 / Fork and merge</p>
-        <h2>Build a graph without hiding its delivery rules.</h2>
-        <p>
-          <code>fork()</code> creates a reliable branch: every record must reach every active fork.
-          <code>merge()</code> consumes streams with a limit on active inputs and an explicit order choice.
-        </p>
-        <a class="topic-link" href="/docs/learn/branching/">Branch and observe →</a>
-      </div>
-      <div class="topic-detail">
-        <div class="topic-code"><pre><code>{@html branchCode}</code></pre></div>
-        <dl class="topic-facts">
-          <div>
-            <dt>fork()</dt>
-            <dd>Reliable, participates in pressure</dd>
-          </div>
-          <div>
-            <dt>observe()</dt>
-            <dd>Best-effort, bounded buffer</dd>
-          </div>
-          <div>
-            <dt>merge()</dt>
-            <dd>Limits active inner streams</dd>
-          </div>
-          <div>
-            <dt>Lifecycle</dt>
-            <dd>Terminal promises own completion</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
+  <section class="contract-statement">
+    <div class="contract-copy">
+      <p class="eyebrow">Engineering by contract</p>
+      <h2>The behavior is part of the API.</h2>
+      <p>
+        The fluent syntax is the visible part. Underneath it, Exstream favors explicit semantics
+        over convenient surprises. That discipline continues through the reference, the type system,
+        and execution itself, so a pipeline can be understood before it runs.
+      </p>
+      <a class="text-link" href="/docs/reference/">Read the operator contracts →</a>
+    </div>
 
-    <section class="topic-card" id="streaming-operations">
-      <div class="topic-copy">
-        <p class="topic-index">04 / Streaming operations</p>
-        <h2>Join and group records without first collecting the input.</h2>
-        <p>
-          Higher-level operators cover common ETL work. On pre-sorted inputs,
-          <code>sortedGroupBy()</code> retains one adjacent group and <code>sortedJoin()</code>
-          performs a two-stream merge join.
-        </p>
-        <a class="topic-link" href="/docs/reference/sorted-join/"
-          >Read the sortedJoin() contract →</a
-        >
+    <dl class="contract-points">
+      <div>
+        <dt>Contracts</dt>
+        <dd>Retention, order, errors, and cancellation are documented per operator.</dd>
       </div>
-      <div class="topic-detail">
-        <div class="topic-code"><pre><code>{@html operationsCode}</code></pre></div>
-        <dl class="topic-facts">
-          <div>
-            <dt>Transform</dt>
-            <dd>map, filter, batch, reduce</dd>
-          </div>
-          <div>
-            <dt>Structure</dt>
-            <dd>split, flatten, keyBy</dd>
-          </div>
-          <div>
-            <dt>Ordered data</dt>
-            <dd>sortedGroupBy, sortedJoin</dd>
-          </div>
-          <div>
-            <dt>Formats</dt>
-            <dd>CSV, JSON, JSON Lines</dd>
-          </div>
-        </dl>
+      <div>
+        <dt>Types</dt>
+        <dd>Value and record-context types evolve through the complete chain.</dd>
       </div>
-    </section>
-
-    <section class="topic-card" id="error-handling">
-      <div class="topic-copy">
-        <p class="topic-index">05 / Error handling</p>
-        <h2>Keep bad records separate from a broken pipeline.</h2>
-        <p>
-          Recoverable record errors can be replaced, skipped, or routed to a dead-letter stream.
-          Source, destination, lifecycle, and cancellation failures remain fatal graph events and
-          reject the terminal operation.
-        </p>
-        <a class="topic-link" href="/docs/learn/errors/">Errors and lifecycle →</a>
+      <div>
+        <dt>Execution</dt>
+        <dd>Synchronous transforms stay synchronous; terminal work is always awaitable.</dd>
       </div>
-      <div class="topic-detail">
-        <div class="topic-code"><pre><code>{@html errorsCode}</code></pre></div>
-        <dl class="topic-facts">
-          <div>
-            <dt>errors()</dt>
-            <dd>Replace a failed record</dd>
-          </div>
-          <div>
-            <dt>skipErrors()</dt>
-            <dd>Drop accepted failures</dd>
-          </div>
-          <div>
-            <dt>routeErrors()</dt>
-            <dd>Split data and dead letters</dd>
-          </div>
-          <div>
-            <dt>failOnError()</dt>
-            <dd>Promote a record error to fatal</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
-  </div>
+    </dl>
+  </section>
 
   <section class="usage-note">
     <div>
       <p class="eyebrow">When it fits</p>
-      <h2>Use Exstream when the flow has operational constraints.</h2>
+      <h2>Use Exstream when the pipeline itself is the problem.</h2>
     </div>
     <p>
-      If the data already fits in memory and the work is sequential, an array or a
-      <code>for await</code> loop is usually simpler. Exstream becomes useful when concurrency,
-      backpressure, multiple destinations, or error routing need to behave as one pipeline.
-      <a href="/docs/project/when-not-to-use/">See the tradeoffs →</a>
+      If you can explain the job with one loop and a few <code>await</code>s, keep it that way.
+      Reach for Exstream when correctness depends not only on each step, but on how the complete
+      flow behaves under load, failure, or cancellation.
+      <a href="/docs/project/when-not-to-use/">See when Exstream fits →</a>
     </p>
   </section>
 </div>
+
+<style>
+  .pipeline-panel > .panel-bar {
+    padding-right: 0.25rem;
+  }
+
+  .panel-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: right;
+  }
+
+  .hero-play-button {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    flex: none;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--accent);
+    text-decoration: none;
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease,
+      transform 140ms ease;
+  }
+
+  .hero-play-button:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    background: var(--surface-strong);
+    transform: translateY(-1px);
+  }
+</style>

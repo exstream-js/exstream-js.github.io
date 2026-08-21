@@ -1,0 +1,90 @@
+export type OperatorTelemetry = {
+  metric?: 'dropped' | 'errors'
+  capacity?: 'mapAsync'
+}
+
+export const operatorTelemetry = {
+  batch: {},
+  collect: {},
+  compact: { metric: 'dropped' },
+  consume: {},
+  consumeSync: {},
+  csv: { metric: 'errors' },
+  csvStringify: { metric: 'errors' },
+  decode: { metric: 'errors' },
+  drop: { metric: 'dropped' },
+  encode: { metric: 'errors' },
+  errors: {},
+  extendContext: { metric: 'errors' },
+  failOnError: {},
+  filter: { metric: 'dropped' },
+  find: { metric: 'dropped' },
+  findWhere: { metric: 'dropped' },
+  flatMap: { metric: 'errors' },
+  flatten: {},
+  groupBy: { metric: 'errors' },
+  head: { metric: 'dropped' },
+  json: { metric: 'errors' },
+  jsonStringify: { metric: 'errors' },
+  jsonl: { metric: 'errors' },
+  jsonlStringify: { metric: 'errors' },
+  keyBy: { metric: 'errors' },
+  last: { metric: 'dropped' },
+  makeAsync: {},
+  map: { metric: 'errors' },
+  mapAsync: { capacity: 'mapAsync', metric: 'errors' },
+  omit: { metric: 'errors' },
+  pick: { metric: 'errors' },
+  pluck: { metric: 'errors' },
+  rateLimit: {},
+  reduce: { metric: 'errors' },
+  reject: { metric: 'dropped' },
+  skipErrors: {},
+  slice: { metric: 'dropped' },
+  sort: {},
+  sortedGroupBy: {},
+  split: {},
+  stopOnError: {},
+  stopWhen: {},
+  take: { metric: 'dropped' },
+  tap: {},
+  throttle: { metric: 'dropped' },
+  through: {},
+  uniq: { metric: 'dropped' },
+  where: { metric: 'dropped' },
+  withContext: { metric: 'errors' },
+} as const satisfies Record<string, OperatorTelemetry>
+
+export type InstrumentedOperator = keyof typeof operatorTelemetry
+
+export const graphMethodNames = ['fork', 'merge', 'observe', 'routeErrors', 'sortedJoin'] as const
+
+export const terminalMethodNames = ['drain', 'single', 'toArray'] as const
+export const destinationMethodNames = ['pipeTo'] as const
+export const adapterMethodNames = ['toWebReadable'] as const
+export const lifecycleMethodNames = ['start'] as const
+
+export const playgroundStaticNames = [
+  'BufferOverflowError',
+  'CsvParseError',
+  'CsvStringifyError',
+  'JsonParseError',
+  'JsonStringifyError',
+  'MapAsyncTimeoutError',
+  'data',
+  'defer',
+  'destination',
+  'errorInfo',
+  'fromEvent',
+  'nil',
+  'pipeline',
+] as const
+
+export const playgroundMethodNames = [
+  ...Object.keys(operatorTelemetry),
+  ...graphMethodNames,
+  ...terminalMethodNames,
+  ...destinationMethodNames,
+  ...adapterMethodNames,
+  ...lifecycleMethodNames,
+] as const

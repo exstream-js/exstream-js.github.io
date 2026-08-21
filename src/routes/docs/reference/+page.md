@@ -13,8 +13,10 @@
 ## Create
 
 - [`exstream()`](/docs/reference/exstream/) — adapt iterables, promises, platform streams, generators, or a writable source
+- [`defer()`](/docs/reference/defer/) — create or acquire a source only when its graph is activated
 - [`fromEvent()`](/docs/reference/from-event/) — adapt hot EventTarget and EventEmitter sources
 - [`pipeline()`](/docs/reference/pipeline/) — define a reusable typed operator chain
+- [`destination()`](/docs/reference/destination/) — define a reusable terminal consumer with setup and cleanup
 - [`data()` and `nil`](/docs/reference/data/) — distinguish data from error and end control records
 
 ## Context
@@ -34,34 +36,33 @@
 
 - [`filter()`](/docs/reference/filter/) and [`reject()`](/docs/reference/reject/) — keep or drop by synchronous predicate
 - [`find()`](/docs/reference/find/), [`where()`](/docs/reference/where/), and [`findWhere()`](/docs/reference/find-where/) — find by predicate or shallow object match
-- [`uniq()`](/docs/reference/uniq/) and [`uniqBy()`](/docs/reference/uniq-by/) — retain the first value for each identity or key
+- [`uniq()`](/docs/reference/uniq/) — retain the first value for each identity, selected key, or field tuple
 - [`slice()`](/docs/reference/slice/), [`take()`](/docs/reference/take/), [`drop()`](/docs/reference/drop/), [`head()`](/docs/reference/head/), and [`last()`](/docs/reference/last/) — select by position
 - [`stopWhen()`](/docs/reference/stop-when/) — include the first match and stop the branch
 
 ## Aggregate and order
 
-- [`collect()`](/docs/reference/collect/), [`reduce()`](/docs/reference/reduce/), and [`reduce1()`](/docs/reference/reduce-1/) — produce one result after completion
+- [`collect()`](/docs/reference/collect/) and [`reduce()`](/docs/reference/reduce/) — produce one result after completion
 - [`groupBy()`](/docs/reference/group-by/) and [`keyBy()`](/docs/reference/key-by/) — build a complete grouped or unique-key index
-- [`sort()`](/docs/reference/sort/) and [`sortBy()`](/docs/reference/sort-by/) — order a complete finite stream
+- [`sort()`](/docs/reference/sort/) — order a complete finite stream
 - [`sortedGroupBy()`](/docs/reference/sorted-group-by/) — group adjacent equal keys without retaining the whole stream
 
 ## Async work
 
-- [`mapAsync()`](/docs/reference/map-async/) — transform with concurrency, ordering, retry, timeout, and cancellation controls
-- [`asyncFilter()`](/docs/reference/async-filter/) and [`asyncReduce()`](/docs/reference/async-reduce/) — await sequential selection or aggregation
+- [`mapAsync()`](/docs/reference/map-async/) — transform with concurrency, ordering, retry, local recovery, timeout, and cancellation controls
 - [`makeAsync()`](/docs/reference/make-async/) — yield long synchronous pipelines to the event loop
 
 ## Flow control
 
 - [`throttle()`](/docs/reference/throttle/) — drop values inside a time window
-- [`ratelimit()`](/docs/reference/ratelimit/) — delay values to enforce a maximum rate
+- [`rateLimit()`](/docs/reference/rate-limit/) — delay values to enforce a local burst rate
 
 ## Branch and combine
 
 - [`fork()`](/docs/reference/fork/) — create a reliable branch participating in backpressure
 - [`observe()`](/docs/reference/observe/) — create a non-blocking, explicitly buffered observer
-- [`merge()`](/docs/reference/merge/) — consume a stream of streams with bounded parallelism
-- [`through()`](/docs/reference/through/) — attach a pipeline, stream, function, or Node transform
+- [`merge()`](/docs/reference/merge/) — consume a stream of streams with bounded concurrency
+- [`through()`](/docs/reference/through/) — attach a pipeline, function, or Node transform
 - [`sortedJoin()`](/docs/reference/sorted-join/) — merge-join exactly two pre-sorted streams
 
 ## Errors
@@ -76,20 +77,22 @@
 - [`csv()`](/docs/reference/csv/) and [`csvStringify()`](/docs/reference/csv-stringify/) — incremental CSV parsing and serialization
 - [`json()`](/docs/reference/json/) and [`jsonStringify()`](/docs/reference/json-stringify/) — stream one JSON document or array envelope
 - [`jsonl()`](/docs/reference/jsonl/) and [`jsonlStringify()`](/docs/reference/jsonl-stringify/) — parse and serialize line-delimited JSON
-- [`split()`](/docs/reference/split/) and [`splitBy()`](/docs/reference/split-by/) — decode and tokenize text across chunk boundaries
+- [`split()`](/docs/reference/split/) — decode and tokenize lines or custom regular-expression-delimited text across chunk boundaries
 - [`encode()`](/docs/reference/encode/) and [`decode()`](/docs/reference/decode/) — transform streaming base64
 
 ## Consume
 
-- [`pipeTo()`](/docs/reference/pipe-to/) — write to a Node or Web destination and await completion
-- [Async iteration](/docs/reference/async-iteration/) — consume one value per `for await` demand
-- [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeReadable()`](/docs/reference/to-node-readable/) — expose platform readables
+- [`pipeTo()`](/docs/reference/pipe-to/) — run an Exstream destination or write to a Node or Web writable
+- [`for await...of`](/docs/reference/async-iteration/) — consume one value at a time
 - [`toArray()`](/docs/reference/to-array/), [`single()`](/docs/reference/single/), and [`drain()`](/docs/reference/drain/) — finish with uniform promise semantics
+
+## Interop
+
+- [`toWebReadable()`](/docs/reference/to-web-readable/) and [`toNodeReadable()`](/docs/reference/to-node-readable/) — expose platform readables from a source-backed Exstream
+- [`toNodeTransform()`](/docs/reference/to-node-transform/) — expose a reusable pipeline as a native Node transform
 
 ## Low-level API
 
-- [`write()`](/docs/reference/write/) and [`writeData()`](/docs/reference/write-data/) — implement manual sources
+- [`write()`](/docs/reference/write/) and [`end()`](/docs/reference/end/) — implement manual sources
 - [`consume()`](/docs/reference/consume/) and [`consumeSync()`](/docs/reference/consume-sync/) — build custom operators
-- [`start()`](/docs/reference/start/), [`pause()`](/docs/reference/pause/), and [`resume()`](/docs/reference/resume/) — control source gates and adapters
-- [`end()`](/docs/reference/end/), [`destroy()`](/docs/reference/destroy/), [`abort()`](/docs/reference/abort/), and [`fail()`](/docs/reference/fail/) — choose the correct terminal transition
-- [`extend()`](/docs/reference/extend/) and [Utilities](/docs/reference/utilities/) — extend the prototype or reuse exported helpers
+- [`start()`](/docs/reference/start/) — freeze and activate an explicitly gated source graph

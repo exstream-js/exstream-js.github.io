@@ -2,14 +2,19 @@ import type { Component } from 'svelte'
 import AsyncWorkDescription from './playground-examples/async-work.md'
 import BackpressureDescription from './playground-examples/backpressure.md'
 import BranchingDescription from './playground-examples/branching.md'
+import CompositionDescription from './playground-examples/composition.md'
 import ConsumeDescription from './playground-examples/consume.md'
 import ErrorsDescription from './playground-examples/errors.md'
+import ExtensibilityDescription from './playground-examples/extensibility.md'
 import MergeSourcesDescription from './playground-examples/merge-sources.md'
+import OrdersPipelineDescription from './playground-examples/orders-pipeline.md'
 import PipelineModelDescription from './playground-examples/pipeline-model.md'
+import SortedJoinDescription from './playground-examples/sorted-join.md'
 import SourcesDescription from './playground-examples/sources.md'
 import TransformDataDescription from './playground-examples/transform-data.md'
+import { homeExampleCode } from './homeExample'
 
-type PlaygroundExample = {
+export type PlaygroundExample = {
   title: string
   sourcePath: string
   description: Component
@@ -17,6 +22,12 @@ type PlaygroundExample = {
 }
 
 export const playgroundExamples = {
+  'orders-pipeline': {
+    title: 'Orders pipeline',
+    sourcePath: '/',
+    description: OrdersPipelineDescription,
+    code: homeExampleCode,
+  },
   sources: {
     title: 'Create a source',
     sourcePath: '/docs/learn/sources/',
@@ -63,6 +74,31 @@ await activeOrders.pipeTo(destination('active-orders'))`,
   }))
 
 await settlementBatches.pipeTo(destination('settlement-batches'))`,
+  },
+  composition: {
+    title: 'Composition',
+    sourcePath: '/docs/learn/composition/',
+    description: CompositionDescription,
+    code: `const normalizeTransaction = exstream
+  .pipeline()
+  .filter((transaction) => transaction.amount >= 1000)
+  .map((transaction) => ({
+    ...transaction,
+    amountInCents: Math.round(transaction.amount * 100),
+  }))
+
+const addReviewBand = (stream) =>
+  stream.map((transaction) => ({
+    ...transaction,
+    reviewBand: transaction.amount >= 7500 ? 'manual' : 'automatic',
+  }))
+
+const prepared = exstream(source('transactions'))
+  .take(80)
+  .through(normalizeTransaction)
+  .through(addReviewBand)
+
+await prepared.pipeTo(destination('prepared-transactions'))`,
   },
   'async-work': {
     title: 'Async processing',
@@ -111,21 +147,22 @@ await pipeline.pipeTo(destination('processed'))`,
   },
   backpressure: {
     title: 'Backpressure',
-    sourcePath: '/docs/concepts/backpressure/',
+    sourcePath: '/docs/learn/backpressure/',
     description: BackpressureDescription,
-    code: `const transactions = exstream(source('transactions'))
-  .take(200)
+    code: `const mouseMoves = exstream
+  .fromEvent(source('mousemove'), 'mousemove', {
+    map: (event) => event.detail,
+    highWaterMark: 1,
+    overflow: 'drop-oldest',
+  })
+  .throttle(200)
 
-const primary = transactions.fork()
-const audit = transactions.fork()
-
-await Promise.all([
-  primary.take(130).pipeTo(destination('primary', { speed: 5 })),
-  audit.slice(100).pipeTo(destination('slow-audit', { speed: 1 })),
-])`,
+await mouseMoves.pipeTo(
+  destination('sampled-pointer', { speed: Infinity }),
+)`,
   },
   branching: {
-    title: 'Branch and observe',
+    title: 'Fork and observe',
     sourcePath: '/docs/learn/branching/',
     description: BranchingDescription,
     code: `const transactions = exstream(source('transactions'))
@@ -146,7 +183,7 @@ await Promise.all([
   },
   'merge-sources': {
     title: 'Rejoin processing lanes',
-    sourcePath: '/docs/reference/merge/',
+    sourcePath: '/docs/learn/merge/',
     description: MergeSourcesDescription,
     code: `const wait = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds))
@@ -179,108 +216,182 @@ const highRisk = transactions
   )
 
 const decisions = exstream([routine, highRisk])
-  .merge(2, false)
+  .merge({ concurrency: 2, ordered: false })
 
 await decisions.pipeTo(destination('decisions', { speed: Infinity }))`,
+  },
+  'sorted-join': {
+    title: 'Join sorted records',
+    sourcePath: '/docs/reference/sorted-join/',
+    description: SortedJoinDescription,
+    code: `const left = exstream([
+  { id: 1, tenant: 'eu', value: 'a' },
+  { id: 1, tenant: 'eu', value: 'duplicate' },
+  { id: 2, tenant: 'us', value: 'b' },
+]).uniq(['tenant', 'id'])
+
+const right = exstream([
+  { id: 1, label: 'one' },
+  { id: 2, label: 'two' },
+])
+
+await left
+  .sortedJoin(right, {
+    leftKey: 'id',
+    rightKey: 'id',
+    type: 'left',
+    order: 'asc',
+  })
+  .mapAsync(async (row) => row, { concurrency: 2, ordered: false })
+  .pipeTo(destination('joined', { speed: Infinity }))`,
   },
   errors: {
     title: 'Errors and lifecycle',
     sourcePath: '/docs/learn/errors/',
     description: ErrorsDescription,
-    code: `const MAX_RETRIES = 2
-const input = exstream(null, { bufferLimit: 256 })
+    code: `const attempts = new Map()
 
-let originalSourceEnded = false
-let pending = 0
-let closeScheduled = false
+const validated = exstream(source('transactions'))
+  .take(120)
+  .mapAsync(
+    async (transaction) => {
+      const attempt = (attempts.get(transaction.id) ?? 0) + 1
+      attempts.set(transaction.id, attempt)
+      const sequence = Number(transaction.id.slice(-2))
 
-function closeInputWhenIdle() {
-  if (!originalSourceEnded || pending !== 0 || closeScheduled) return
+      if (sequence % 17 === 0 && attempt < 3) {
+        const error = new Error('Risk service timed out')
+        error.code = 'RISK_TIMEOUT'
+        throw error
+      }
 
-  closeScheduled = true
-  queueMicrotask(() => {
-    closeScheduled = false
-    if (originalSourceEnded && pending === 0 && !input.ended) input.end()
-  })
-}
+      if (sequence % 11 === 0) {
+        const error = new Error('Customer validation failed')
+        error.code = 'INVALID_CUSTOMER'
+        throw error
+      }
 
-function settle() {
-  pending -= 1
-  closeInputWhenIdle()
-}
-
-async function seedInput() {
-  let count = 0
-
-  for await (const transaction of source('transactions')) {
-    pending += 1
-    input.writeData({ ...transaction, attempt: 0 })
-    count += 1
-
-    if (count === 120) break
-  }
-
-  originalSourceEnded = true
-  closeInputWhenIdle()
-}
-
-const validated = input
-  .map((transaction) => {
-    const sequence = Number(transaction.id.slice(-2))
-
-    if (sequence % 17 === 0 && transaction.attempt < MAX_RETRIES) {
-      const error = new Error('Risk service timed out')
-      error.code = 'RISK_TIMEOUT'
-      throw error
-    }
-
-    if (sequence % 11 === 0) {
-      const error = new Error('Customer validation failed')
-      error.code = 'INVALID_CUSTOMER'
-      throw error
-    }
-
-    return { ...transaction, status: 'validated' }
-  })
+      return { ...transaction, status: 'validated', attempt }
+    },
+    {
+      concurrency: 8,
+      retry: {
+        retries: 2,
+        when: (error) => error.code === 'RISK_TIMEOUT',
+      },
+    },
+  )
 
 const { output, deadLetters } = validated.routeErrors()
 
-const failures = deadLetters.map(({ error, input }) => ({
+const rejected = deadLetters.map(({ error, input }) => ({
   code: error.code ?? 'UNKNOWN',
   message: error.message,
-  retryable: error.code === 'RISK_TIMEOUT' && input.attempt < MAX_RETRIES,
+  attempts: attempts.get(input.id),
   input,
 }))
 
-const retryable = failures
-  .fork()
-  .filter((failure) => failure.retryable)
-
-const rejected = failures
-  .fork()
-  .filter((failure) => !failure.retryable)
-
 await Promise.all([
-  output
-    .tap(settle)
-    .pipeTo(destination('processed')),
-  retryable
-    .tap((failure) => {
-      input.writeData({
-        ...failure.input,
-        attempt: failure.input.attempt + 1,
-      })
-    })
-    .pipeTo(destination('retry-queue')),
-  rejected
-    .tap(settle)
-    .pipeTo(destination('dead-letter')),
-  seedInput(),
+  output.pipeTo(destination('processed')),
+  rejected.pipeTo(destination('dead-letter')),
 ])`,
+  },
+  extensibility: {
+    title: 'Extensibility',
+    sourcePath: '/docs/learn/extensibility/',
+    description: ExtensibilityDescription,
+    code: `const wait = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds))
+
+const mapSimple = (project) => (source) =>
+  source.consumeSync((error, value, push) => {
+    if (error) return push(error)
+    if (value === exstream.nil) return push(null, exstream.nil)
+
+    try {
+      push(null, project(value))
+    } catch (error) {
+      push(error)
+    }
+  })
+
+const batchWithTimeOrCount = ({ count, milliseconds }) => (source) => {
+  let batch = []
+  let emitBatch
+  let timer
+
+  const clearTimer = () => {
+    if (timer !== undefined) clearTimeout(timer)
+    timer = undefined
+  }
+
+  const flush = () => {
+    if (batch.length === 0) return
+
+    clearTimer()
+    const values = batch
+    const push = emitBatch
+    batch = []
+    emitBatch = undefined
+    push(null, values)
+  }
+
+  const output = source.consume((error, value, push, next) => {
+    if (error) {
+      push(error)
+      next()
+      return
+    }
+
+    if (value === exstream.nil) {
+      flush()
+      push(null, exstream.nil)
+      return
+    }
+
+    if (batch.length === 0) {
+      emitBatch = push
+      timer = setTimeout(flush, milliseconds)
+    }
+
+    batch.push(value)
+    if (batch.length >= count) flush()
+    next()
+  })
+
+  output.once('end', clearTimer)
+  return output
+}
+
+async function* pacedTransactions(limit, delay) {
+  let emitted = 0
+
+  for await (const transaction of source('transactions')) {
+    yield transaction
+    emitted += 1
+    if (emitted === limit) return
+    await wait(delay)
+  }
+}
+
+const batches = exstream(pacedTransactions(30, 60))
+  .through(
+    mapSimple((transaction) => ({
+      ...transaction,
+      amountInCents: Math.round(transaction.amount * 100),
+    })),
+  )
+  .through(batchWithTimeOrCount({ count: 10, milliseconds: 250 }))
+
+await batches.pipeTo(destination('batches', { speed: Infinity }))`,
   },
 } satisfies Record<string, PlaygroundExample>
 
 export type PlaygroundExampleId = keyof typeof playgroundExamples
+
+export const playgroundExampleEntries = Object.entries(playgroundExamples) as Array<
+  [PlaygroundExampleId, PlaygroundExample]
+>
 
 export function getPlaygroundExample(id: string | null | undefined) {
   if (!id || !(id in playgroundExamples)) return undefined

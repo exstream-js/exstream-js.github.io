@@ -10,13 +10,6 @@
 
 <p class="lead">Emit the first value accepted by a synchronous predicate, then stop this branch.</p>
 
-## Signature
-
-```typescript
-find<S extends T>(fn: (value: T, context: C) => value is S): Exstream<S, C>
-find(fn: (value: T, context: C) => unknown): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -45,15 +38,20 @@ Record errors pass through and do not call `fn`. A handled error does not end th
 
 ## Errors
 
-If `fn` throws, the failure becomes a record error for that input. `find()` does not await promises; a returned promise is truthy, so use [`asyncFilter()`](/docs/reference/async-filter/) followed by [`head()`](/docs/reference/head/) for an asynchronous predicate.
+If `fn` throws, the failure becomes a record error for that input. `find()` does not await promises. When a decision requires asynchronous work, attach its result with [`mapAsync()`](/docs/reference/map-async/) before filtering and taking the first match.
 
 ## Forms
 
 ```javascript
 stream.find(predicate)
 exstream.pipeline().find(predicate)
-exstream.find(predicate, stream)
-stream.through(exstream.find(predicate))
+```
+
+## Signature
+
+```typescript
+find<S extends T>(fn: (value: T, context: C) => value is S): Exstream<S, C>
+find(fn: (value: T, context: C) => unknown): Exstream<T, C>
 ```
 
 ## Related

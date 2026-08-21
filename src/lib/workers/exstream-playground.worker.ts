@@ -1,4 +1,11 @@
 import realExstream from 'exstream.js'
+import {
+  adapterMethodNames,
+  destinationMethodNames,
+  operatorTelemetry,
+  terminalMethodNames,
+  type OperatorTelemetry,
+} from '$lib/playgroundOperators'
 
 const firstNames = [
   'Ada',
@@ -99,42 +106,9 @@ const products = [
   'Webhook Delivery',
 ] as const
 
-const instrumentedOperators = new Set([
-  'batch',
-  'compact',
-  'errors',
-  'failOnError',
-  'filter',
-  'flatMap',
-  'flatten',
-  'map',
-  'mapAsync',
-  'omit',
-  'pick',
-  'pluck',
-  'reject',
-  'resolve',
-  'ratelimit',
-  'slice',
-  'skipErrors',
-  'stopWhen',
-  'take',
-  'tap',
-  'throttle',
-  'uniq',
-  'uniqBy',
-])
-
-const recordDroppingOperators = new Set([
-  'compact',
-  'filter',
-  'reject',
-  'slice',
-  'throttle',
-  'uniq',
-  'uniqBy',
-])
-const recordErrorOperators = new Set(['map', 'mapAsync'])
+const terminalMethods = new Set<string>(terminalMethodNames)
+const destinationMethods = new Set<string>(destinationMethodNames)
+const adapterMethods = new Set<string>(adapterMethodNames)
 
 type DestinationConfig = {
   name: string
@@ -158,7 +132,13 @@ type ConfigureDestinationMessage = {
   delay: number
 }
 
-type PlaygroundMessage = RunMessage | ConfigureDestinationMessage
+type SourceEventMessage = {
+  type: 'source:event'
+  name: 'mousemove'
+  value: unknown
+}
+
+type PlaygroundMessage = RunMessage | ConfigureDestinationMessage | SourceEventMessage
 
 type GraphNode = {
   id: string
@@ -172,7 +152,7 @@ type GraphNode = {
   errors: number
   capacity?: number
   status: 'open' | 'closed' | 'aborted'
-  metric?: 'dropped' | 'errors'
+  metric?: 'buffered' | 'dropped' | 'errors'
 }
 
 type GraphEdge = {
@@ -212,6 +192,7 @@ type StreamOptions = {
   bufferLimit?: number
   overflow?: 'error' | 'drop-oldest' | 'drop-newest'
   signal?: AbortSignal
+  start?: 'auto' | 'manual'
 }
 
 const AsyncFunction = Object.getPrototypeOf(async function () {})
@@ -221,6 +202,8 @@ const StreamConstructor = realExstream([]).constructor as new (...arguments_: un
 let graphNodes = new Map<string, GraphNode>()
 let graphEdges: GraphEdge[] = []
 let destinations = new Map<string, DestinationRuntime>()
+let eventSources = new Map<string, EventTarget>()
+let sourceLabels = new WeakMap<object, string>()
 let forkStates = new WeakMap<StreamTarget, { stream: StreamTarget; nodeId: string }>()
 let proxyTargets = new WeakMap<object, StreamTarget>()
 let proxyNodeIds = new WeakMap<object, string>()
@@ -298,11 +281,21 @@ async function* transactionSource() {
 }
 
 function source(name: string) {
-  if (name !== 'transactions') {
-    throw new Error(`Unknown source "${name}". Available sources: transactions.`)
+  if (name === 'transactions') {
+    const transactions = transactionSource()
+    sourceLabels.set(transactions, 'transactions ∞')
+    return transactions
+  }
+  if (name === 'mousemove') {
+    let target = eventSources.get(name)
+    if (!target) {
+      target = new EventTarget()
+      eventSources.set(name, target)
+    }
+    return target
   }
 
-  return transactionSource()
+  throw new Error(`Unknown source "${name}". Available sources: transactions, mousemove.`)
 }
 
 function destination(name: string, options: DestinationOptions = {}) {
@@ -407,7 +400,8 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
   }
 
   const manual = input === undefined || input === null
-  const sourceNodeId = addNode('source', manual ? 'work queue' : 'transactions ∞', 0)
+  const sourceLabel = manual ? 'work queue' : describeSource(input)
+  const sourceNodeId = addNode('source', sourceLabel, 0)
   const node = graphNodes.get(sourceNodeId)!
 
   if (manual) {
@@ -416,17 +410,74 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
     return wrapStream(stream, sourceNodeId)
   }
 
-  async function* observedInput() {
-    for await (const value of input as AsyncIterable<unknown>) {
-      node.output += 1
-      scheduleTelemetry()
-      yield value
-    }
-  }
+  const sourceInput =
+    input && typeof input === 'object' ? (proxyTargets.get(input as object) ?? input) : input
+  const stream = (
+    realExstream as unknown as (
+      source?: unknown,
+      streamOptions?: StreamOptions | null,
+    ) => StreamTarget
+  )(sourceInput, options)
+  const observed = callTargetMethod(stream, 'tap', () => {
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(observed, sourceNodeId)
+  return wrapStream(observed, sourceNodeId)
+}
 
-  const stream = realExstream(observedInput(), options) as StreamTarget
-  watchNodeLifecycle(stream, sourceNodeId)
-  return wrapStream(stream, sourceNodeId)
+Object.assign(instrumentedExstream, realExstream, {
+  defer: instrumentedDefer,
+  fromEvent: instrumentedFromEvent,
+})
+
+function instrumentedDefer(factory: unknown, options?: StreamOptions | null) {
+  const createDeferred = realExstream.defer as unknown as (
+    sourceFactory: unknown,
+    sourceOptions?: StreamOptions | null,
+  ) => object
+  const deferred = createDeferred(factory, options)
+  sourceLabels.set(deferred, 'deferred source')
+  return deferred
+}
+
+function describeSource(input: unknown) {
+  if ((typeof input === 'object' && input !== null) || typeof input === 'function') {
+    const knownLabel = sourceLabels.get(input as object)
+    if (knownLabel) return knownLabel
+  }
+  if (Array.isArray(input)) return `array (${input.length.toLocaleString('en')})`
+  if (typeof input === 'string') return 'string'
+  if (input instanceof ReadableStream) return 'Web ReadableStream'
+  if (ArrayBuffer.isView(input)) return input.constructor.name
+  if (!input || (typeof input !== 'object' && typeof input !== 'function')) return 'source'
+
+  const candidate = input as {
+    then?: unknown
+    [Symbol.asyncIterator]?: unknown
+    [Symbol.iterator]?: unknown
+  }
+  if (typeof candidate.then === 'function') return 'promise'
+  if (typeof candidate[Symbol.asyncIterator] === 'function') return 'async iterable'
+  if (typeof candidate[Symbol.iterator] === 'function') return 'iterable'
+  return 'source'
+}
+
+function instrumentedFromEvent(target: unknown, eventName: string, options?: unknown) {
+  const sourceNodeId = addNode('source', `${eventName} (hot)`, 0)
+  const node = graphNodes.get(sourceNodeId)!
+  const fromEvent = realExstream.fromEvent as unknown as (
+    target: unknown,
+    eventName: string,
+    options?: unknown,
+  ) => StreamTarget
+  const stream = fromEvent(target, eventName, options)
+  const observed = callTargetMethod(stream, 'tap', () => {
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(observed, sourceNodeId)
+  return wrapStream(observed, sourceNodeId)
 }
 
 function extractMergeInputs(input: unknown): MergeInput[] | undefined {
@@ -477,18 +528,45 @@ function callStreamMethod(
   if (methodName === 'merge' && mergeInputs) {
     return instrumentMerge(mergeInputs, unwrappedArguments)
   }
+  if (methodName === 'sortedJoin' && parentNodeId) {
+    const rightProxy = arguments_[0]
+    const rightTarget =
+      rightProxy && typeof rightProxy === 'object'
+        ? proxyTargets.get(rightProxy as object)
+        : undefined
+    const rightNodeId =
+      rightProxy && typeof rightProxy === 'object'
+        ? proxyNodeIds.get(rightProxy as object)
+        : undefined
+    if (rightTarget && rightNodeId) {
+      return instrumentSortedJoin(
+        { nodeId: parentNodeId, target },
+        { nodeId: rightNodeId, target: rightTarget },
+        unwrappedArguments[1],
+      )
+    }
+  }
   if (!parentNodeId) {
     throw new Error('A stream collection must be consumed with merge() before other operators.')
   }
 
   if (methodName === 'fork') return instrumentFork(target, parentNodeId, unwrappedArguments)
+  if (methodName === 'observe') {
+    return instrumentObserve(target, parentNodeId, method, unwrappedArguments)
+  }
   if (methodName === 'routeErrors') {
     return instrumentRouteErrors(target, parentNodeId, method, unwrappedArguments)
   }
-  if (methodName === 'pipe' || methodName === 'pipeTo') {
-    return instrumentPipe(target, parentNodeId, method, unwrappedArguments)
+  if (methodName === 'pipe' || destinationMethods.has(methodName)) {
+    return instrumentPipe(target, parentNodeId, methodName, unwrappedArguments)
   }
-  if (methodName === 'write' || methodName === 'writeData') {
+  if (terminalMethods.has(methodName)) {
+    return instrumentTerminal(target, parentNodeId, methodName, unwrappedArguments)
+  }
+  if (adapterMethods.has(methodName)) {
+    return instrumentReadableAdapter(target, parentNodeId, methodName, unwrappedArguments)
+  }
+  if (methodName === 'write') {
     const result = Reflect.apply(method, target, unwrappedArguments)
     const node = graphNodes.get(parentNodeId)
     if (node) {
@@ -498,7 +576,8 @@ function callStreamMethod(
     return result
   }
 
-  if (!instrumentedOperators.has(methodName)) {
+  const telemetry = (operatorTelemetry as Record<string, OperatorTelemetry>)[methodName]
+  if (!telemetry) {
     const result = Reflect.apply(method, target, unwrappedArguments)
     return isStream(result) ? wrapStream(result, parentNodeId) : result
   }
@@ -508,16 +587,12 @@ function callStreamMethod(
     'transform',
     formatOperator(methodName, arguments_),
     parent.depth + 1,
-    recordDroppingOperators.has(methodName)
-      ? 'dropped'
-      : recordErrorOperators.has(methodName)
-        ? 'errors'
-        : undefined,
+    telemetry.metric,
   )
   const node = graphNodes.get(nodeId)!
   addEdge(parentNodeId, nodeId)
 
-  if (methodName === 'mapAsync' && typeof unwrappedArguments[0] === 'function') {
+  if (telemetry.capacity === 'mapAsync' && typeof unwrappedArguments[0] === 'function') {
     node.capacity = mapAsyncCapacity(unwrappedArguments[1])
     const operation = unwrappedArguments[0] as (...values: unknown[]) => unknown
     unwrappedArguments[0] = async (...values: unknown[]) => {
@@ -578,7 +653,7 @@ function mapAsyncCapacity(options: unknown) {
 function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
   const parentNodes = inputs.map((input) => graphNodes.get(input.nodeId)!).filter(Boolean)
   const depth = Math.max(...parentNodes.map((node) => node.depth)) + 1
-  const nodeId = addNode('transform', formatOperator('merge', arguments_), depth)
+  const nodeId = addNode('transform', formatOperator('merge', arguments_), depth, 'buffered')
   const node = graphNodes.get(nodeId)!
 
   const countedInputs = inputs.map((input) => {
@@ -590,11 +665,47 @@ function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
     })
   })
   const carrier = realExstream(countedInputs) as StreamTarget
-  const merge = Reflect.get(carrier, 'merge', carrier) as (...values: unknown[]) => unknown
-  const result = Reflect.apply(merge, carrier, arguments_)
+  const combine = Reflect.get(carrier, 'merge', carrier) as (...values: unknown[]) => unknown
+  const result = Reflect.apply(combine, carrier, arguments_)
+  return instrumentCombinedResult(result, node, nodeId)
+}
+
+function instrumentSortedJoin(left: MergeInput, right: MergeInput, options: unknown) {
+  const parentNodes = [graphNodes.get(left.nodeId), graphNodes.get(right.nodeId)].filter(Boolean)
+  const depth = Math.max(...parentNodes.map((node) => node!.depth)) + 1
+  const nodeId = addNode('transform', formatOperator('sortedJoin', [options]), depth, 'errors')
+  const node = graphNodes.get(nodeId)!
+
+  const countInput = (input: MergeInput) => {
+    const edge = addEdge(input.nodeId, nodeId, true)
+    return callTargetMethod(input.target, 'tap', () => {
+      node.input += 1
+      edge.flowed = (edge.flowed ?? 0) + 1
+      scheduleTelemetry()
+    })
+  }
+  const countedLeft = countInput(left)
+  const countedRight = countInput(right)
+  const join = Reflect.get(countedLeft, 'sortedJoin', countedLeft) as (
+    right: StreamTarget,
+    options: unknown,
+  ) => unknown
+  const result = Reflect.apply(join, countedLeft, [countedRight, options])
+  return instrumentCombinedResult(result, node, nodeId)
+}
+
+function instrumentCombinedResult(result: unknown, node: GraphNode, nodeId: string) {
   if (!isStream(result)) return result
 
-  const countedOutput = callTargetMethod(result, 'tap', () => {
+  const errorCountedResult =
+    node.metric === 'errors'
+      ? callTargetMethod(result, 'errors', (error: unknown, push: (error: unknown) => void) => {
+          node.errors += 1
+          scheduleTelemetry()
+          push(error)
+        })
+      : result
+  const countedOutput = callTargetMethod(errorCountedResult, 'tap', () => {
     node.output += 1
     scheduleTelemetry()
   })
@@ -626,6 +737,29 @@ function instrumentFork(target: StreamTarget, parentNodeId: string, arguments_: 
   const branch = Reflect.apply(branchMethod, fork.stream, arguments_)
   if (!isStream(branch)) return branch
   return wrapStream(branch, fork.nodeId)
+}
+
+function instrumentObserve(
+  target: StreamTarget,
+  parentNodeId: string,
+  method: (...arguments_: unknown[]) => unknown,
+  arguments_: unknown[],
+) {
+  const branch = Reflect.apply(method, target, arguments_)
+  if (!isStream(branch)) return branch
+
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('fork', 'observe', parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+
+  const counted = callTargetMethod(branch, 'tap', () => {
+    node.input += 1
+    node.output += 1
+    scheduleTelemetry()
+  })
+  watchNodeLifecycle(counted, nodeId)
+  return wrapStream(counted, nodeId)
 }
 
 function instrumentRouteErrors(
@@ -677,7 +811,7 @@ function instrumentRouteErrors(
 function instrumentPipe(
   target: StreamTarget,
   parentNodeId: string,
-  method: (...arguments_: unknown[]) => unknown,
+  methodName: string,
   arguments_: unknown[],
 ) {
   const writable = arguments_[0]
@@ -689,10 +823,65 @@ function instrumentPipe(
     const destinationNode = graphNodes.get(runtime.nodeId)!
     destinationNode.depth = Math.max(destinationNode.depth, parent.depth + 1)
     addEdge(parentNodeId, runtime.nodeId)
+    flushTelemetry()
+    return callTargetMethod(target, methodName, ...arguments_)
   }
 
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('destination', methodName, parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+  const counted = observeDestinationInput(target, node)
+  const result = callTargetMethod(counted, methodName, ...arguments_)
+  watchPromiseLifecycle(result, nodeId)
   flushTelemetry()
-  return Reflect.apply(method, target, arguments_)
+  return result
+}
+
+function instrumentTerminal(
+  target: StreamTarget,
+  parentNodeId: string,
+  methodName: string,
+  arguments_: unknown[],
+) {
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('destination', methodName, parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+
+  const counted = observeDestinationInput(target, node)
+  const result = callTargetMethod(counted, methodName, ...arguments_)
+  watchPromiseLifecycle(result, nodeId)
+  return result
+}
+
+function instrumentReadableAdapter(
+  target: StreamTarget,
+  parentNodeId: string,
+  methodName: string,
+  arguments_: unknown[],
+) {
+  const parent = graphNodes.get(parentNodeId)!
+  const nodeId = addNode('destination', methodName, parent.depth + 1)
+  const node = graphNodes.get(nodeId)!
+  addEdge(parentNodeId, nodeId)
+
+  const counted = observeDestinationInput(target, node)
+  watchNodeLifecycle(counted, nodeId)
+  return callTargetMethod(counted, methodName, ...arguments_)
+}
+
+function observeDestinationInput(target: StreamTarget, node: GraphNode) {
+  const counted = callTargetMethod(target, 'tap', () => {
+    node.input += 1
+    node.output += 1
+    scheduleTelemetry()
+  })
+  return callTargetMethod(counted, 'errors', (error: unknown, push: (error: unknown) => void) => {
+    node.errors += 1
+    scheduleTelemetry()
+    push(error)
+  })
 }
 
 function callTargetMethod(target: StreamTarget, name: string, ...arguments_: unknown[]) {
@@ -751,17 +940,59 @@ function watchCombinedLifecycle(targets: StreamTarget[], nodeId: string) {
   }
 }
 
+function watchPromiseLifecycle(result: unknown, nodeId: string) {
+  if (!result || typeof (result as { then?: unknown }).then !== 'function') return
+
+  void Promise.resolve(result).then(
+    () => {
+      const node = graphNodes.get(nodeId)
+      if (!node || node.status !== 'open') return
+      node.status = 'closed'
+      flushTelemetry()
+    },
+    () => {
+      const node = graphNodes.get(nodeId)
+      if (!node) return
+      node.status = 'aborted'
+      flushTelemetry()
+    },
+  )
+}
+
 function isStream(value: unknown): value is StreamTarget {
   return value instanceof StreamConstructor
 }
 
 function formatOperator(name: string, arguments_: unknown[]) {
-  if (name === 'take') return `take(${String(arguments_[0] ?? '')})`
-  if (name === 'slice') return `slice(${arguments_.map(String).join(', ')})`
-  if (name === 'batch') return `batch(${String(arguments_[0] ?? '')})`
-  if (name === 'throttle') return `throttle(${String(arguments_[0] ?? '')})`
-  if (name === 'ratelimit') return `ratelimit(${arguments_.map(String).join(', ')})`
-  if (name === 'merge') return `merge(${arguments_.map(String).join(', ')})`
+  if (name === 'merge') {
+    const options = arguments_[0]
+    const configuration =
+      options && typeof options === 'object' && !Array.isArray(options)
+        ? (options as { concurrency?: unknown; ordered?: unknown })
+        : {}
+    const concurrency = configuration.concurrency ?? Infinity
+    const mode = configuration.ordered === true ? 'ordered' : 'unordered'
+    return `merge(${String(concurrency)}, ${mode})`
+  }
+  if (name === 'rateLimit') {
+    const options = arguments_[0]
+    if (options && typeof options === 'object' && !Array.isArray(options)) {
+      const { interval, limit } = options as { interval?: unknown; limit?: unknown }
+      return `rateLimit(${String(limit ?? '')} / ${String(interval ?? '')} ms)`
+    }
+    return name
+  }
+  if (['slice', 'split'].includes(name)) {
+    return `${name}(${arguments_.map(String).join(', ')})`
+  }
+  if (
+    ['batch', 'decode', 'drop', 'encode', 'makeAsync', 'pluck', 'take', 'throttle'].includes(name)
+  ) {
+    return `${name}(${String(arguments_[0] ?? '')})`
+  }
+  if (['groupBy', 'keyBy', 'sortedGroupBy'].includes(name) && typeof arguments_[0] !== 'function') {
+    return `${name}(${String(arguments_[0] ?? '')})`
+  }
   return name
 }
 
@@ -857,6 +1088,8 @@ function resetRuntime(configurations: DestinationConfig[]) {
       { ...configuration, count: 0, values: [], state: 'idle' as const },
     ]),
   )
+  eventSources = new Map()
+  sourceLabels = new WeakMap()
   forkStates = new WeakMap()
   proxyTargets = new WeakMap()
   proxyNodeIds = new WeakMap()
@@ -918,6 +1151,13 @@ function flushConsole() {
 }
 
 self.addEventListener('message', async (event: MessageEvent<PlaygroundMessage>) => {
+  if (event.data.type === 'source:event') {
+    eventSources
+      .get(event.data.name)
+      ?.dispatchEvent(new CustomEvent(event.data.name, { detail: event.data.value }))
+    return
+  }
+
   if (event.data.type === 'destination:configure') {
     configureDestination(event.data)
     return

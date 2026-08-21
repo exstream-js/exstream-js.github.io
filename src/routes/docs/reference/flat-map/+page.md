@@ -10,14 +10,6 @@
 
 <p class="lead">Map each input to a value or synchronous iterable, then emit its members inline.</p>
 
-## Signature
-
-```typescript
-flatMap<U>(
-  fn: (value: T, context: CallbackContext<T, C>) => U,
-): Exstream<FlatValue<U>, C>
-```
-
 ## Example
 
 ```javascript
@@ -66,13 +58,19 @@ A callback failure becomes a record error for its input, and existing record err
 
 ## Forms
 
-`flatMap()` is available on streams and reusable pipelines, plus direct and curried standalone forms:
+`flatMap()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.flatMap(fn)
 exstream.pipeline().flatMap(fn)
-exstream.flatMap(fn, stream)
-stream.through(exstream.flatMap(fn))
+```
+
+## Signature
+
+```typescript
+flatMap<U>(
+  fn: (value: T, context: CallbackContext<T, C>) => U,
+): Exstream<FlatValue<U>, C>
 ```
 
 ## Related

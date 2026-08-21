@@ -10,12 +10,6 @@
 
 <p class="lead">Drop values for which a synchronous predicate returns a truthy result.</p>
 
-## Signature
-
-```typescript
-reject(fn: (value: T, context: C) => unknown): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -40,17 +34,21 @@ const active = exstream(accounts).reject((account) => account.disabled)
 
 ## Errors
 
-A thrown callback error becomes a contextual record error. A returned promise is truthy and therefore drops the value immediately; use [`asyncFilter()`](/docs/reference/async-filter/) with an inverted predicate for asynchronous decisions.
+A thrown callback error becomes a contextual record error. A returned promise is truthy and therefore drops the value immediately. When a decision requires asynchronous work, attach its result with [`mapAsync()`](/docs/reference/map-async/) before applying a synchronous filter.
 
 ## Forms
 
 ```javascript
 stream.reject(predicate)
 exstream.pipeline().reject(predicate)
-exstream.reject(predicate, stream)
-stream.through(exstream.reject(predicate))
+```
+
+## Signature
+
+```typescript
+reject(fn: (value: T, context: C) => unknown): Exstream<T, C>
 ```
 
 ## Related
 
-[`filter()`](/docs/reference/filter/), [`compact()`](/docs/reference/compact/), [`asyncFilter()`](/docs/reference/async-filter/)
+[`filter()`](/docs/reference/filter/), [`compact()`](/docs/reference/compact/), [`mapAsync()`](/docs/reference/map-async/)

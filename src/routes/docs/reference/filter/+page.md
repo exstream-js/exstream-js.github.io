@@ -10,18 +10,6 @@
 
 <p class="lead">Keep successful values whose synchronous predicate returns a truthy result.</p>
 
-## Signature
-
-```typescript
-filter<S extends T>(
-  fn: (value: T, context: CallbackContext<T, C>) => value is S,
-): Exstream<S, C>
-
-filter(
-  fn: (value: T, context: CallbackContext<T, C>) => unknown,
-): Exstream<T, C>
-```
-
 ## Example
 
 ```typescript
@@ -65,13 +53,23 @@ A thrown predicate error becomes a contextual record error associated with the c
 
 ## Forms
 
-`filter()` is available on streams and reusable pipelines. Its standalone form accepts the stream directly or returns a curried operator:
+`filter()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.filter(predicate)
 exstream.pipeline().filter(predicate)
-exstream.filter(predicate, stream)
-stream.through(exstream.filter(predicate))
+```
+
+## Signature
+
+```typescript
+filter<S extends T>(
+  fn: (value: T, context: CallbackContext<T, C>) => value is S,
+): Exstream<S, C>
+
+filter(
+  fn: (value: T, context: CallbackContext<T, C>) => unknown,
+): Exstream<T, C>
 ```
 
 ## Related

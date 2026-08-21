@@ -1,9 +1,9 @@
-# Watch demand move between branches
+# Sample a hot mouse source
 
-Both branches are reliable forks, but they consume different windows of the same 200 transactions. `primary.take(130)` writes the first 130 records and then detaches. `audit.slice(100)` discards the first 100 records and writes the final 100.
+Press **Run**, then move the pointer anywhere over the page. The playground forwards real browser `mousemove` events to the worker as the hot `source('mousemove')` event target.
 
-The playground-only `destination(name, { speed })` option sets a writer's initial speed in records per second. Here `primary` starts at 5 rps and `slow-audit` at 1 rps, making each phase easy to observe. The sliders can still override either value before or during the run.
+`fromEvent()` gives the non-pausable source a one-event buffer and drops the oldest buffered position on overflow. `throttle(200)` then keeps at most one leading position every 200 milliseconds and drops intermediate positions immediately.
 
-For the first 100 records, `slice(100)` discards the audit branch's values without writing them, so `primary` alone sets the source's 5 rps pace. From records 101 through 130, both destinations write and the common source adapts to the slower 1 rps audit writer. Then `take(130)` detaches `primary`, leaving the audit branch to finish the remaining 70 records at 1 rps.
+The destination is intentionally unlimited: the dropped count belongs to `throttle()`, not to a slow writer. Remove `.throttle(200)` and run again to compare how many mouse positions arrive.
 
-The orange edge shows where demand is currently blocked. Records skipped by `slice` are counted as dropped by the operator, not queued in `slow-audit`.
+Mouse movement is open-ended, so the run remains active until you press **Stop**.

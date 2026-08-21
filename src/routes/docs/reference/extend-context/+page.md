@@ -10,14 +10,6 @@
 
 <p class="lead">Await metadata for each record and assign it to the context without changing the value.</p>
 
-## Signature
-
-```typescript
-extendContext<A extends object | void | PromiseLike<object | void>>(
-  fn: (value: T, context: CallbackContext<T, C>) => A,
-): Exstream<T, MaterializedContext<C, T> & ContextAddition<A>>
-```
-
 ## Example
 
 ```javascript
@@ -47,10 +39,16 @@ A thrown or rejected callback and an invalid resolved value become a record erro
 ```javascript
 stream.extendContext(initializer)
 exstream.pipeline().extendContext(initializer)
-exstream.extendContext(initializer, stream)
-stream.through(exstream.extendContext(initializer))
+```
+
+## Signature
+
+```typescript
+extendContext<A extends object | void | PromiseLike<object | void>>(
+  fn: (value: T, context: CallbackContext<T, C>) => A,
+): Exstream<T, MaterializedContext<C, T> & ContextAddition<A>>
 ```
 
 ## Related
 
-[`withContext()`](/docs/reference/with-context/), [`mapAsync()`](/docs/reference/map-async/), [`asyncFilter()`](/docs/reference/async-filter/)
+[`withContext()`](/docs/reference/with-context/), [`mapAsync()`](/docs/reference/map-async/)

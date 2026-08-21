@@ -1,4 +1,4 @@
-<svelte:head><title>Stream state — Exstream</title><meta name="description" content="Inspect Exstream lifecycle, pressure, buffering, drops, signals, and graph properties with exact states and invariants." /><link rel="canonical" href="https://exstream-js.github.io/docs/reference/stream-state/" /></svelte:head>
+<svelte:head><title>Stream state — Exstream</title><meta name="description" content="Inspect Exstream lifecycle, aggregate pressure, buffering, drops, and cancellation with exact states and invariants." /><link rel="canonical" href="https://exstream-js.github.io/docs/reference/stream-state/" /></svelte:head>
 
 <p class="eyebrow">API · Core</p>
 
@@ -14,24 +14,20 @@
 | `ended`                | `boolean`                                                                                               | True for ended, destroyed, or aborted                      |
 | `abortReason`          | `unknown`                                                                                               | Explicit abort/fatal reason; `null` for normal end/destroy |
 | `signal`               | `AbortSignal`                                                                                           | Lazily created branch cancellation signal                  |
-| `paused`               | `boolean`                                                                                               | Any active pause gate                                      |
-| `pausedFromOutside`    | `boolean`                                                                                               | Manual/external pause gate                                 |
-| `pausedFromInside`     | `boolean`                                                                                               | Operator/generator pressure gate                           |
+| `paused`               | `boolean`                                                                                               | Whether aggregate backpressure currently stops this stream |
 | `buffered`             | `number`                                                                                                | Currently queued data and error records                    |
 | `peakBuffered`         | `number`                                                                                                | Maximum queued record count observed                       |
 | `dropped`              | `number`                                                                                                | Records discarded by an overflow drop policy               |
 | `bufferLimit`          | `number`                                                                                                | Configured maximum queued records                          |
 | `overflowPolicy`       | <code>'error' &#124; 'drop-oldest' &#124; 'drop-newest'</code>                                          | Configured full-buffer action                              |
 | `writable`, `readable` | `boolean`                                                                                               | Capability flags for adapters                              |
-| `source`               | `Exstream                                                                                               | null`                                                      | Immediate upstream stream when connected  |
-| `endOfChain`           | `Exstream                                                                                               | undefined`                                                 | Last stream assigned in a connected chain |
 
 ## Invariants
 
-End markers do not count toward `buffered`. `peakBuffered` and `dropped` are cumulative for the stream lifetime. Accessing `signal` after termination returns an already-aborted signal with the stored lifecycle reason. State is read-only; use lifecycle methods to transition it.
+End markers do not count toward `buffered`. `peakBuffered` and `dropped` are cumulative for the stream lifetime. Accessing `signal` after termination returns an already-aborted signal with the stored lifecycle reason. Lifecycle and pressure state are read-only: downstream demand, normal completion, failures, and `AbortSignal` cancellation drive their transitions.
 
-These values are useful for diagnostics and observability, not for polling-based flow control. Producers should use the boolean from `write()` and the `drain` event.
+These values are useful for diagnostics and observability, not for polling-based flow control. Producers should use the boolean from `write()` and the `drain` event. Upstream graph links and individual scheduler pause gates are private implementation details.
 
 ## Related
 
-[`events`](/docs/reference/events/), [`write()`](/docs/reference/write/), [`pause()`](/docs/reference/pause/), [`abort()`](/docs/reference/abort/)
+[`events`](/docs/reference/events/), [`write()`](/docs/reference/write/), [`end()`](/docs/reference/end/), [`pipeTo()`](/docs/reference/pipe-to/)

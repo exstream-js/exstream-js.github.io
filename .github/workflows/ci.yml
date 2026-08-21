@@ -27,6 +27,8 @@ jobs:
       - run: npm run check
       - run: npm run lint
       - run: npm run build
+      - run: npm run check:links
+      - run: npm run check:links:external
       - run: npm audit
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'

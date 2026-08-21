@@ -10,12 +10,6 @@
 
 <p class="lead">Turn the first recoverable record error reaching this operator into a fatal pipeline failure.</p>
 
-## Signature
-
-```typescript
-failOnError(): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -37,7 +31,12 @@ The original error object remains the failure reason; Exstream marks the failure
 ```javascript
 stream.failOnError()
 exstream.pipeline().failOnError()
-exstream.failOnError(stream)
+```
+
+## Signature
+
+```typescript
+failOnError(): Exstream<T, C>
 ```
 
 ## Related

@@ -10,12 +10,6 @@
 
 <p class="lead">Emit values until a synchronous condition matches, including the value that matched.</p>
 
-## Signature
-
-```typescript
-stopWhen(fn: (value: T, context: C) => unknown): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -52,8 +46,12 @@ Existing record errors pass through and do not call `fn`. If `fn` throws, the ex
 ```javascript
 stream.stopWhen(predicate)
 exstream.pipeline().stopWhen(predicate)
-exstream.stopWhen(predicate, stream)
-stream.through(exstream.stopWhen(predicate))
+```
+
+## Signature
+
+```typescript
+stopWhen(fn: (value: T, context: C) => unknown): Exstream<T, C>
 ```
 
 ## Related

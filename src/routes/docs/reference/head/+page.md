@@ -10,12 +10,6 @@
 
 <p class="lead">Emit the first successful value and stop this branch.</p>
 
-## Signature
-
-```typescript
-head(): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -33,7 +27,12 @@ Because range termination is detected on the next successful input, the source c
 ```javascript
 stream.head()
 exstream.pipeline().head()
-exstream.head(stream)
+```
+
+## Signature
+
+```typescript
+head(): Exstream<T, C>
 ```
 
 ## Related

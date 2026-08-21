@@ -59,6 +59,8 @@ Public content is in English unless a page is explicitly localized.
 ```shell
 npm run dev          # local development
 npm run check        # Svelte and TypeScript checks
+npm run check:links  # verify links and anchors in the generated site
+npm run check:links:external # also verify external link targets (requires network)
 npm run lint         # lint scripts and components
 npm run format       # format the repository
 npm run format:check # verify formatting

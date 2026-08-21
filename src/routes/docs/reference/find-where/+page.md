@@ -10,12 +10,6 @@
 
 <p class="lead">Emit the first object matching every requested property, then stop this branch.</p>
 
-## Signature
-
-```typescript
-findWhere(properties: Partial<T>): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -37,8 +31,12 @@ Existing record errors pass through and do not end the search. Matching errors b
 ```javascript
 stream.findWhere({ id: 42 })
 exstream.pipeline().findWhere({ id: 42 })
-exstream.findWhere({ id: 42 }, stream)
-stream.through(exstream.findWhere({ id: 42 }))
+```
+
+## Signature
+
+```typescript
+findWhere(properties: Partial<T>): Exstream<T, C>
 ```
 
 ## Related

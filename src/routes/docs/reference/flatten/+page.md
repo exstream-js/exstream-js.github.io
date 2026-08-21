@@ -10,12 +10,6 @@
 
 <p class="lead">Emit the members of each synchronous iterable, one level deep.</p>
 
-## Signature
-
-```typescript
-flatten(): Exstream<FlatValue<T>, C>
-```
-
 ## Example
 
 ```javascript
@@ -51,7 +45,12 @@ Existing record errors pass through. `flatten()` does not catch exceptions throw
 ```javascript
 stream.flatten()
 exstream.pipeline().flatten()
-exstream.flatten(stream)
+```
+
+## Signature
+
+```typescript
+flatten(): Exstream<FlatValue<T>, C>
 ```
 
 ## Related

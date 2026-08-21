@@ -1,9 +1,9 @@
-# Retry through a finite work queue
+# Retry, then route remaining failures
 
-Validation deliberately creates two recoverable failure classes. Exstream attaches each error to the transaction that caused it, and `routeErrors()` splits the flow into successful `output` and structured `deadLetters`.
+This example creates two record-error classes. A simulated risk timeout is transient; invalid customer data is permanent.
 
-The manual `work queue` receives 120 original transactions. Temporary failures are written back to that same input with an incremented attempt; permanent failures go to `dead-letter`. `retry-queue` makes every retry decision visible without removing it from the loop.
+`mapAsync()` retries only `RISK_TIMEOUT` failures, up to two additional attempts, while retaining the record's concurrency slot. Invalid customer data is not retried.
 
-`pending` counts logical transactions, not attempts. A retry replaces its failed attempt, while a success or permanent rejection settles one transaction. Once the original source has ended and `pending` reaches zero, the queue closes and all three destinations finish naturally.
+After retry policy finishes, `routeErrors()` splits successful records into `output` and remaining record errors into structured `{ error, input }` dead letters. Both reliable branches are consumed concurrently.
 
-Retries are bounded to two attempts. In this simulation the transient timeout then succeeds; invalid customer data is rejected immediately. Fatal source, sink, lifecycle, and cancellation failures still bypass the dead-letter path.
+Unhandled record errors would reject a terminal instead. Fatal graph, destination, lifecycle, and cancellation failures bypass the dead-letter route.

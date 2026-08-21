@@ -5,74 +5,27 @@
 
 <svelte:head>
   <title>Quick start — Exstream</title>
-  <meta name="description" content="Build and run a bounded Exstream pipeline in Node.js or the browser." />
+  <meta name="description" content="Fetch, transform, and write a remote file with Exstream in Node.js or the browser." />
   <link rel="canonical" href="https://exstream-js.github.io/quick-start/" />
 </svelte:head>
 
-<p class="eyebrow">Start here · 5 minutes</p>
-
-# Build one useful pipeline
-
-<p class="lead">Read records, transform them while they flow, and write the result without collecting the whole input first.</p>
-
-## Install
-
-For Node.js, install the package. Exstream requires Node.js 22 or newer.
-
-```shell
-npm install exstream.js
-```
-
-In a browser project, install the same package through your bundler. The default import selects the portable browser runtime automatically.
+# Quick start
 
 <QuickStartTabs />
 
-## What the pipeline does
-
-The example connects a real source and destination, parses CSV incrementally, converts `total` to a number, keeps active orders, and serializes each result as JSON Lines.
-
-Nothing runs just because the chain exists. `pipeTo()` is the terminal operation: it starts demand and settles only after the destination finishes.
-
-<div class="contract-grid">
-  <div><strong>Memory</strong><span>No complete-file collection</span></div>
-  <div><strong>Flow</strong><span>The destination sets the pace</span></div>
-  <div><strong>Transform</strong><span>One record at a time</span></div>
-  <div><strong>Completion</strong><span>Explicit terminal promise</span></div>
-</div>
+The Node.js example writes JSON Lines to a file. The browser examples write the same records into the page. Only the source and destination change.
 
 <QuickStartDemo />
 
-## Add bounded asynchronous work
+## What the pipeline does
 
-When a record needs I/O, use `mapAsync()` and state the contract you need:
+`fetch()` provides the response body as a stream. `csv()` converts incoming bytes into rows, `filter()` and `map()` process each row, and `take()` stops after eight results. The terminal `pipeTo()` call starts the work and waits for the destination to finish.
 
-```javascript
-const enriched = orders.mapAsync(loadCustomer, {
-  concurrency: 8,
-  ordered: true,
-  retry: 2,
-  timeout: 5_000,
-})
-```
+The mapping here is synchronous. When each record needs a database query, HTTP request, or other asynchronous work, use [`mapAsync()`](/docs/learn/async-work/) with bounded concurrency.
 
-At most eight calls are active, results preserve input order, and cancelled work receives an `AbortSignal` through the record context.
+## Continue
 
-## Handle the terminal failure
-
-```javascript
-try {
-  await pipeline.pipeTo(destination)
-} catch (error) {
-  const { origin, stage } = exstream.errorInfo(error)
-  console.error(`Pipeline failed in ${origin}:${stage ?? 'unknown'}`, error)
-}
-```
-
-Recoverable record errors and fatal graph failures are separate policies. The quick start stops at the terminal boundary; the error guide explains routing, skipping, and promotion.
-
-## Continue from here
-
-- Understand the [pipeline model](/docs/learn/pipeline-model/).
-- Learn how [backpressure](/docs/concepts/backpressure/) keeps the graph bounded.
-- Run the full [browser CSV guide](/docs/examples/browser-csv/).
-- Check [when not to use Exstream](/docs/project/when-not-to-use/) before making the pipeline more elaborate.
+- Start with [the pipeline model](/docs/learn/pipeline-model/) to understand sources, transformations, branches, and destinations.
+- Read [sources](/docs/learn/sources/) and the [`csv()` reference](/docs/reference/csv/) for other inputs and parsing options.
+- See [transform data](/docs/learn/transform-data/) for reusable pipelines and the complete transformation reference.
+- Read [consume a pipeline](/docs/learn/consume/) for terminal operations and destination adapters.

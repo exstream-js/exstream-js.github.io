@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: consume
+---
 
 <svelte:head>
   <title>Consume a pipeline — Exstream</title>
@@ -31,9 +31,7 @@ setTimeout(async () => {
 
 Operators such as `map()`, `filter()`, `collect()`, and `reduce()` return another lazy Exstream. Work begins when you call `toArray()`, `single()`, `drain()`, or `pipeTo()`, or when a reader asks for data through async iteration or a platform adapter. See the [pipeline model](/docs/learn/pipeline-model/#when-work-starts) for the complete source → operators → consumer picture.
 
-`start()` is different: it only releases a source whose automatic startup was disabled. Without a downstream consumer, there is still no demand.
-
-<PlaygroundLink example="consume" />
+`start()` is different: it only activates a graph created with `{ start: 'manual' }`. Without a downstream consumer, there is still no demand.
 
 ## Pick the boundary
 
@@ -42,9 +40,10 @@ Operators such as `map()`, `filter()`, `collect()`, and `reduce()` return anothe
 | Collect every value                 | `await stream.toArray()`            | `Promise<T[]>`                                 |
 | Require zero or one value           | `await stream.single()`             | <code>Promise&lt;T &#124; undefined&gt;</code> |
 | Run side effects and discard output | `await stream.drain()`              | `Promise<void>`                                |
-| Write to a Node or Web destination  | `await stream.pipeTo(destination)`  | `Promise<void>`                                |
+| Send values to a destination        | `await stream.pipeTo(destination)`  | `Promise<void>`                                |
 | Pull values one at a time           | `for await (const value of stream)` | Native async iteration                         |
 | Expose a Node readable              | `stream.toNodeReadable()`           | Node `Readable`                                |
+| Expose a reusable Node transform    | `pipeline.toNodeTransform()`        | Node `Transform`                               |
 | Expose a Web readable               | `stream.toWebReadable()`            | Web `ReadableStream`                           |
 
 ## Finish and await
@@ -81,11 +80,27 @@ Consumes to completion without retaining output. Use it when the useful work hap
 await pipeline.pipeTo(destination)
 ```
 
-Writes to a Node writable or Web `WritableStream`, propagates destination backpressure, and settles after the transfer completes. [Reference →](/docs/reference/pipe-to/)
+Runs a reusable Exstream destination or writes to a Node writable or Web `WritableStream`. It propagates destination backpressure and settles after processing completes. [Reference →](/docs/reference/pipe-to/)
+
+## Define a reusable destination
+
+For an application writer, close a reusable pipeline with `drain()` and keep its internals outside the calling flow:
+
+```javascript
+const ordersApi = exstream
+  .pipeline()
+  .batch(200)
+  .mapAsync(postOrders, { concurrency: 4, ordered: false })
+  .drain()
+
+await source.through(transform).pipeTo(ordersApi)
+```
+
+Here `drain()` does not start any work because it is called on a pipeline definition. It returns a reusable destination; the later `pipeTo()` call creates a fresh chain and starts it. Use [`destination()`](/docs/reference/destination/) when a run also needs to open and close a database client, transaction, or similar resource.
 
 ## Stream output
 
-### Async iteration
+### `for await...of`
 
 ```javascript
 for await (const record of pipeline) {
@@ -113,6 +128,16 @@ await nodePipeline(
 )
 ```
 
+When the Exstream part is a reusable definition rather than a source-backed stream, convert it to a native Node transform:
+
+```javascript
+const normalize = exstream.pipeline().csv({ header: true }).map(normalizeOrder).jsonlStringify()
+
+await nodePipeline(input, normalize.toNodeTransform(), output)
+```
+
+The transform accepts pipeline input on its writable side and emits pipeline output on its readable side. Each call creates an independent native stream and snapshots the operators currently recorded in the definition.
+
 In a Web runtime, `toWebReadable()` can become a streaming response body:
 
 ```javascript
@@ -121,4 +146,4 @@ return new Response(exstream(rows).jsonlStringify().toWebReadable(), {
 })
 ```
 
-Both adapters pass demand and cancellation between Exstream and the native reader. See [`toNodeReadable()`](/docs/reference/to-node-readable/) and [`toWebReadable()`](/docs/reference/to-web-readable/).
+These adapters pass demand and cancellation across the native boundary. See [`toNodeReadable()`](/docs/reference/to-node-readable/), [`toNodeTransform()`](/docs/reference/to-node-transform/), and [`toWebReadable()`](/docs/reference/to-web-readable/).

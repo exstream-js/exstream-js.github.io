@@ -1,6 +1,6 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: pipeline-model
+---
 
 <svelte:head>
   <title>Pipeline model — Exstream</title>
@@ -61,12 +61,12 @@ See the [format operators](/docs/reference/#formats) for CSV, JSON, JSON Lines, 
 Several sources can become one flow. For example, orders from a website and retail stores can be processed by the same pipeline:
 
 ```javascript
-const orders = exstream([webOrders, retailOrders]).merge(2, false)
+const orders = exstream([webOrders, retailOrders]).merge({ concurrency: 2, ordered: false })
 ```
 
 The merged output is another Exstream, so downstream operators do not need to know which source produced a record.
 
-Read the [`merge()` reference](/docs/reference/merge/) for parallelism, ordering, lazy source factories, buffering, and errors.
+Continue with [Merge streams](/docs/learn/merge/) for concurrency, output order, and deferred source acquisition.
 
 ## Transforming records
 
@@ -103,7 +103,7 @@ const archive = processedOrders.fork()
 
 Each branch ends at a terminal consumer. A reliable branch participates in backpressure; an observer is used when a secondary branch must not slow the main flow.
 
-Read [Branch and observe](/docs/learn/branching/) for reliable forks, non-blocking observers, and their different delivery guarantees.
+Read [Fork and observe](/docs/learn/branching/) for reliable forks, non-blocking observers, and their different delivery guarantees.
 
 ## Destinations
 
@@ -136,6 +136,4 @@ await activeOrders.pipeTo(destination)
 
 As the destination accepts records, the pipeline requests more data upstream. If the destination slows down, that pressure travels back through the operators toward the source. Operators process incrementally unless their job explicitly requires collection, as sorting does.
 
-Read [Backpressure](/docs/concepts/backpressure/) for how demand and bounded buffering behave across a connected pipeline.
-
-<PlaygroundLink example="pipeline-model" />
+Read [Backpressure](/docs/learn/backpressure/) for how demand and bounded buffering behave across a connected pipeline.

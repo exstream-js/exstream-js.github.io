@@ -10,12 +10,6 @@
 
 <p class="lead">Emit at most the first `n` successful values, then stop this branch.</p>
 
-## Signature
-
-```typescript
-take(n: number): Exstream<T, C>
-```
-
 ## Example
 
 ```javascript
@@ -39,8 +33,12 @@ Record errors pass through and do not count toward `n`. `take(0)`, negative coun
 ```javascript
 stream.take(10)
 exstream.pipeline().take(10)
-exstream.take(10, stream)
-stream.through(exstream.take(10))
+```
+
+## Signature
+
+```typescript
+take(n: number): Exstream<T, C>
 ```
 
 ## Related

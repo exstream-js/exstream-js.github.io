@@ -10,12 +10,6 @@
 
 <p class="lead">Create a new object containing only the requested fields from each record.</p>
 
-## Signature
-
-```typescript
-pick<K extends keyof T>(fields: readonly K[]): Exstream<Pick<T, K>, C>
-```
-
 ## Example
 
 ```typescript
@@ -49,8 +43,12 @@ Applying `pick()` to `null`, `undefined`, or another value that cannot be used w
 ```javascript
 stream.pick(['id', 'name'])
 exstream.pipeline().pick(['id', 'name'])
-exstream.pick(['id', 'name'], stream)
-stream.through(exstream.pick(['id', 'name']))
+```
+
+## Signature
+
+```typescript
+pick<K extends keyof T>(fields: readonly K[]): Exstream<Pick<T, K>, C>
 ```
 
 ## Related

@@ -4,17 +4,11 @@
   <link rel="canonical" href="https://exstream-js.github.io/docs/reference/to-node-readable/" />
 </svelte:head>
 
-<p class="eyebrow">API · Consume</p>
+<p class="eyebrow">API · Interop</p>
 
 # `toNodeReadable()`
 
 <p class="lead">Expose Exstream output through Node's native `Readable` interface.</p>
-
-## Signature
-
-```typescript
-toNodeReadable(options?: object | null): NodeReadableLike<T>
-```
 
 ## Example
 
@@ -31,6 +25,12 @@ The returned readable pulls from Exstream through its async iterator. Node deman
 
 This adapter is available only in the Node runtime. Browser and portable entry points throw; use `toWebReadable()` there. Pipeline failures are emitted through the readable's `error` event, so attach an error handler or use `pipeTo()` when a completion promise is a better boundary.
 
+## Signature
+
+```typescript
+toNodeReadable(options?: object | null): NodeReadableLike<T>
+```
+
 ## Related
 
-[`toWebReadable()`](/docs/reference/to-web-readable/), [`pipeTo()`](/docs/reference/pipe-to/), [async iteration](/docs/reference/async-iteration/)
+[`toNodeTransform()`](/docs/reference/to-node-transform/), [`toWebReadable()`](/docs/reference/to-web-readable/), [`pipeTo()`](/docs/reference/pipe-to/), [async iteration](/docs/reference/async-iteration/)

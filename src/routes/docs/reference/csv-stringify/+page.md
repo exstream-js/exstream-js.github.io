@@ -10,27 +10,6 @@
 
 <p class="lead">Serialize each array or object as one CSV record and emit it incrementally.</p>
 
-## Signature
-
-```typescript
-csvStringify<H extends readonly PropertyKey[] | boolean = false>(
-  options?: CsvStringifyOptions<H> | null,
-): Exstream<string | Uint8Array, C>
-
-interface CsvStringifyOptions<H extends readonly PropertyKey[] | boolean = false> {
-  encoding?: string
-  separator?: string
-  quote?: string
-  escape?: string
-  lineEnding?: string
-  header?: H
-  quoted?: boolean
-  quotedEmpty?: boolean
-  maxColumns?: number
-  maxRecordBytes?: number
-}
-```
-
 ## Example
 
 ```javascript
@@ -87,16 +66,33 @@ Upstream record errors pass through unchanged and do not produce CSV output. Han
 
 ## Forms
 
-`csvStringify()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream and the curried form composes with `through()`:
+`csvStringify()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.csvStringify(options)
 exstream.pipeline().csvStringify(options)
-exstream.csvStringify(options, stream)
-stream.through(exstream.csvStringify(options))
 ```
 
-Pass `null` in the direct standalone form to apply defaults.
+## Signature
+
+```typescript
+csvStringify<H extends readonly PropertyKey[] | boolean = false>(
+  options?: CsvStringifyOptions<H> | null,
+): Exstream<string | Uint8Array, C>
+
+interface CsvStringifyOptions<H extends readonly PropertyKey[] | boolean = false> {
+  encoding?: string
+  separator?: string
+  quote?: string
+  escape?: string
+  lineEnding?: string
+  header?: H
+  quoted?: boolean
+  quotedEmpty?: boolean
+  maxColumns?: number
+  maxRecordBytes?: number
+}
+```
 
 ## Related
 

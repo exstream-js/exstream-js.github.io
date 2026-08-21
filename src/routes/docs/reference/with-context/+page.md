@@ -10,15 +10,6 @@
 
 <p class="lead">Materialize a record context and add synchronous metadata without changing the value.</p>
 
-## Signature
-
-```typescript
-withContext(): Exstream<T, C>
-withContext<A extends object | void>(
-  fn: (value: T, context: CallbackContext<T, C>) => A,
-): Exstream<T, MaterializedContext<C, T> & ContextAddition<A>>
-```
-
 ## Example
 
 ```javascript
@@ -51,8 +42,15 @@ The callback is synchronous and runs once per successful value. Order, values, a
 ```javascript
 stream.withContext(initializer)
 exstream.pipeline().withContext(initializer)
-exstream.withContext(initializer, stream)
-stream.through(exstream.withContext(initializer))
+```
+
+## Signature
+
+```typescript
+withContext(): Exstream<T, C>
+withContext<A extends object | void>(
+  fn: (value: T, context: CallbackContext<T, C>) => A,
+): Exstream<T, MaterializedContext<C, T> & ContextAddition<A>>
 ```
 
 ## Related

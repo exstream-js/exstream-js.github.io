@@ -1,16 +1,16 @@
-<script>
-  import PlaygroundLink from '$lib/components/PlaygroundLink.svelte'
-</script>
+---
+playground: branching
+---
 
 <svelte:head>
-  <title>Branch and observe — Exstream</title>
+  <title>Fork and observe — Exstream</title>
   <meta name="description" content="Choose reliable forks or non-blocking observers in an Exstream pipeline." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/learn/branching/" />
 </svelte:head>
 
 <p class="eyebrow">Learn · Pipeline graphs</p>
 
-# Branch and observe
+# Fork and observe
 
 <p class="lead">Use a reliable branch when every record must arrive. Use an observer when the main pipeline must never wait for it.</p>
 
@@ -24,11 +24,26 @@ const auditFile = source.fork()
 await Promise.all([database.pipeTo(databaseWriter), auditFile.jsonlStringify().pipeTo(auditWriter)])
 ```
 
-<PlaygroundLink example="branching" />
-
 Every `fork()` participates in backpressure. The shared source advances only when all reliable branches can make progress. A slow audit destination may therefore slow the database branch too.
 
 That behavior is correct when both outputs are required.
+
+### Registering forks later
+
+Automatic activation supports ordinary synchronous graph construction. If branch setup crosses a timer or `await`, make the root source manual and activate it explicitly:
+
+```javascript
+const source = exstream.defer(() => openRecords(), { start: 'manual' })
+const database = source.fork().pipeTo(databaseWriter)
+
+await prepareAuditWriter()
+const audit = source.fork().pipeTo(auditWriter)
+
+await source.start()
+await Promise.all([database, audit])
+```
+
+Every fork still receives the complete shared execution. A fork created after `start()` is rejected; use a new deferred source execution when a later consumer needs to read independently.
 
 ## Non-blocking observer
 
@@ -53,3 +68,5 @@ For every branch, write one sentence:
 - “Missing observations are acceptable.” Use `observe()` with a bound.
 
 If neither sentence is true, the delivery contract is still undefined.
+
+When several branches should feed one downstream pipeline again, continue with [Merge streams](/docs/learn/merge/).
