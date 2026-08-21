@@ -1,6 +1,6 @@
 <svelte:head>
   <title>through() — Exstream</title>
-  <meta name="description" content="Compose Exstream with pipelines, functions, streams, and Node transforms, including accepted targets and lifecycle behavior." />
+  <meta name="description" content="Compose an Exstream with a reusable pipeline, transform function, or Node transform." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/reference/through/" />
 </svelte:head>
 
@@ -8,7 +8,7 @@
 
 # `through()`
 
-<p class="lead">Attach a reusable pipeline, transform function, Exstream, or Node stream to the current flow.</p>
+<p class="lead">Attach a reusable transformation to the current stream.</p>
 
 ## Example
 
@@ -27,43 +27,59 @@ const normalized = exstream(rows).through(normalizeOrder)
   <div>
     <dt><code>target</code></dt>
     <dd>
-      <p class="parameter-meta"><span><strong>Type</strong> <code>Pipeline | Exstream | function | Node stream | null</code></span><span><strong>Default</strong> <code>null</code></span></p>
-      <p>A reusable pipeline is instantiated for this attachment. A function receives the current stream and returns its result. An Exstream target must not already be consumed. A Node duplex or transform is piped from the source and its readable side becomes the returned Exstream. <code>null</code> and <code>undefined</code> return the current stream unchanged.</p>
-    </dd>
-  </div>
-  <div>
-    <dt><code>writable</code></dt>
-    <dd>
-      <p class="parameter-meta"><span><strong>Type</strong> <code>boolean</code></span><span><strong>Default</strong> <code>false</code></span></p>
-      <p>Applies only to Node streams. When true, treats the target as write-only and returns a non-readable Exstream that mirrors its finish, close, and error lifecycle instead of exposing a readable side. The runtime uses truthiness; TypeScript accepts a boolean.</p>
+      <p class="parameter-meta"><span><strong>Type</strong> <code>Pipeline | function | Node Transform</code></span></p>
+      <p>A reusable pipeline is instantiated for this attachment. A function receives the current Exstream and returns the transformed Exstream. In Node.js, a native duplex or transform is also accepted and its readable side becomes the returned Exstream.</p>
     </dd>
   </div>
 </dl>
 
 ## Composition
 
-The target defines output type, ordering, buffering, and concurrency. Backpressure and cancellation follow the connected graph; `through()` does not add a queue or neutralize the target's semantics.
+A function can package a small transformation without changing its behavior:
 
 ```javascript
 const activeOnly = (stream) => stream.filter((order) => order.active)
 const active = orders.through(activeOnly)
 ```
 
-Node stream targets are available only in the Node.js runtime. Invalid targets throw when attached.
+A pipeline is a reusable definition. Every attachment creates an independent operator chain, so buffers and other operator state are not shared:
 
-For an Exstream target, `through()` connects the source to the target's root and returns that target; it must not already have a reliable consumer. A function target is called immediately with the current stream and its return value becomes the result. A reusable pipeline creates a fresh live pipeline instance for every attachment.
+```javascript
+const normalize = exstream.pipeline().map(normalizeOrder)
 
-With a Node duplex or transform and the default `writable: false`, Exstream writes into the target and wraps its readable side. With `writable: true`, the returned Exstream is marked non-readable, starts consuming immediately, and mirrors destination `error`, `finish`, and `close` lifecycle events. Use [`pipeTo()`](/docs/reference/pipe-to/) when a completion promise and strict terminal failure contract are preferable.
+const apiOrders = exstream(apiRows).through(normalize)
+const fileOrders = exstream(csvRows).through(normalize)
+```
 
-TypeScript models Node duplex and transform targets directly. The returned Exstream carries the value type of the target's readable side. Use `pipeTo()` instead when the target is a terminal writable and the completion promise is the desired boundary.
+An empty pipeline is an explicit identity target. Exstream recognizes it before instantiation and returns the current stream without adding a node, queue, or per-record work. This makes conditional composition cheap:
+
+```javascript
+const transform = shouldNormalize ? exstream.pipeline().map(normalizeOrder) : exstream.pipeline()
+
+const orders = source.through(transform)
+```
+
+In Node.js, pass a duplex or transform when data must continue through its readable side:
+
+```javascript
+const decompressed = exstream(compressedInput).through(zlib.createGunzip())
+```
+
+Use [`pipeTo()`](/docs/reference/pipe-to/) for a write-only terminal destination:
+
+```javascript
+await orders.pipeTo(createWriteStream('orders.jsonl'))
+```
+
+The target determines output type, ordering, buffering, and concurrency. Backpressure, errors, and cancellation follow the connected graph; `through()` does not add its own queue or error boundary.
 
 ## Errors
 
-An unsupported target throws when attached. A transform function that throws also escapes the attachment call. Once connected, record errors, fatal failures, and cancellation follow the target graph. In write-only Node mode, destination errors are written into the returned Exstream's error channel before it ends; they reject an attached terminal consumer unless handled.
+Passing `null`, `undefined`, a live Exstream, a Node writable-only stream, or a second options argument throws when attached. A transform function that throws also escapes the attachment call. Once connected, record errors and fatal failures follow the resulting graph.
 
 ## Forms
 
-`through()` is an instance method. Reusable pipeline definitions also expose `through()` for appending another pipeline or transform function, but not a live Exstream or Node stream:
+Reusable pipeline definitions also expose `through()` for appending another pipeline or transform function:
 
 ```javascript
 stream.through(reusablePipeline)
@@ -75,18 +91,12 @@ exstream.pipeline().through(reusablePipeline)
 
 ```typescript
 through<U>(
-  target: Pipeline<T, U> | Exstream<U> | ((stream: Exstream<T, C>) => Exstream<U>),
-  options?: { writable?: boolean },
+  target: Pipeline<T, U> | ((stream: Exstream<T, C>) => Exstream<U>),
 ): Exstream<U>
 
-through<U>(
-  target: NodeTransformLike<T, U>,
-  options?: { writable?: boolean },
-): Exstream<U, C>
-
-through(target?: null, options?: ThroughOptions): Exstream<T, C>
+through<U>(target: NodeTransformLike<T, U>): Exstream<U, C>
 ```
 
 ## Related
 
-[Composition](/docs/learn/composition/), [`pipeTo()`](/docs/reference/pipe-to/), [`fork()`](/docs/reference/fork/), [`merge()`](/docs/reference/merge/)
+[Composition](/docs/learn/composition/), [`pipeline()`](/docs/reference/pipeline/), [`pipeTo()`](/docs/reference/pipe-to/), [`toNodeTransform()`](/docs/reference/to-node-transform/)
