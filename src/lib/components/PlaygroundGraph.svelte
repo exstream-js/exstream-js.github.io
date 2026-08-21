@@ -3,6 +3,8 @@
   import Minimize2 from '@lucide/svelte/icons/minimize-2'
   import { onDestroy, onMount } from 'svelte'
 
+  import { routeGraphEdge } from './playground-graph-path.js'
+
   type GraphNode = {
     id: string
     type: 'source' | 'transform' | 'fork' | 'destination'
@@ -234,24 +236,46 @@
     frame = undefined
     if (!scene) return
     const sceneBox = scene.getBoundingClientRect()
+    const nodeRects = new Map(
+      Array.from(elements, ([id, element]) => {
+        const box = element.getBoundingClientRect()
+        return [
+          id,
+          {
+            left: box.left - sceneBox.left,
+            right: box.right - sceneBox.left,
+            top: box.top - sceneBox.top,
+            bottom: box.bottom - sceneBox.top,
+          },
+        ] as const
+      }),
+    )
 
     lines = edges.flatMap((edge) => {
-      const from = elements.get(edge.from)?.getBoundingClientRect()
-      const to = elements.get(edge.to)?.getBoundingClientRect()
+      const from = nodeRects.get(edge.from)
+      const to = nodeRects.get(edge.to)
       if (!from || !to) return []
 
-      const x1 = from.right - sceneBox.left
-      const y1 = from.top + from.height / 2 - sceneBox.top
-      const x2 = to.left - sceneBox.left
-      const y2 = to.top + to.height / 2 - sceneBox.top
-      const bend = Math.max(24, (x2 - x1) * 0.48)
+      const x1 = from.right
+      const y1 = (from.top + from.bottom) / 2
+      const x2 = to.left
+      const y2 = (to.top + to.bottom) / 2
+      const obstacles = Array.from(nodeRects)
+        .filter(([id]) => id !== edge.from && id !== edge.to)
+        .map(([, box]) => box)
+      const route = routeGraphEdge({
+        x1,
+        y1,
+        x2,
+        y2,
+        height: sceneBox.height,
+        obstacles,
+      })
 
       return [
         {
           ...edge,
-          path: `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`,
-          labelX: x1 + (x2 - x1) * 0.52,
-          labelY: y1 + (y2 - y1) * 0.52,
+          ...route,
         },
       ]
     })
