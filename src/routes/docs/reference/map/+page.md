@@ -1,6 +1,6 @@
 <svelte:head>
   <title>map() — Exstream</title>
-  <meta name="description" content="Transform every Exstream value synchronously, with complete map() parameters, output modes, and error behavior." />
+  <meta name="description" content="Transform every Exstream value synchronously, including context, promise values, and error behavior." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/reference/map/" />
 </svelte:head>
 
@@ -29,13 +29,6 @@ const totals = exstream(rows).map((row) => ({
       <p>Called once for every successful value. The callback is synchronous. Declare the second parameter only when record metadata or its cancellation signal is needed; Exstream materializes a context lazily.</p>
     </dd>
   </div>
-  <div>
-    <dt><code>wrap</code></dt>
-    <dd>
-      <p class="parameter-meta"><span><strong>Type</strong> <code>boolean</code></span><span><strong>Default</strong> <code>false</code></span></p>
-      <p>When <code>true</code>, emits <code>&#123; input, output &#125;</code> so the transformed result stays associated with its original input. The JavaScript implementation tests this field by truthiness, while the public TypeScript API intentionally accepts booleans only. Passing <code>null</code> or <code>undefined</code> as the options object applies the default.</p>
-    </dd>
-  </div>
 </dl>
 
 ## Behavior
@@ -44,7 +37,7 @@ const totals = exstream(rows).map((row) => ({
 
 When requested, `context.input` is the value that created the current context, `context.signal` aborts when this branch should stop, and any custom fields added upstream remain available. The same materialized context continues with the mapped output unless a later branch boundary copies it.
 
-The callback result is emitted as-is, including `undefined`, arrays, streams, and asynchronous values. A native promise, or an object exposing both callable `then` and `catch` properties, is recognized for rejection wrapping and `wrap` handling. A minimal thenable with only `then` is emitted as an ordinary value. Returning any promise does not make `map()` await it or limit concurrent work:
+The callback result is emitted as-is, including `undefined`, arrays, streams, and asynchronous values. A native promise, or an object exposing both callable `then` and `catch` properties, is recognized so rejection retains the original input. A minimal thenable with only `then` is emitted as an ordinary value. Returning any promise does not make `map()` await it or limit concurrent work:
 
 ```javascript
 const pending = exstream(ids).map((id) => fetch(`/items/${id}`))
@@ -53,14 +46,14 @@ const pending = exstream(ids).map((id) => fetch(`/items/${id}`))
 
 Use [`mapAsync()`](/docs/reference/map-async/) for awaited output, bounded concurrency, ordering controls, retries, or timeouts.
 
-## Wrapped output
+To retain both input and output, return that shape explicitly:
 
 ```javascript
-const compared = exstream(records).map(calculateScore, { wrap: true })
-// { input: originalRecord, output: score }
+const compared = exstream(records).map((input) => ({
+  input,
+  output: calculateScore(input),
+}))
 ```
-
-If `calculateScore` returns a promise, each emitted value is a promise that resolves to the wrapped object.
 
 ## Errors
 
@@ -71,8 +64,8 @@ If `fn` throws, Exstream emits a contextual record error for that input and cont
 `map()` is available on streams and reusable pipelines:
 
 ```javascript
-stream.map(fn, { wrap: true })
-exstream.pipeline().map(fn, { wrap: true })
+stream.map(fn)
+exstream.pipeline().map(fn)
 ```
 
 ## Signature
@@ -80,22 +73,7 @@ exstream.pipeline().map(fn, { wrap: true })
 ```typescript
 map<U>(
   fn: (value: T, context: CallbackContext<T, C>) => U,
-  options: { wrap: true },
-): Exstream<
-  U extends PromiseLike<infer R>
-    ? Promise<{ input: T; output: Awaited<R> }>
-    : { input: T; output: U },
-  MaterializedContext<C, T>
->
-
-map<U>(
-  fn: (value: T, context: CallbackContext<T, C>) => U,
-  options?: MapOptions | null,
 ): Exstream<U, NextContext<C, U>>
-
-interface MapOptions {
-  wrap?: boolean
-}
 ```
 
 ## Related
