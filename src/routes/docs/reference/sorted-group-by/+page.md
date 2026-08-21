@@ -47,4 +47,4 @@ sortedGroupBy<K>(
 
 ## Related
 
-[`groupBy()`](/docs/reference/group-by/), [`sortedJoin()`](/docs/reference/sorted-join/), [`sortBy()`](/docs/reference/sort-by/)
+[`groupBy()`](/docs/reference/group-by/), [`sortedJoin()`](/docs/reference/sorted-join/), [`sort()`](/docs/reference/sort/)

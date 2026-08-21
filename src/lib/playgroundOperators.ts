@@ -42,7 +42,6 @@ export const operatorTelemetry = {
   skipErrors: {},
   slice: { metric: 'dropped' },
   sort: {},
-  sortBy: { metric: 'errors' },
   sortedGroupBy: {},
   split: {},
   splitBy: {},

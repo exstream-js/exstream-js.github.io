@@ -87,7 +87,6 @@ export const docsNavigation = [
       { href: '/docs/reference/group-by/', label: 'groupBy()', fullStreamBuffer: true },
       { href: '/docs/reference/key-by/', label: 'keyBy()', fullStreamBuffer: true },
       { href: '/docs/reference/sort/', label: 'sort()', fullStreamBuffer: true },
-      { href: '/docs/reference/sort-by/', label: 'sortBy()', fullStreamBuffer: true },
       { href: '/docs/reference/sorted-group-by/', label: 'sortedGroupBy()' },
     ],
   },

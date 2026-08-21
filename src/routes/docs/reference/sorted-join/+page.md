@@ -76,4 +76,4 @@ For an inner join both values are present. A left join returns `Right | null`; a
 
 ## Related
 
-[`sortedGroupBy()`](/docs/reference/sorted-group-by/), [`merge()`](/docs/reference/merge/), [`sortBy()`](/docs/reference/sort-by/)
+[`sortedGroupBy()`](/docs/reference/sorted-group-by/), [`merge()`](/docs/reference/merge/), [`sort()`](/docs/reference/sort/)
