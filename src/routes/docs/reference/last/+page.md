@@ -37,4 +37,4 @@ last(): Exstream<T, C>
 
 ## Related
 
-[`head()`](/docs/reference/head/), [`single()`](/docs/reference/single/), [`reduce1()`](/docs/reference/reduce-1/)
+[`head()`](/docs/reference/head/), [`single()`](/docs/reference/single/), [`reduce()`](/docs/reference/reduce/)

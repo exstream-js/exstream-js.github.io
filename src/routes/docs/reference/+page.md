@@ -42,7 +42,7 @@
 
 ## Aggregate and order
 
-- [`collect()`](/docs/reference/collect/), [`reduce()`](/docs/reference/reduce/), and [`reduce1()`](/docs/reference/reduce-1/) — produce one result after completion
+- [`collect()`](/docs/reference/collect/) and [`reduce()`](/docs/reference/reduce/) — produce one result after completion
 - [`groupBy()`](/docs/reference/group-by/) and [`keyBy()`](/docs/reference/key-by/) — build a complete grouped or unique-key index
 - [`sort()`](/docs/reference/sort/) and [`sortBy()`](/docs/reference/sort-by/) — order a complete finite stream
 - [`sortedGroupBy()`](/docs/reference/sorted-group-by/) — group adjacent equal keys without retaining the whole stream

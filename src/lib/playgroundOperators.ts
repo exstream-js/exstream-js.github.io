@@ -38,7 +38,6 @@ export const operatorTelemetry = {
   pluck: { metric: 'errors' },
   ratelimit: {},
   reduce: { metric: 'errors' },
-  reduce1: { metric: 'errors' },
   reject: { metric: 'dropped' },
   skipErrors: {},
   slice: { metric: 'dropped' },

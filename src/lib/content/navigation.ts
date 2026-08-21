@@ -84,7 +84,6 @@ export const docsNavigation = [
     items: [
       { href: '/docs/reference/collect/', label: 'collect()', fullStreamBuffer: true },
       { href: '/docs/reference/reduce/', label: 'reduce()' },
-      { href: '/docs/reference/reduce-1/', label: 'reduce1()' },
       { href: '/docs/reference/group-by/', label: 'groupBy()', fullStreamBuffer: true },
       { href: '/docs/reference/key-by/', label: 'keyBy()', fullStreamBuffer: true },
       { href: '/docs/reference/sort/', label: 'sort()', fullStreamBuffer: true },
