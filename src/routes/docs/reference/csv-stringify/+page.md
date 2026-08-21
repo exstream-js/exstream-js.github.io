@@ -66,16 +66,12 @@ Upstream record errors pass through unchanged and do not produce CSV output. Han
 
 ## Forms
 
-`csvStringify()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream and the curried form composes with `through()`:
+`csvStringify()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.csvStringify(options)
 exstream.pipeline().csvStringify(options)
-exstream.csvStringify(options, stream)
-stream.through(exstream.csvStringify(options))
 ```
-
-Pass `null` in the direct standalone form to apply defaults.
 
 ## Signature
 

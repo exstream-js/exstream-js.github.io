@@ -43,16 +43,12 @@ A serialization, replacer, or size failure becomes a `JsonStringifyError` record
 
 ## Forms
 
-`jsonlStringify()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream and the curried form composes with `through()`:
+`jsonlStringify()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.jsonlStringify(options)
 exstream.pipeline().jsonlStringify(options)
-exstream.jsonlStringify(options, stream)
-stream.through(exstream.jsonlStringify(options))
 ```
-
-Pass `null` in the direct standalone form to apply defaults.
 
 ## Signature
 

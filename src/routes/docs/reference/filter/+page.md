@@ -53,13 +53,11 @@ A thrown predicate error becomes a contextual record error associated with the c
 
 ## Forms
 
-`filter()` is available on streams and reusable pipelines. Its standalone form accepts the stream directly or returns a curried operator:
+`filter()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.filter(predicate)
 exstream.pipeline().filter(predicate)
-exstream.filter(predicate, stream)
-stream.through(exstream.filter(predicate))
 ```
 
 ## Signature

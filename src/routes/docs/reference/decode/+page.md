@@ -35,8 +35,6 @@ Unsupported encoding throws at creation. Base64 validation follows the active pl
 ```javascript
 stream.decode('base64')
 exstream.pipeline().decode('base64')
-exstream.decode('base64', stream)
-stream.through(exstream.decode('base64'))
 ```
 
 ## Signature

@@ -29,12 +29,11 @@ It is synchronous, stable, and one-to-zero-or-one: output order is unchanged, no
 
 ## Forms
 
-Available on streams and reusable pipelines. The standalone form takes the stream directly:
+Available on streams and reusable pipelines:
 
 ```javascript
 stream.compact()
 exstream.pipeline().compact()
-exstream.compact(stream)
 ```
 
 ## Signature

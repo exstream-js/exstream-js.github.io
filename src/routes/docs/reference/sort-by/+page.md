@@ -43,8 +43,6 @@ A thrown comparator failure produces one record error whose input is the array o
 ```javascript
 stream.sortBy(compare)
 exstream.pipeline().sortBy(compare)
-exstream.sortBy(compare, stream)
-stream.through(exstream.sortBy(compare))
 ```
 
 ## Signature

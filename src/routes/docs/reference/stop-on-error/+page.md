@@ -41,8 +41,6 @@ The implementation does not wrap exceptions thrown by `fn`; keep the handler non
 ```javascript
 stream.stopOnError(handler)
 exstream.pipeline().stopOnError(handler)
-exstream.stopOnError(handler, stream)
-stream.through(exstream.stopOnError(handler))
 ```
 
 ## Signature

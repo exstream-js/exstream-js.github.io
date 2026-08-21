@@ -65,18 +65,14 @@ Upstream record errors pass through without adding an array item. Handle them be
 
 ## Forms
 
-`jsonStringify()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream and the curried form composes with `through()`:
+`jsonStringify()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.jsonStringify(options)
 exstream.pipeline().jsonStringify(options)
-exstream.jsonStringify(options, stream)
-stream.through(exstream.jsonStringify(options))
 ```
 
-Pass `null` in the direct standalone form to apply defaults. The `FinalProperties` generic describes the object returned by `finalize()`.
-
-That generic improves compile-time checking of the finalizer only; it does not add runtime schema validation.
+The `FinalProperties` generic describes the object returned by `finalize()`. It improves compile-time checking of the finalizer only; it does not add runtime schema validation.
 
 ## Signature
 

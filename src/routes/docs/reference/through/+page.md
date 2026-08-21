@@ -71,8 +71,6 @@ stream.through((input) => input.filter(predicate))
 exstream.pipeline().through(reusablePipeline)
 ```
 
-There is no standalone `exstream.through()` operator.
-
 ## Signature
 
 ```typescript

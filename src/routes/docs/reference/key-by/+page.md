@@ -41,8 +41,6 @@ The first duplicate is an error rather than “first wins” or “last wins.”
 ```javascript
 stream.keyBy('id')
 exstream.pipeline().keyBy('id')
-exstream.keyBy((row) => row.id, stream)
-stream.through(exstream.keyBy('id'))
 ```
 
 ## Signature

@@ -46,8 +46,6 @@ Existing record errors pass through and do not call `fn`. If `fn` throws, the ex
 ```javascript
 stream.stopWhen(predicate)
 exstream.pipeline().stopWhen(predicate)
-exstream.stopWhen(predicate, stream)
-stream.through(exstream.stopWhen(predicate))
 ```
 
 ## Signature

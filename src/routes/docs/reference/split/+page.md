@@ -35,8 +35,6 @@ Unsupported encodings throw at operator creation. Invalid chunks or decoder fail
 ```javascript
 stream.split()
 exstream.pipeline().split('utf8')
-exstream.split('utf8', stream)
-stream.through(exstream.split())
 ```
 
 ## Signature

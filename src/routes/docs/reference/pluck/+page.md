@@ -45,13 +45,11 @@ A non-string field is rejected when the operator is created. Inputs that cannot 
 
 ## Forms
 
-The direct standalone form requires the default argument; use `undefined` when no fallback is wanted:
+`pluck()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.pluck('profile.email', 'missing')
 exstream.pipeline().pluck('profile.email', 'missing')
-exstream.pluck('profile.email', undefined, stream)
-stream.through(exstream.pluck('profile.email', 'missing'))
 ```
 
 ## Signature

@@ -145,13 +145,11 @@ Cancelling the branch stops new scheduling and ignores late completions from wor
 
 ## Forms
 
-`mapAsync()` is available on streams and reusable pipelines. The direct standalone form requires an explicit options argument; pass `null` for defaults:
+`mapAsync()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.mapAsync(fn, options)
 exstream.pipeline().mapAsync(fn, options)
-exstream.mapAsync(fn, null, stream)
-stream.through(exstream.mapAsync(fn, options))
 ```
 
 ## Signature

@@ -37,8 +37,6 @@ Negative values, `NaN`, and `Infinity` are rejected at construction. Numeric str
 ```javascript
 stream.throttle(1_000)
 exstream.pipeline().throttle(1_000)
-exstream.throttle(1_000, stream)
-stream.through(exstream.throttle(1_000))
 ```
 
 ## Signature

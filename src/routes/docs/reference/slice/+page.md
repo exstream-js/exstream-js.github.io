@@ -41,8 +41,6 @@ The operator preserves order and context and adds no queue. Reaching a finite `e
 ```javascript
 stream.slice(10, 20)
 exstream.pipeline().slice(10, 20)
-exstream.slice(10, 20, stream)
-stream.through(exstream.slice(10, 20))
 ```
 
 ## Signature

@@ -48,7 +48,7 @@ Invalid inputs and options throw when the join is constructed. Selector, compara
 
 ## Forms
 
-`sortedJoin()` is available only on a live Exstream. It is not a standalone curried operator and cannot be recorded in a reusable pipeline because it connects two specific stream instances:
+`sortedJoin()` is available only on a live Exstream. It cannot be recorded in a reusable pipeline because it connects two specific stream instances:
 
 ```javascript
 left.sortedJoin(right, {

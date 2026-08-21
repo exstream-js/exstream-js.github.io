@@ -43,8 +43,6 @@ Applying `pick()` to `null`, `undefined`, or another value that cannot be used w
 ```javascript
 stream.pick(['id', 'name'])
 exstream.pipeline().pick(['id', 'name'])
-exstream.pick(['id', 'name'], stream)
-stream.through(exstream.pick(['id', 'name']))
 ```
 
 ## Signature

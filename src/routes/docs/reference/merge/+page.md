@@ -73,7 +73,7 @@ Record errors from the outer or any inner stream are forwarded in the selected o
 
 ## Forms
 
-`merge()` is available only as an instance method on the outer stream of Exstreams. It is not a reusable-pipeline or standalone operator because it coordinates live inner stream instances.
+`merge()` is available only as an instance method on the outer stream of Exstreams. It is not a reusable-pipeline operator because it coordinates live inner stream instances.
 
 ## Signature
 

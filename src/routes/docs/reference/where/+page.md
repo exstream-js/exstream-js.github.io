@@ -35,8 +35,6 @@ Reading a property from `null` or `undefined`, or from a throwing getter, become
 ```javascript
 stream.where({ status: 'open' })
 exstream.pipeline().where({ status: 'open' })
-exstream.where({ status: 'open' }, stream)
-stream.through(exstream.where({ status: 'open' }))
 ```
 
 ## Signature

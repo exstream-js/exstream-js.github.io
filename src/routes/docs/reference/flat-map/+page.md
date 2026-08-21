@@ -58,13 +58,11 @@ A callback failure becomes a record error for its input, and existing record err
 
 ## Forms
 
-`flatMap()` is available on streams and reusable pipelines, plus direct and curried standalone forms:
+`flatMap()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.flatMap(fn)
 exstream.pipeline().flatMap(fn)
-exstream.flatMap(fn, stream)
-stream.through(exstream.flatMap(fn))
 ```
 
 ## Signature

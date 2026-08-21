@@ -38,7 +38,7 @@ Use [`observe()`](/docs/reference/observe/) when observation must never slow the
 
 ## Forms
 
-`fork()` is a graph operation on a concrete stream. It is not available on reusable pipeline definitions and has no standalone operator form because it must attach to one live source instance.
+`fork()` is a graph operation on a concrete stream. It is not available on reusable pipeline definitions.
 
 ## Signature
 

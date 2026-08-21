@@ -38,8 +38,6 @@ Invalid counts and durations throw when the operator is created. The JavaScript 
 ```javascript
 stream.ratelimit(100, 60_000)
 exstream.pipeline().ratelimit(100, 60_000)
-exstream.ratelimit(100, 60_000, stream)
-stream.through(exstream.ratelimit(100, 60_000))
 ```
 
 ## Signature

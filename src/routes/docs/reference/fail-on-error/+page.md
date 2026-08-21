@@ -31,7 +31,6 @@ The original error object remains the failure reason; Exstream marks the failure
 ```javascript
 stream.failOnError()
 exstream.pipeline().failOnError()
-exstream.failOnError(stream)
 ```
 
 ## Signature

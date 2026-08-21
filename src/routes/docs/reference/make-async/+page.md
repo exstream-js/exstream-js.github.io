@@ -55,8 +55,6 @@ Negative values, `NaN`, and `Infinity` are rejected when the operator is created
 ```javascript
 stream.makeAsync(8)
 exstream.pipeline().makeAsync(8)
-exstream.makeAsync(8, stream)
-stream.through(exstream.makeAsync(8))
 ```
 
 ## Signature

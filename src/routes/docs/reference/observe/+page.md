@@ -63,7 +63,7 @@ Observer overflow with the default policy and failures inside the observer abort
 
 ## Forms
 
-`observe()` is a graph operation on a concrete stream. It is not available on reusable pipeline definitions and has no standalone operator form.
+`observe()` is a graph operation on a concrete stream. It is not available on reusable pipeline definitions.
 
 ## Signature
 

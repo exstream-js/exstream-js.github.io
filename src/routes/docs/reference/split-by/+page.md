@@ -34,8 +34,6 @@ Choose a separator that cannot match the empty string; empty matches can create 
 ```javascript
 stream.splitBy(/\0/, 'utf8')
 exstream.pipeline().splitBy(/\0/)
-exstream.splitBy(/\0/, 'utf8', stream)
-stream.through(exstream.splitBy(/\0/))
 ```
 
 ## Signature

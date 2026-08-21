@@ -45,7 +45,6 @@ Existing record errors pass through. `flatten()` does not catch exceptions throw
 ```javascript
 stream.flatten()
 exstream.pipeline().flatten()
-exstream.flatten(stream)
 ```
 
 ## Signature

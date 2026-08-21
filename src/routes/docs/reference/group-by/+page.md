@@ -44,8 +44,6 @@ A selector failure becomes a record error and terminates the underlying reductio
 ```javascript
 stream.groupBy('region')
 exstream.pipeline().groupBy('region')
-exstream.groupBy((row) => row.region, stream)
-stream.through(exstream.groupBy('region'))
 ```
 
 ## Signature

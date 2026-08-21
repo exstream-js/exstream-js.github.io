@@ -30,7 +30,6 @@ Seen values are stored in a JavaScript `Set`, so equality follows SameValueZero:
 ```javascript
 stream.uniq()
 exstream.pipeline().uniq()
-exstream.uniq(stream)
 ```
 
 ## Signature

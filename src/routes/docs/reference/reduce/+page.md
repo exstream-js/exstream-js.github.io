@@ -37,13 +37,11 @@ If `fn` throws, Exstream emits a record error associated with the current input 
 
 ## Forms
 
-The method order is `fn, initialValue`, matching the standalone operator:
+The argument order is `fn, initialValue`, matching `Array.prototype.reduce()`:
 
 ```javascript
 stream.reduce(reducer, initialValue)
 exstream.pipeline().reduce(reducer, initialValue)
-exstream.reduce(reducer, initialValue, stream)
-stream.through(exstream.reduce(reducer, initialValue))
 ```
 
 ## Signature

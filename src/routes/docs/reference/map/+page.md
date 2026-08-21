@@ -68,13 +68,11 @@ If `fn` throws, Exstream emits a contextual record error for that input and cont
 
 ## Forms
 
-`map()` is available on a stream, in a reusable pipeline, and as a standalone operator. The direct standalone form requires an explicit options argument; use `null` for defaults:
+`map()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.map(fn, { wrap: true })
 exstream.pipeline().map(fn, { wrap: true })
-exstream.map(fn, null, stream)
-stream.through(exstream.map(fn, { wrap: true }))
 ```
 
 ## Signature

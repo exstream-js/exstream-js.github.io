@@ -41,8 +41,6 @@ A thrown callback error becomes a contextual record error. A returned promise is
 ```javascript
 stream.reject(predicate)
 exstream.pipeline().reject(predicate)
-exstream.reject(predicate, stream)
-stream.through(exstream.reject(predicate))
 ```
 
 ## Signature

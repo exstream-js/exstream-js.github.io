@@ -44,13 +44,11 @@ If the predicate throws, its failure becomes a new contextual record error for t
 
 ## Forms
 
-`skipErrors()` is available on streams and reusable pipelines. The direct standalone form requires the predicate position; pass `null` to drop every record error:
+`skipErrors()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.skipErrors(predicate)
 exstream.pipeline().skipErrors(predicate)
-exstream.skipErrors(null, stream)
-stream.through(exstream.skipErrors(predicate))
 ```
 
 ## Signature

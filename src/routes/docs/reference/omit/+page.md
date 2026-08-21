@@ -43,8 +43,6 @@ An input that cannot be checked with the `in` operator produces a record error. 
 ```javascript
 stream.omit('password')
 exstream.pipeline().omit(['password', 'token'])
-exstream.omit(['password', 'token'], stream)
-stream.through(exstream.omit('password'))
 ```
 
 ## Signature

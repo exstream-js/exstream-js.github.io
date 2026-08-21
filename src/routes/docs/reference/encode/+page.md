@@ -36,8 +36,6 @@ Unsupported encoding throws immediately. A value that cannot be converted to byt
 ```javascript
 stream.encode('base64')
 exstream.pipeline().encode('base64')
-exstream.encode('base64', stream)
-stream.through(exstream.encode('base64'))
 ```
 
 ## Signature

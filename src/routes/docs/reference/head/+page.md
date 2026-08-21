@@ -27,7 +27,6 @@ Because range termination is detected on the next successful input, the source c
 ```javascript
 stream.head()
 exstream.pipeline().head()
-exstream.head(stream)
 ```
 
 ## Signature

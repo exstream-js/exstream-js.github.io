@@ -34,8 +34,6 @@ await exstream(['header', 'a', 'b']).drop(1).toArray()
 ```javascript
 stream.drop(1)
 exstream.pipeline().drop(1)
-exstream.drop(1, stream)
-stream.through(exstream.drop(1))
 ```
 
 ## Signature

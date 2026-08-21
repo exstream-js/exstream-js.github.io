@@ -47,8 +47,6 @@ A thrown selector error or invalid property access becomes a record error for th
 ```javascript
 stream.uniqBy('id')
 exstream.pipeline().uniqBy(['tenantId', 'id'])
-exstream.uniqBy((row) => row.id, stream)
-stream.through(exstream.uniqBy('id'))
 ```
 
 ## Signature

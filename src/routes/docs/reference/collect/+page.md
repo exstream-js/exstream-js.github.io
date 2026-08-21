@@ -43,12 +43,11 @@ Record errors pass through immediately and are excluded from the array. If handl
 
 ## Forms
 
-`collect()` is available on streams, reusable pipelines, and as a standalone operator. It takes no configuration, so the standalone form receives the stream directly:
+`collect()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.collect()
 exstream.pipeline().collect()
-exstream.collect(stream)
 ```
 
 ## Signature

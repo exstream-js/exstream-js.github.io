@@ -46,17 +46,14 @@ A decoder failure or `maxRecordBytes` violation before a record boundary is stru
 
 ## Forms
 
-`jsonl()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream and the curried form composes with `through()`:
+`jsonl()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.jsonl(options)
 exstream.pipeline().jsonl(options)
-exstream.jsonl(options, stream)
-stream.through(exstream.jsonl(options))
 ```
 
-Pass `null` in the direct standalone form to apply defaults. Supply an output generic such as `stream.jsonl<Event>()` when the record shape is known.
-
+Supply an output generic such as `stream.jsonl<Event>()` when the record shape is known.
 The generic is a compile-time assertion only. Each line is checked as JSON, not validated against a TypeScript interface or application schema.
 
 ## Signature

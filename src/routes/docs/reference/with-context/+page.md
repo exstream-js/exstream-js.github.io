@@ -42,8 +42,6 @@ The callback is synchronous and runs once per successful value. Order, values, a
 ```javascript
 stream.withContext(initializer)
 exstream.pipeline().withContext(initializer)
-exstream.withContext(initializer, stream)
-stream.through(exstream.withContext(initializer))
 ```
 
 ## Signature

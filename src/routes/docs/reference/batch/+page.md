@@ -52,13 +52,11 @@ Existing record errors pass through immediately and are not included in a batch.
 
 ## Forms
 
-`batch()` is available on streams and reusable pipelines. The standalone form accepts the stream directly or returns a curried operator:
+`batch()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.batch(100)
 exstream.pipeline().batch(100)
-exstream.batch(100, stream)
-stream.through(exstream.batch(100))
 ```
 
 ## Signature

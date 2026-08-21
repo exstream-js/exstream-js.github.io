@@ -32,7 +32,6 @@ For large inputs, prefer a source that can provide the required order, such as a
 ```javascript
 stream.sort()
 exstream.pipeline().sort()
-exstream.sort(stream)
 ```
 
 ## Signature

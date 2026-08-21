@@ -27,7 +27,6 @@ Memory is constant apart from the retained value. Downstream pressure propagates
 ```javascript
 stream.last()
 exstream.pipeline().last()
-exstream.last(stream)
 ```
 
 ## Signature

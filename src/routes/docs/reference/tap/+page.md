@@ -58,13 +58,11 @@ A synchronous throw becomes a contextual record error for the current input. Han
 
 ## Forms
 
-`tap()` is available on streams and reusable pipelines, plus direct and curried standalone forms:
+`tap()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.tap(fn)
 exstream.pipeline().tap(fn)
-exstream.tap(fn, stream)
-stream.through(exstream.tap(fn))
 ```
 
 ## Signature

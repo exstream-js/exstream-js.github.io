@@ -39,8 +39,6 @@ A thrown or rejected callback and an invalid resolved value become a record erro
 ```javascript
 stream.extendContext(initializer)
 exstream.pipeline().extendContext(initializer)
-exstream.extendContext(initializer, stream)
-stream.through(exstream.extendContext(initializer))
 ```
 
 ## Signature

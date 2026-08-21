@@ -186,16 +186,12 @@ Record errors already present upstream pass through unchanged. If they are handl
 
 ## Forms
 
-`csv()` is available on streams and reusable pipelines. The direct standalone form takes options before the stream; the curried form is useful with `through()`:
+`csv()` is available on streams and reusable pipelines:
 
 ```javascript
 stream.csv(options)
 exstream.pipeline().csv(options)
-exstream.csv(options, stream)
-stream.through(exstream.csv(options))
 ```
-
-Pass `null` in the direct standalone form to apply defaults.
 
 ## Signature
 

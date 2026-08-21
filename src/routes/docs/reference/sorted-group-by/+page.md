@@ -35,8 +35,6 @@ Selector failures become contextual record errors. Existing errors pass through 
 ```javascript
 stream.sortedGroupBy('customerId')
 exstream.pipeline().sortedGroupBy('customerId')
-exstream.sortedGroupBy('customerId', stream)
-stream.through(exstream.sortedGroupBy('customerId'))
 ```
 
 ## Signature

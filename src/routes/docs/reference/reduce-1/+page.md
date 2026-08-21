@@ -39,8 +39,6 @@ A thrown reducer error becomes a contextual record error and terminates this red
 ```javascript
 stream.reduce1(reducer)
 exstream.pipeline().reduce1(reducer)
-exstream.reduce1(reducer, stream)
-stream.through(exstream.reduce1(reducer))
 ```
 
 ## Signature

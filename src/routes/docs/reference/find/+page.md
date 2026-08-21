@@ -45,8 +45,6 @@ If `fn` throws, the failure becomes a record error for that input. `find()` does
 ```javascript
 stream.find(predicate)
 exstream.pipeline().find(predicate)
-exstream.find(predicate, stream)
-stream.through(exstream.find(predicate))
 ```
 
 ## Signature
