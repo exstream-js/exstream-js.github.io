@@ -56,3 +56,38 @@ test('routes below when there is not enough room above', () => {
 
   assert.equal(route.labelY, 93)
 })
+
+test('uses the free channel between cards in compact layouts', () => {
+  const route = routeGraphEdge({
+    x1: 0,
+    y1: 150,
+    x2: 300,
+    y2: 150,
+    height: 200,
+    obstacles: [
+      { left: 110, right: 190, top: 20, bottom: 80 },
+      { left: 110, right: 190, top: 120, bottom: 180 },
+    ],
+  })
+
+  assert.match(route.path, / L /)
+  assert.equal(route.labelY, 92)
+})
+
+test('uses a narrow channel when both outside detours are blocked', () => {
+  const route = routeGraphEdge({
+    x1: 0,
+    y1: 192,
+    x2: 300,
+    y2: 192,
+    height: 256,
+    obstacles: [
+      { left: 100, right: 200, top: 14, bottom: 114 },
+      { left: 100, right: 200, top: 142, bottom: 242 },
+    ],
+  })
+
+  assert.match(route.path, / L /)
+  assert.equal(route.labelX, 50)
+  assert.equal(route.labelY, 128)
+})
