@@ -1,12 +1,12 @@
 <svelte:head>
-  <title>Async iteration — Exstream</title>
+  <title>for await...of — Exstream</title>
   <meta name="description" content="Consume Exstream directly with pull-based JavaScript async iteration." />
   <link rel="canonical" href="https://exstream-js.github.io/docs/reference/async-iteration/" />
 </svelte:head>
 
 <p class="eyebrow">API · Consume</p>
 
-# Async iteration
+# `for await...of`
 
 <p class="lead">Pull one output value at a time through JavaScript's native async-iteration protocol.</p>
 

@@ -105,7 +105,7 @@ await mouseMoves.pipeTo(renderPointerPreview)
 
 The first position is emitted immediately. Positions arriving during the next 200 milliseconds are dropped, not delayed. The result is at most five updates per second with constant operator memory.
 
-This is not backpressure on the browser: the mouse keeps producing events. `throttle()` is the explicit decision that intermediate values are disposable. Use `ratelimit()` instead when every value must be retained and the source is capable of slowing down.
+This is not backpressure on the browser: the mouse keeps producing events. `throttle()` is the explicit decision that intermediate values are disposable. Use `rateLimit()` instead when every value must be retained and the source is capable of slowing down.
 
 Open the playground, press **Run**, then move the pointer anywhere over the page. Remove `throttle(200)` to compare the number of events reaching the destination. The event stream is open-ended, so press **Stop** when finished.
 
@@ -120,4 +120,4 @@ Before shipping a pipeline, identify:
 
 If a buffer is unbounded, or a hot source may produce indispensable events faster than they can be stored, the boundary needs redesigning.
 
-Continue with [Fork and observe](/docs/learn/branching/), [`mapAsync()`](/docs/reference/map-async/), [`throttle()`](/docs/reference/throttle/), and [`ratelimit()`](/docs/reference/ratelimit/).
+Continue with [Fork and observe](/docs/learn/branching/), [`mapAsync()`](/docs/reference/map-async/), [`throttle()`](/docs/reference/throttle/), and [`rateLimit()`](/docs/reference/rate-limit/).

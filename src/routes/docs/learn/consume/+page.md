@@ -100,7 +100,7 @@ Here `drain()` does not start any work because it is called on a pipeline defini
 
 ## Stream output
 
-### Async iteration
+### `for await...of`
 
 ```javascript
 for await (const record of pipeline) {

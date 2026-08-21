@@ -932,21 +932,19 @@ function isStream(value: unknown): value is StreamTarget {
 }
 
 function formatOperator(name: string, arguments_: unknown[]) {
-  if (['slice', 'ratelimit', 'merge'].includes(name)) {
+  if (name === 'rateLimit') {
+    const options = arguments_[0]
+    if (options && typeof options === 'object' && !Array.isArray(options)) {
+      const { interval, limit } = options as { interval?: unknown; limit?: unknown }
+      return `rateLimit(${String(limit ?? '')} / ${String(interval ?? '')} ms)`
+    }
+    return name
+  }
+  if (['slice', 'split', 'merge'].includes(name)) {
     return `${name}(${arguments_.map(String).join(', ')})`
   }
   if (
-    [
-      'batch',
-      'decode',
-      'drop',
-      'encode',
-      'makeAsync',
-      'pluck',
-      'split',
-      'take',
-      'throttle',
-    ].includes(name)
+    ['batch', 'decode', 'drop', 'encode', 'makeAsync', 'pluck', 'take', 'throttle'].includes(name)
   ) {
     return `${name}(${String(arguments_[0] ?? '')})`
   }

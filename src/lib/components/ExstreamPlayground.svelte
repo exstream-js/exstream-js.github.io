@@ -438,6 +438,38 @@ await Promise.all([
     consoleEntries = []
   }
 
+  function liveTail(node: HTMLOListElement, count: number) {
+    let following = true
+    let frame: number | undefined
+
+    const updateFollowing = () => {
+      following = node.scrollHeight - node.clientHeight - node.scrollTop <= 4
+    }
+
+    const scrollToTail = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        frame = undefined
+        if (following) node.scrollTop = node.scrollHeight
+      })
+    }
+
+    node.addEventListener('scroll', updateFollowing, { passive: true })
+    scrollToTail()
+
+    return {
+      update(nextCount: number) {
+        if (nextCount < count) following = true
+        count = nextCount
+        scrollToTail()
+      },
+      destroy() {
+        node.removeEventListener('scroll', updateFollowing)
+        if (frame !== undefined) cancelAnimationFrame(frame)
+      },
+    }
+  }
+
   function sendMouseMove(event: MouseEvent) {
     if (!forwardMouseMoves || !isRunning) return
 
@@ -987,7 +1019,10 @@ await Promise.all([
                   </label>
                 </div>
 
-                <ol style={`--visible-rows:${destination.bufferSize}`}>
+                <ol
+                  style={`--visible-rows:${destination.bufferSize}`}
+                  use:liveTail={destination.count}
+                >
                   {#each destination.values as value, index}
                     <li>
                       <span>{destination.count - destination.values.length + index + 1}</span>

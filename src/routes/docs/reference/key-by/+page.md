@@ -34,7 +34,7 @@ For incremental processing, keep records in stream form and perform the keyed wr
 
 ## Duplicate keys
 
-The first duplicate is an error rather than “first wins” or “last wins.” Exstream emits a record error with message `Multiple values per key: …` for that input and terminates this aggregation, so no partial index is emitted. Use [`groupBy()`](/docs/reference/group-by/) when multiple values per key are valid, or [`uniqBy()`](/docs/reference/uniq-by/) when the first should win.
+The first duplicate is an error rather than “first wins” or “last wins.” Exstream emits a record error with message `Multiple values per key: …` for that input and terminates this aggregation, so no partial index is emitted. Use [`groupBy()`](/docs/reference/group-by/) when multiple values per key are valid, or [`uniq(selector)`](/docs/reference/uniq/) when the first should win.
 
 ## Forms
 
@@ -53,4 +53,4 @@ keyBy<K extends PropertyKey>(
 
 ## Related
 
-[`groupBy()`](/docs/reference/group-by/), [`uniqBy()`](/docs/reference/uniq-by/), [`sortedGroupBy()`](/docs/reference/sorted-group-by/)
+[`groupBy()`](/docs/reference/group-by/), [`uniq()`](/docs/reference/uniq/), [`sortedGroupBy()`](/docs/reference/sorted-group-by/)

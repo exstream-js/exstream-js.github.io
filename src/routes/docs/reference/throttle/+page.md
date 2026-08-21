@@ -47,4 +47,4 @@ throttle(milliseconds: number): Exstream<T, C>
 
 ## Related
 
-[`ratelimit()`](/docs/reference/ratelimit/), [`makeAsync()`](/docs/reference/make-async/), [`observe()`](/docs/reference/observe/)
+[`rateLimit()`](/docs/reference/rate-limit/), [`makeAsync()`](/docs/reference/make-async/), [`observe()`](/docs/reference/observe/)

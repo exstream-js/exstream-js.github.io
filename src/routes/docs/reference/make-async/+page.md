@@ -65,4 +65,4 @@ makeAsync(maxSyncExecutionTime: number): Exstream<T, C>
 
 ## Related
 
-[`mapAsync()`](/docs/reference/map-async/), [`throttle()`](/docs/reference/throttle/), [`ratelimit()`](/docs/reference/ratelimit/)
+[`mapAsync()`](/docs/reference/map-async/), [`throttle()`](/docs/reference/throttle/), [`rateLimit()`](/docs/reference/rate-limit/)

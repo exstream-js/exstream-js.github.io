@@ -71,7 +71,6 @@ export const docsNavigation = [
       { href: '/docs/reference/where/', label: 'where()' },
       { href: '/docs/reference/find-where/', label: 'findWhere()' },
       { href: '/docs/reference/uniq/', label: 'uniq()' },
-      { href: '/docs/reference/uniq-by/', label: 'uniqBy()' },
       { href: '/docs/reference/slice/', label: 'slice()' },
       { href: '/docs/reference/take/', label: 'take()' },
       { href: '/docs/reference/drop/', label: 'drop()' },
@@ -129,7 +128,6 @@ export const docsNavigation = [
       { href: '/docs/reference/jsonl/', label: 'jsonl()' },
       { href: '/docs/reference/jsonl-stringify/', label: 'jsonlStringify()' },
       { href: '/docs/reference/split/', label: 'split()' },
-      { href: '/docs/reference/split-by/', label: 'splitBy()' },
       { href: '/docs/reference/encode/', label: 'encode()' },
       { href: '/docs/reference/decode/', label: 'decode()' },
     ],
@@ -138,14 +136,14 @@ export const docsNavigation = [
     label: 'API · Flow',
     items: [
       { href: '/docs/reference/throttle/', label: 'throttle()' },
-      { href: '/docs/reference/ratelimit/', label: 'ratelimit()' },
+      { href: '/docs/reference/rate-limit/', label: 'rateLimit()' },
     ],
   },
   {
     label: 'API · Consume',
     items: [
       { href: '/docs/reference/pipe-to/', label: 'pipeTo()' },
-      { href: '/docs/reference/async-iteration/', label: 'Async iteration' },
+      { href: '/docs/reference/async-iteration/', label: 'for await...of' },
       { href: '/docs/reference/to-array/', label: 'toArray()', fullStreamBuffer: true },
       { href: '/docs/reference/drain/', label: 'drain()' },
       { href: '/docs/reference/single/', label: 'single()' },

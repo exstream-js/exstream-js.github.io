@@ -78,7 +78,7 @@ const normalizePayments = exstream
     accountId: payment.accountId,
     amountInCents: Math.round(payment.amount * 100),
   }))
-  .uniqBy('id')
+  .uniq('id')
 ```
 
 Attach it to any compatible Exstream with `through()`:
@@ -88,6 +88,6 @@ const webPayments = exstream(webPaymentSource).through(normalizePayments)
 const retailPayments = exstream(retailPaymentSource).through(normalizePayments)
 ```
 
-Each call to `through()` creates an independent operator chain. State held by operators such as `uniqBy()` or `batch()` is not shared between attachments. The resulting values are ordinary Exstreams and can continue through more operators or a terminal destination.
+Each call to `through()` creates an independent operator chain. State held by operators such as `uniq()` or `batch()` is not shared between attachments. The resulting values are ordinary Exstreams and can continue through more operators or a terminal destination.
 
 Read the [`pipeline()`](/docs/reference/pipeline/) and [`through()`](/docs/reference/through/) references for supported operators, composition, types, and attachment behavior.

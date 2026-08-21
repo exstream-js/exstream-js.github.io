@@ -36,7 +36,7 @@
 
 - [`filter()`](/docs/reference/filter/) and [`reject()`](/docs/reference/reject/) — keep or drop by synchronous predicate
 - [`find()`](/docs/reference/find/), [`where()`](/docs/reference/where/), and [`findWhere()`](/docs/reference/find-where/) — find by predicate or shallow object match
-- [`uniq()`](/docs/reference/uniq/) and [`uniqBy()`](/docs/reference/uniq-by/) — retain the first value for each identity or key
+- [`uniq()`](/docs/reference/uniq/) — retain the first value for each identity, selected key, or field tuple
 - [`slice()`](/docs/reference/slice/), [`take()`](/docs/reference/take/), [`drop()`](/docs/reference/drop/), [`head()`](/docs/reference/head/), and [`last()`](/docs/reference/last/) — select by position
 - [`stopWhen()`](/docs/reference/stop-when/) — include the first match and stop the branch
 
@@ -55,7 +55,7 @@
 ## Flow control
 
 - [`throttle()`](/docs/reference/throttle/) — drop values inside a time window
-- [`ratelimit()`](/docs/reference/ratelimit/) — delay values to enforce a maximum rate
+- [`rateLimit()`](/docs/reference/rate-limit/) — delay values to enforce a local burst rate
 
 ## Branch and combine
 
@@ -77,13 +77,13 @@
 - [`csv()`](/docs/reference/csv/) and [`csvStringify()`](/docs/reference/csv-stringify/) — incremental CSV parsing and serialization
 - [`json()`](/docs/reference/json/) and [`jsonStringify()`](/docs/reference/json-stringify/) — stream one JSON document or array envelope
 - [`jsonl()`](/docs/reference/jsonl/) and [`jsonlStringify()`](/docs/reference/jsonl-stringify/) — parse and serialize line-delimited JSON
-- [`split()`](/docs/reference/split/) and [`splitBy()`](/docs/reference/split-by/) — decode and tokenize text across chunk boundaries
+- [`split()`](/docs/reference/split/) — decode and tokenize lines or custom regular-expression-delimited text across chunk boundaries
 - [`encode()`](/docs/reference/encode/) and [`decode()`](/docs/reference/decode/) — transform streaming base64
 
 ## Consume
 
 - [`pipeTo()`](/docs/reference/pipe-to/) — run an Exstream destination or write to a Node or Web writable
-- [Async iteration](/docs/reference/async-iteration/) — consume one value per `for await` demand
+- [`for await...of`](/docs/reference/async-iteration/) — consume one value at a time
 - [`toArray()`](/docs/reference/to-array/), [`single()`](/docs/reference/single/), and [`drain()`](/docs/reference/drain/) — finish with uniform promise semantics
 
 ## Interop
