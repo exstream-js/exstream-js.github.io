@@ -6,6 +6,7 @@ import {
   terminalMethodNames,
   type OperatorTelemetry,
 } from '$lib/playgroundOperators'
+import { nextDestinationDeadline } from './destination-clock.js'
 
 const firstNames = [
   'Ada',
@@ -182,6 +183,7 @@ type DestinationRuntime = DestinationConfig & {
   values: unknown[]
   state: 'idle' | 'open' | 'closed' | 'aborted'
   snapshotTimer?: ReturnType<typeof setTimeout>
+  nextWriteAt?: number
   wakeDelay?: () => void
 }
 
@@ -224,10 +226,14 @@ function sleep(milliseconds: number) {
 }
 
 async function waitForDestination(runtime: DestinationRuntime) {
-  const startedAt = performance.now()
+  runtime.nextWriteAt = nextDestinationDeadline(
+    runtime.nextWriteAt,
+    performance.now(),
+    runtime.delay,
+  )
 
   while (true) {
-    const remaining = runtime.delay - (performance.now() - startedAt)
+    const remaining = runtime.nextWriteAt - performance.now()
     if (remaining <= 0) return
 
     await new Promise<void>((resolve) => {
@@ -327,6 +333,7 @@ function destination(name: string, options: DestinationOptions = {}) {
   runtime.state = 'open'
   runtime.count = 0
   runtime.values = []
+  runtime.nextWriteAt = undefined
   sendDestinationSnapshot(runtime)
 
   const writable = new WritableStream({
@@ -1107,6 +1114,7 @@ function configureDestination(message: ConfigureDestinationMessage) {
   if (!runtime) return
 
   runtime.delay = Math.min(10_000, Math.max(0, Math.round(message.delay)))
+  runtime.nextWriteAt = performance.now()
   runtime.wakeDelay?.()
 }
 

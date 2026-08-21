@@ -30,11 +30,12 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:links": "node scripts/check-links.mjs build",
     "check:links:external": "node scripts/check-links.mjs build --external",
+    "check:playground": "node --test src/lib/workers/destination-clock.test.mjs",
     "check:snippets": "node scripts/check-snippets.mjs",
     "lint": "oxlint --report-unused-disable-directives-severity=error --deny-warnings src scripts svelte.config.js vite.config.ts",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
-    "test": "npm run check && npm run check:snippets && npm run lint && npm run build && npm run check:links"
+    "test": "npm run check && npm run check:playground && npm run check:snippets && npm run lint && npm run build && npm run check:links"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.3",
