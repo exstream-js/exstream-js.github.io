@@ -39,7 +39,7 @@ Use Exstream when a flow must remain bounded, coordinate slow or multiple destin
 - [`mapAsync()`](https://exstream-js.github.io/docs/reference/map-async/): asynchronous transformation with concurrency, ordering, retry, recovery, timeout, and cancellation controls
 - [`fork()`](https://exstream-js.github.io/docs/reference/fork/): create a reliable branch that participates in backpressure
 - [`observe()`](https://exstream-js.github.io/docs/reference/observe/): create a non-blocking observer with explicit buffering
-- [`merge()`](https://exstream-js.github.io/docs/reference/merge/): consume a stream of streams with bounded parallelism
+- [`merge()`](https://exstream-js.github.io/docs/reference/merge/): consume a stream of streams with bounded concurrency
 - [`through()`](https://exstream-js.github.io/docs/reference/through/): attach a reusable pipeline, operator function, or platform transform
 - [Stream state](https://exstream-js.github.io/docs/reference/stream-state/): inspect lifecycle, buffering, drops, pressure, and cancellation
 - [Error API](https://exstream-js.github.io/docs/reference/error-api/): record error metadata, provenance, format errors, overflow, and timeouts

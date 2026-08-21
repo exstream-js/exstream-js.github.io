@@ -215,7 +215,7 @@ const highRisk = transactions
   )
 
 const decisions = exstream([routine, highRisk])
-  .merge(2, false)
+  .merge({ concurrency: 2, ordered: false })
 
 await decisions.pipeTo(destination('decisions', { speed: Infinity }))`,
   },

@@ -61,12 +61,12 @@ See the [format operators](/docs/reference/#formats) for CSV, JSON, JSON Lines, 
 Several sources can become one flow. For example, orders from a website and retail stores can be processed by the same pipeline:
 
 ```javascript
-const orders = exstream([webOrders, retailOrders]).merge(2, false)
+const orders = exstream([webOrders, retailOrders]).merge({ concurrency: 2, ordered: false })
 ```
 
 The merged output is another Exstream, so downstream operators do not need to know which source produced a record.
 
-Continue with [Merge streams](/docs/learn/merge/) for parallelism, output order, and deferred source acquisition.
+Continue with [Merge streams](/docs/learn/merge/) for concurrency, output order, and deferred source acquisition.
 
 ## Transforming records
 

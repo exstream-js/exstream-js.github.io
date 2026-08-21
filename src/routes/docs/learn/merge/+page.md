@@ -31,7 +31,7 @@ const reviewed = transactions
   .filter((transaction) => transaction.amount >= 7500)
   .mapAsync(checkRisk, { concurrency: 6, ordered: false })
 
-const decisions = exstream([routine, reviewed]).merge(2, false)
+const decisions = exstream([routine, reviewed]).merge({ concurrency: 2, ordered: false })
 
 await decisions.pipeTo(decisionWriter)
 ```
@@ -40,11 +40,11 @@ The outer stream contains Exstreams. `merge()` consumes them and emits their rec
 
 ## Choose output order
 
-The second argument controls how active inputs are emitted:
+The `ordered` option controls how active inputs are emitted:
 
 ```javascript
-exstream(streams).merge(4, false) // emit records from any input as soon as they are available
-exstream(streams).merge(4, true) // finish each input in outer-stream order
+exstream(streams).merge({ concurrency: 4, ordered: false }) // emit records from any input as soon as they are available
+exstream(streams).merge({ concurrency: 4, ordered: true }) // finish each input in outer-stream order
 ```
 
 Unordered mode is appropriate when records may interleave. Backpressure still reaches every active input.
@@ -53,19 +53,19 @@ Ordered mode preserves the order of the inner streams, not a global sort order. 
 
 ## Defer resource acquisition
 
-The first argument is the maximum number of active inner streams. Wrap an inner source in `defer()` when creating it also opens a file, request, cursor, or another limited resource:
+`concurrency` is the maximum number of active inner streams. Wrap an inner source in `defer()` when creating it also opens a file, request, cursor, or another limited resource:
 
 ```javascript
 import { createReadStream } from 'node:fs'
 
 const records = exstream(paths)
   .map((path) => exstream.defer(() => createReadStream(path)).jsonl())
-  .merge(4, false)
+  .merge({ concurrency: 4, ordered: false })
 ```
 
 Here at most four files are open at once. `merge()` activates at most four inner Exstreams, and each deferred source is acquired only when its inner is activated. The `defer()` factory may also be asynchronous.
 
-If the inner sources are opened before `merge()` receives their streams, their resources may already be active. In that case, `parallelism` limits consumption but cannot undo work that has already started.
+If the inner sources are opened before `merge()` receives their streams, their resources may already be active. In that case, `concurrency` limits consumption but cannot undo work that has already started.
 
 ## Keep the operations distinct
 

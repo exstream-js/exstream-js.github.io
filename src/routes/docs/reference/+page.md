@@ -61,7 +61,7 @@
 
 - [`fork()`](/docs/reference/fork/) — create a reliable branch participating in backpressure
 - [`observe()`](/docs/reference/observe/) — create a non-blocking, explicitly buffered observer
-- [`merge()`](/docs/reference/merge/) — consume a stream of streams with bounded parallelism
+- [`merge()`](/docs/reference/merge/) — consume a stream of streams with bounded concurrency
 - [`through()`](/docs/reference/through/) — attach a pipeline, stream, function, or Node transform
 - [`sortedJoin()`](/docs/reference/sorted-join/) — merge-join exactly two pre-sorted streams
 
