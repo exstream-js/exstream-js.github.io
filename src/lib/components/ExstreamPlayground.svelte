@@ -57,7 +57,7 @@
     errors: number
     capacity?: number
     status: 'open' | 'closed' | 'aborted'
-    metric?: 'dropped' | 'errors'
+    metric?: 'buffered' | 'dropped' | 'errors'
   }
   type GraphEdge = {
     id: string

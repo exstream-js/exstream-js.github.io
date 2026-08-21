@@ -16,7 +16,7 @@
     errors: number
     capacity?: number
     status: 'open' | 'closed' | 'aborted'
-    metric?: 'dropped' | 'errors'
+    metric?: 'buffered' | 'dropped' | 'errors'
   }
 
   type GraphEdge = {
@@ -35,9 +35,14 @@
     labelY: number
   }
 
-  type OrderedColumn = {
+  type GraphColumn = {
     depth: number
     nodes: GraphNode[]
+  }
+
+  type PositionedColumn = {
+    depth: number
+    nodes: Array<{ node: GraphNode; position: number }>
   }
 
   let { nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge[] } = $props()
@@ -48,11 +53,11 @@
   let frame: number | undefined
   const elements = new Map<string, HTMLElement>()
 
-  const orderedColumns = $derived(buildOrderedColumns(nodes, edges))
+  const layout = $derived(buildLayout(nodes, edges))
 
-  function buildOrderedColumns(graphNodes: GraphNode[], graphEdges: GraphEdge[]) {
+  function buildLayout(graphNodes: GraphNode[], graphEdges: GraphEdge[]) {
     const depths = [...new Set(graphNodes.map((node) => node.depth))].sort((a, b) => a - b)
-    const columns: OrderedColumn[] = depths.map((depth) => ({
+    const columns: GraphColumn[] = depths.map((depth) => ({
       depth,
       nodes: graphNodes.filter((node) => node.depth === depth),
     }))
@@ -69,11 +74,64 @@
       sweepColumns(columns, children, columns.length - 2, -1, -1)
     }
 
-    return columns
+    const laneCount = Math.max(1, ...columns.map((column) => column.nodes.length))
+    const positions = new Map<string, number>()
+    const positionedColumns: PositionedColumn[] = columns.map((column) => {
+      const previousOrder = new Map(column.nodes.map((node, index) => [node.id, index]))
+      const candidates = column.nodes
+        .map((node, index) => ({
+          node,
+          target: barycenter(node.id, parents, positions) ?? (index + 0.5) / column.nodes.length,
+        }))
+        .sort(
+          (left, right) =>
+            left.target - right.target ||
+            previousOrder.get(left.node.id)! - previousOrder.get(right.node.id)!,
+        )
+      const resolvedPositions = spreadPositions(
+        candidates.map((candidate) => candidate.target),
+        laneCount,
+      )
+
+      candidates.forEach((candidate, index) => {
+        positions.set(candidate.node.id, resolvedPositions[index]!)
+      })
+
+      return {
+        depth: column.depth,
+        nodes: candidates.map((candidate, index) => ({
+          node: candidate.node,
+          position: resolvedPositions[index]!,
+        })),
+      }
+    })
+
+    return { columns: positionedColumns, laneCount }
+  }
+
+  function spreadPositions(targets: number[], laneCount: number) {
+    if (targets.length === 0) return []
+
+    const gap = 1 / laneCount
+    const minimum = gap / 2
+    const maximum = 1 - minimum
+    const positions = targets.map((target) => Math.min(maximum, Math.max(minimum, target)))
+
+    for (let index = 1; index < positions.length; index += 1) {
+      positions[index] = Math.max(positions[index]!, positions[index - 1]! + gap)
+    }
+    if (positions.at(-1)! > maximum) {
+      positions[positions.length - 1] = maximum
+      for (let index = positions.length - 2; index >= 0; index -= 1) {
+        positions[index] = Math.min(positions[index]!, positions[index + 1]! - gap)
+      }
+    }
+
+    return positions
   }
 
   function sweepColumns(
-    columns: OrderedColumn[],
+    columns: GraphColumn[],
     references: Map<string, string[]>,
     start: number,
     end: number,
@@ -101,13 +159,13 @@
     }
   }
 
-  function nodePositions(columns: OrderedColumn[]) {
+  function nodePositions(columns: GraphColumn[]) {
     const positions = new Map<string, number>()
     for (const column of columns) updateColumnPositions(column, positions)
     return positions
   }
 
-  function updateColumnPositions(column: OrderedColumn, positions: Map<string, number>) {
+  function updateColumnPositions(column: GraphColumn, positions: Map<string, number>) {
     const count = column.nodes.length
     column.nodes.forEach((node, index) => positions.set(node.id, (index + 0.5) / count))
   }
@@ -257,7 +315,11 @@
     {#if nodes.length === 0}
       <div class="empty">Run the pipeline to build its graph.</div>
     {:else}
-      <div class="scene" use:registerScene style={`--column-count:${orderedColumns.length}`}>
+      <div
+        class="scene"
+        use:registerScene
+        style={`--column-count:${layout.columns.length};--layout-min-height:${layout.laneCount * 8}rem`}
+      >
         <svg aria-hidden="true">
           <defs>
             <marker
@@ -303,16 +365,18 @@
 
         <div
           class="columns"
-          style={`grid-template-columns: repeat(${orderedColumns.length}, minmax(8.5rem, 1fr))`}
+          style={`grid-template-columns: repeat(${layout.columns.length}, minmax(8.5rem, 1fr))`}
         >
-          {#each orderedColumns as column (column.depth)}
+          {#each layout.columns as column (column.depth)}
             <div class="column">
-              {#each column.nodes as node (node.id)}
+              {#each column.nodes as positionedNode (positionedNode.node.id)}
+                {@const node = positionedNode.node}
                 <article
                   class:type-source={node.type === 'source'}
                   class:type-fork={node.type === 'fork'}
                   class:type-destination={node.type === 'destination'}
                   use:registerNode={node.id}
+                  style={`--node-position:${positionedNode.position}`}
                 >
                   <span>{node.type}</span>
                   <strong>{node.label}</strong>
@@ -331,6 +395,12 @@
                       <div>
                         <dt>dropped</dt>
                         <dd>{(node.input - node.output).toLocaleString('en')}</dd>
+                      </div>
+                    {/if}
+                    {#if node.metric === 'buffered'}
+                      <div>
+                        <dt>buffered</dt>
+                        <dd>{Math.max(0, node.input - node.output).toLocaleString('en')}</dd>
                       </div>
                     {/if}
                     {#if node.errors > 0}
@@ -448,7 +518,7 @@
   .scene {
     position: relative;
     width: max(100%, calc(var(--column-count) * 14.3rem - 4.8rem));
-    min-height: 100%;
+    min-height: max(100%, var(--layout-min-height));
   }
 
   svg {
@@ -487,25 +557,27 @@
   }
 
   .columns {
-    position: relative;
+    position: absolute;
     z-index: 1;
+    inset: 0;
     display: grid;
     width: 100%;
-    min-height: 100%;
-    align-items: center;
+    align-items: stretch;
     gap: 4.8rem;
   }
 
   .column {
-    display: grid;
-    align-content: center;
-    gap: 1rem;
+    position: relative;
+    min-height: 100%;
   }
 
   article {
+    position: absolute;
+    top: calc(var(--node-position) * 100%);
+    left: 50%;
     width: 9.5rem;
     min-height: 6.2rem;
-    justify-self: center;
+    transform: translate(-50%, -50%);
     border: 1px solid var(--pg-line-strong);
     border-radius: 0.65rem;
     background: var(--pg-panel-raised);

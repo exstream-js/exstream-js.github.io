@@ -64,6 +64,22 @@ export const destinationMethodNames = ['pipeTo'] as const
 export const adapterMethodNames = ['toWebReadable'] as const
 export const lifecycleMethodNames = ['start'] as const
 
+export const playgroundStaticNames = [
+  'BufferOverflowError',
+  'CsvParseError',
+  'CsvStringifyError',
+  'JsonParseError',
+  'JsonStringifyError',
+  'MapAsyncTimeoutError',
+  'data',
+  'defer',
+  'destination',
+  'errorInfo',
+  'fromEvent',
+  'nil',
+  'pipeline',
+] as const
+
 export const playgroundMethodNames = [
   ...Object.keys(operatorTelemetry),
   ...graphMethodNames,

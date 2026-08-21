@@ -29,7 +29,7 @@
     lineNumbers,
   } from '@codemirror/view'
   import { tags } from '@lezer/highlight'
-  import { playgroundMethodNames } from '$lib/playgroundOperators'
+  import { playgroundMethodNames, playgroundStaticNames } from '$lib/playgroundOperators'
   import { EditorView } from 'codemirror'
   import { onDestroy, onMount } from 'svelte'
 
@@ -64,13 +64,24 @@
     detail: 'Exstream operator',
   }))
 
+  const staticCompletions = playgroundStaticNames.map((label) => ({
+    label,
+    type: 'property',
+    detail: 'Exstream public API',
+  }))
+
   function playgroundCompletions(context: Parameters<typeof completionPath>[0]) {
     const path = completionPath(context)
     if (!path) return null
 
     return {
       from: context.pos - path.name.length,
-      options: path.path.length > 0 ? methodCompletions : globalCompletions,
+      options:
+        path.path.length === 1 && path.path[0] === 'exstream'
+          ? staticCompletions
+          : path.path.length > 0
+            ? methodCompletions
+            : globalCompletions,
       validFor: /^\w*$/,
     }
   }

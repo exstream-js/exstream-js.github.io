@@ -9,6 +9,7 @@ import ExtensibilityDescription from './playground-examples/extensibility.md'
 import MergeSourcesDescription from './playground-examples/merge-sources.md'
 import OrdersPipelineDescription from './playground-examples/orders-pipeline.md'
 import PipelineModelDescription from './playground-examples/pipeline-model.md'
+import SortedJoinDescription from './playground-examples/sorted-join.md'
 import SourcesDescription from './playground-examples/sources.md'
 import TransformDataDescription from './playground-examples/transform-data.md'
 import { homeExampleCode } from './homeExample'
@@ -218,6 +219,31 @@ const decisions = exstream([routine, highRisk])
   .merge({ concurrency: 2, ordered: false })
 
 await decisions.pipeTo(destination('decisions', { speed: Infinity }))`,
+  },
+  'sorted-join': {
+    title: 'Join sorted records',
+    sourcePath: '/docs/reference/sorted-join/',
+    description: SortedJoinDescription,
+    code: `const left = exstream([
+  { id: 1, tenant: 'eu', value: 'a' },
+  { id: 1, tenant: 'eu', value: 'duplicate' },
+  { id: 2, tenant: 'us', value: 'b' },
+]).uniq(['tenant', 'id'])
+
+const right = exstream([
+  { id: 1, label: 'one' },
+  { id: 2, label: 'two' },
+])
+
+await left
+  .sortedJoin(right, {
+    leftKey: 'id',
+    rightKey: 'id',
+    type: 'left',
+    order: 'asc',
+  })
+  .mapAsync(async (row) => row, { concurrency: 2, ordered: false })
+  .pipeTo(destination('joined', { speed: Infinity }))`,
   },
   errors: {
     title: 'Errors and lifecycle',

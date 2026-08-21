@@ -152,7 +152,7 @@ type GraphNode = {
   errors: number
   capacity?: number
   status: 'open' | 'closed' | 'aborted'
-  metric?: 'dropped' | 'errors'
+  metric?: 'buffered' | 'dropped' | 'errors'
 }
 
 type GraphEdge = {
@@ -203,6 +203,7 @@ let graphNodes = new Map<string, GraphNode>()
 let graphEdges: GraphEdge[] = []
 let destinations = new Map<string, DestinationRuntime>()
 let eventSources = new Map<string, EventTarget>()
+let sourceLabels = new WeakMap<object, string>()
 let forkStates = new WeakMap<StreamTarget, { stream: StreamTarget; nodeId: string }>()
 let proxyTargets = new WeakMap<object, StreamTarget>()
 let proxyNodeIds = new WeakMap<object, string>()
@@ -280,7 +281,11 @@ async function* transactionSource() {
 }
 
 function source(name: string) {
-  if (name === 'transactions') return transactionSource()
+  if (name === 'transactions') {
+    const transactions = transactionSource()
+    sourceLabels.set(transactions, 'transactions ∞')
+    return transactions
+  }
   if (name === 'mousemove') {
     let target = eventSources.get(name)
     if (!target) {
@@ -395,11 +400,7 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
   }
 
   const manual = input === undefined || input === null
-  const sourceLabel = manual
-    ? 'work queue'
-    : input instanceof ReadableStream
-      ? 'fetch response'
-      : 'transactions ∞'
+  const sourceLabel = manual ? 'work queue' : describeSource(input)
   const sourceNodeId = addNode('source', sourceLabel, 0)
   const node = graphNodes.get(sourceNodeId)!
 
@@ -425,11 +426,42 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
   return wrapStream(observed, sourceNodeId)
 }
 
-Object.assign(instrumentedExstream, {
+Object.assign(instrumentedExstream, realExstream, {
+  defer: instrumentedDefer,
   fromEvent: instrumentedFromEvent,
-  nil: realExstream.nil,
-  pipeline: realExstream.pipeline,
 })
+
+function instrumentedDefer(factory: unknown, options?: StreamOptions | null) {
+  const createDeferred = realExstream.defer as unknown as (
+    sourceFactory: unknown,
+    sourceOptions?: StreamOptions | null,
+  ) => object
+  const deferred = createDeferred(factory, options)
+  sourceLabels.set(deferred, 'deferred source')
+  return deferred
+}
+
+function describeSource(input: unknown) {
+  if ((typeof input === 'object' && input !== null) || typeof input === 'function') {
+    const knownLabel = sourceLabels.get(input as object)
+    if (knownLabel) return knownLabel
+  }
+  if (Array.isArray(input)) return `array (${input.length.toLocaleString('en')})`
+  if (typeof input === 'string') return 'string'
+  if (input instanceof ReadableStream) return 'Web ReadableStream'
+  if (ArrayBuffer.isView(input)) return input.constructor.name
+  if (!input || (typeof input !== 'object' && typeof input !== 'function')) return 'source'
+
+  const candidate = input as {
+    then?: unknown
+    [Symbol.asyncIterator]?: unknown
+    [Symbol.iterator]?: unknown
+  }
+  if (typeof candidate.then === 'function') return 'promise'
+  if (typeof candidate[Symbol.asyncIterator] === 'function') return 'async iterable'
+  if (typeof candidate[Symbol.iterator] === 'function') return 'iterable'
+  return 'source'
+}
 
 function instrumentedFromEvent(target: unknown, eventName: string, options?: unknown) {
   const sourceNodeId = addNode('source', `${eventName} (hot)`, 0)
@@ -621,7 +653,7 @@ function mapAsyncCapacity(options: unknown) {
 function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
   const parentNodes = inputs.map((input) => graphNodes.get(input.nodeId)!).filter(Boolean)
   const depth = Math.max(...parentNodes.map((node) => node.depth)) + 1
-  const nodeId = addNode('transform', formatOperator('merge', arguments_), depth)
+  const nodeId = addNode('transform', formatOperator('merge', arguments_), depth, 'buffered')
   const node = graphNodes.get(nodeId)!
 
   const countedInputs = inputs.map((input) => {
@@ -932,6 +964,16 @@ function isStream(value: unknown): value is StreamTarget {
 }
 
 function formatOperator(name: string, arguments_: unknown[]) {
+  if (name === 'merge') {
+    const options = arguments_[0]
+    const configuration =
+      options && typeof options === 'object' && !Array.isArray(options)
+        ? (options as { concurrency?: unknown; ordered?: unknown })
+        : {}
+    const concurrency = configuration.concurrency ?? Infinity
+    const mode = configuration.ordered === true ? 'ordered' : 'unordered'
+    return `merge(${String(concurrency)}, ${mode})`
+  }
   if (name === 'rateLimit') {
     const options = arguments_[0]
     if (options && typeof options === 'object' && !Array.isArray(options)) {
@@ -940,7 +982,7 @@ function formatOperator(name: string, arguments_: unknown[]) {
     }
     return name
   }
-  if (['slice', 'split', 'merge'].includes(name)) {
+  if (['slice', 'split'].includes(name)) {
     return `${name}(${arguments_.map(String).join(', ')})`
   }
   if (
@@ -1047,6 +1089,7 @@ function resetRuntime(configurations: DestinationConfig[]) {
     ]),
   )
   eventSources = new Map()
+  sourceLabels = new WeakMap()
   forkStates = new WeakMap()
   proxyTargets = new WeakMap()
   proxyNodeIds = new WeakMap()
