@@ -55,7 +55,9 @@ Use `toNodeReadable()` when an Exstream already has a source and only needs to e
 ## Signature
 
 ```typescript
-pipeline.toNodeTransform(): NodeTransformLike<Input, Output>
+interface Pipeline<Input, Output> {
+  toNodeTransform(): NodeTransformLike<Input, Output>
+}
 ```
 
 ## Related

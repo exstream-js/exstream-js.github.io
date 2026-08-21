@@ -33,7 +33,7 @@ The result receives an aggregate context containing materialized input contexts 
 
 ## Errors
 
-If `fn` throws, Exstream emits a record error associated with the current input and destroys this reduction branch; no accumulator result follows. Promise results are not awaited. Use [`asyncReduce()`](/docs/reference/async-reduce/) for asynchronous accumulation.
+If `fn` throws, Exstream emits a record error associated with the current input and destroys this reduction branch; no accumulator result follows. Promise results are not awaited. Run independent asynchronous work with [`mapAsync()`](/docs/reference/map-async/) before reducing. When each asynchronous step depends on the previous accumulator, consume the stream with `for await` and update that state explicitly.
 
 ## Forms
 
@@ -57,4 +57,4 @@ reduce<A>(
 
 ## Related
 
-[`reduce1()`](/docs/reference/reduce-1/), [`asyncReduce()`](/docs/reference/async-reduce/), [`collect()`](/docs/reference/collect/)
+[`reduce1()`](/docs/reference/reduce-1/), [`mapAsync()`](/docs/reference/map-async/), [`collect()`](/docs/reference/collect/)

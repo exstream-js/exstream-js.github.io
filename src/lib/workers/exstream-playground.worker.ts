@@ -395,7 +395,12 @@ function instrumentedExstream(input?: unknown, options?: StreamOptions | null) {
   }
 
   const manual = input === undefined || input === null
-  const sourceNodeId = addNode('source', manual ? 'work queue' : 'transactions ∞', 0)
+  const sourceLabel = manual
+    ? 'work queue'
+    : input instanceof ReadableStream
+      ? 'fetch response'
+      : 'transactions ∞'
+  const sourceNodeId = addNode('source', sourceLabel, 0)
   const node = graphNodes.get(sourceNodeId)!
 
   if (manual) {
@@ -488,8 +493,26 @@ function callStreamMethod(
     (argument) => proxyTargets.get(argument as object) ?? argument,
   )
 
-  if ((methodName === 'merge' || methodName === 'sortedJoin') && mergeInputs) {
-    return instrumentCombinedStreams(methodName, mergeInputs, unwrappedArguments)
+  if (methodName === 'merge' && mergeInputs) {
+    return instrumentMerge(mergeInputs, unwrappedArguments)
+  }
+  if (methodName === 'sortedJoin' && parentNodeId) {
+    const rightProxy = arguments_[0]
+    const rightTarget =
+      rightProxy && typeof rightProxy === 'object'
+        ? proxyTargets.get(rightProxy as object)
+        : undefined
+    const rightNodeId =
+      rightProxy && typeof rightProxy === 'object'
+        ? proxyNodeIds.get(rightProxy as object)
+        : undefined
+    if (rightTarget && rightNodeId) {
+      return instrumentSortedJoin(
+        { nodeId: parentNodeId, target },
+        { nodeId: rightNodeId, target: rightTarget },
+        unwrappedArguments[1],
+      )
+    }
   }
   if (!parentNodeId) {
     throw new Error('A stream collection must be consumed with merge() before other operators.')
@@ -595,19 +618,10 @@ function mapAsyncCapacity(options: unknown) {
   return undefined
 }
 
-function instrumentCombinedStreams(
-  methodName: 'merge' | 'sortedJoin',
-  inputs: MergeInput[],
-  arguments_: unknown[],
-) {
+function instrumentMerge(inputs: MergeInput[], arguments_: unknown[]) {
   const parentNodes = inputs.map((input) => graphNodes.get(input.nodeId)!).filter(Boolean)
   const depth = Math.max(...parentNodes.map((node) => node.depth)) + 1
-  const nodeId = addNode(
-    'transform',
-    formatOperator(methodName, arguments_),
-    depth,
-    methodName === 'sortedJoin' ? 'errors' : undefined,
-  )
+  const nodeId = addNode('transform', formatOperator('merge', arguments_), depth)
   const node = graphNodes.get(nodeId)!
 
   const countedInputs = inputs.map((input) => {
@@ -619,8 +633,36 @@ function instrumentCombinedStreams(
     })
   })
   const carrier = realExstream(countedInputs) as StreamTarget
-  const combine = Reflect.get(carrier, methodName, carrier) as (...values: unknown[]) => unknown
+  const combine = Reflect.get(carrier, 'merge', carrier) as (...values: unknown[]) => unknown
   const result = Reflect.apply(combine, carrier, arguments_)
+  return instrumentCombinedResult(result, node, nodeId)
+}
+
+function instrumentSortedJoin(left: MergeInput, right: MergeInput, options: unknown) {
+  const parentNodes = [graphNodes.get(left.nodeId), graphNodes.get(right.nodeId)].filter(Boolean)
+  const depth = Math.max(...parentNodes.map((node) => node!.depth)) + 1
+  const nodeId = addNode('transform', formatOperator('sortedJoin', [options]), depth, 'errors')
+  const node = graphNodes.get(nodeId)!
+
+  const countInput = (input: MergeInput) => {
+    const edge = addEdge(input.nodeId, nodeId, true)
+    return callTargetMethod(input.target, 'tap', () => {
+      node.input += 1
+      edge.flowed = (edge.flowed ?? 0) + 1
+      scheduleTelemetry()
+    })
+  }
+  const countedLeft = countInput(left)
+  const countedRight = countInput(right)
+  const join = Reflect.get(countedLeft, 'sortedJoin', countedLeft) as (
+    right: StreamTarget,
+    options: unknown,
+  ) => unknown
+  const result = Reflect.apply(join, countedLeft, [countedRight, options])
+  return instrumentCombinedResult(result, node, nodeId)
+}
+
+function instrumentCombinedResult(result: unknown, node: GraphNode, nodeId: string) {
   if (!isStream(result)) return result
 
   const errorCountedResult =

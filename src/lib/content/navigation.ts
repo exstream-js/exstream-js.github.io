@@ -18,6 +18,7 @@ export const docsNavigation = [
       { href: '/docs/learn/consume/', label: 'Consume a pipeline' },
       { href: '/docs/learn/backpressure/', label: 'Backpressure' },
       { href: '/docs/learn/branching/', label: 'Fork & observe' },
+      { href: '/docs/learn/merge/', label: 'Merge streams' },
       { href: '/docs/learn/errors/', label: 'Errors & lifecycle' },
       { href: '/docs/learn/extensibility/', label: 'Extensibility' },
     ],
@@ -95,8 +96,6 @@ export const docsNavigation = [
     label: 'API · Async',
     items: [
       { href: '/docs/reference/map-async/', label: 'mapAsync()' },
-      { href: '/docs/reference/async-filter/', label: 'asyncFilter()' },
-      { href: '/docs/reference/async-reduce/', label: 'asyncReduce()' },
       { href: '/docs/reference/make-async/', label: 'makeAsync()' },
     ],
   },

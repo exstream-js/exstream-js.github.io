@@ -7,11 +7,13 @@ import ConsumeDescription from './playground-examples/consume.md'
 import ErrorsDescription from './playground-examples/errors.md'
 import ExtensibilityDescription from './playground-examples/extensibility.md'
 import MergeSourcesDescription from './playground-examples/merge-sources.md'
+import OrdersPipelineDescription from './playground-examples/orders-pipeline.md'
 import PipelineModelDescription from './playground-examples/pipeline-model.md'
 import SourcesDescription from './playground-examples/sources.md'
 import TransformDataDescription from './playground-examples/transform-data.md'
+import { homeExampleCode } from './homeExample'
 
-type PlaygroundExample = {
+export type PlaygroundExample = {
   title: string
   sourcePath: string
   description: Component
@@ -19,6 +21,12 @@ type PlaygroundExample = {
 }
 
 export const playgroundExamples = {
+  'orders-pipeline': {
+    title: 'Orders pipeline',
+    sourcePath: '/',
+    description: OrdersPipelineDescription,
+    code: homeExampleCode,
+  },
   sources: {
     title: 'Create a source',
     sourcePath: '/docs/learn/sources/',
@@ -174,7 +182,7 @@ await Promise.all([
   },
   'merge-sources': {
     title: 'Rejoin processing lanes',
-    sourcePath: '/docs/reference/merge/',
+    sourcePath: '/docs/learn/merge/',
     description: MergeSourcesDescription,
     code: `const wait = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds))
@@ -354,6 +362,10 @@ await batches.pipeTo(destination('batches', { speed: Infinity }))`,
 } satisfies Record<string, PlaygroundExample>
 
 export type PlaygroundExampleId = keyof typeof playgroundExamples
+
+export const playgroundExampleEntries = Object.entries(playgroundExamples) as Array<
+  [PlaygroundExampleId, PlaygroundExample]
+>
 
 export function getPlaygroundExample(id: string | null | undefined) {
   if (!id || !(id in playgroundExamples)) return undefined

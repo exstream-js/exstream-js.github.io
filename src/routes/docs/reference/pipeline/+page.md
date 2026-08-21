@@ -38,9 +38,9 @@ await orders.pipeTo(ordersApi)
 
 ## Definition and instances
 
-Calling an operator on a pipeline records its method name and arguments; it does not create or run a source. `through(pipeline)` calls `generateStream()` internally to build a fresh chain, so buffers, contexts, seen-key sets, reducers, and lifecycle are independent per attachment.
+Calling an operator on a pipeline records it without creating or running a source. `through(pipeline)` builds a fresh private chain, so buffers, contexts, seen-key sets, reducers, and lifecycle are independent per attachment.
 
-`generateStream()` is public and returns the writable head whose `endOfChain` points at the final operator, but `through()` is normally clearer. Pipelines are mutable definitions: adding an operator changes future instances, not ones already generated.
+Pipeline instantiation and the recorded operator list are implementation details: there is no public `generateStream()` method or mutable `definitions` array. Attach a definition with `through()`. Pipeline definitions remain fluent and mutable while being assembled; adding an operator changes future attachments, not live chains that were already attached.
 
 Calling `drain()` on the definition takes a snapshot of its current operators and returns a `Destination<Input>`. It does not run the pipeline. Every later `pipeTo(destination)` builds a fresh chain from that snapshot.
 

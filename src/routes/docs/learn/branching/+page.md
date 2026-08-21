@@ -68,3 +68,5 @@ For every branch, write one sentence:
 - “Missing observations are acceptable.” Use `observe()` with a bound.
 
 If neither sentence is true, the delivery contract is still undefined.
+
+When several branches should feed one downstream pipeline again, continue with [Merge streams](/docs/learn/merge/).

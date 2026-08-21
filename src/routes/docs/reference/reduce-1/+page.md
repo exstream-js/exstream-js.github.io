@@ -53,4 +53,4 @@ reduce1(
 
 ## Related
 
-[`reduce()`](/docs/reference/reduce/), [`asyncReduce()`](/docs/reference/async-reduce/), [`last()`](/docs/reference/last/)
+[`reduce()`](/docs/reference/reduce/), [`mapAsync()`](/docs/reference/map-async/), [`last()`](/docs/reference/last/)

@@ -4,8 +4,6 @@ export type OperatorTelemetry = {
 }
 
 export const operatorTelemetry = {
-  asyncFilter: { metric: 'dropped' },
-  asyncReduce: { metric: 'errors' },
   batch: {},
   collect: {},
   compact: { metric: 'dropped' },

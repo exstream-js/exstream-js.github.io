@@ -25,7 +25,7 @@ The main quality gate is:
 npm test
 ```
 
-It checks Svelte and TypeScript, runs the linter, creates the static site, and builds the Pagefind index.
+It checks Svelte and TypeScript, runs the linter, creates the static site, builds the Pagefind index, and verifies generated internal links, anchors, and assets. CI also checks external link targets with `npm run check:links:external`.
 
 ## Content model
 

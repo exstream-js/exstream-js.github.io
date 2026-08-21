@@ -8,13 +8,13 @@
 
 # `merge()`
 
-<p class="lead">Lazily consume Exstreams or stream factories carried by the outer stream, with bounded activation and optional outer-source order.</p>
+<p class="lead">Consume the Exstreams carried by an outer stream with bounded activation and optional outer-source order.</p>
 
 ## Example
 
 ```javascript
 const responses = exstream(urls)
-  .map((url) => () => exstream(fetch(url)))
+  .map((url) => exstream.defer(async () => (await fetch(url)).body).jsonl())
   .merge(4, false)
 ```
 
@@ -41,15 +41,19 @@ const responses = exstream(urls)
 
 ## Input
 
-Every successful outer value must be a readable Exstream instance or a zero-argument factory that synchronously returns one. A factory is invoked once, only when an activation slot is available. This lets `parallelism` control resource creation as well as consumption:
+Every successful outer value must be a readable Exstream instance. Use `defer()` when `parallelism` should control resource creation as well as consumption:
 
 ```javascript
+import { createReadStream } from 'node:fs'
+
 exstream(paths)
-  .map((path) => () => exstream(fs.createReadStream(path)))
+  .map((path) => exstream.defer(() => createReadStream(path)))
   .merge(4)
 ```
 
-Fork a direct inner stream first if it is already part of another reliable chain. A factory that throws or returns anything other than an Exstream becomes a record error; promises of Exstreams are intentionally not accepted. Existing outer record errors pass through. To expand synchronous iterables, use [`flatMap()`](/docs/reference/flat-map/) instead.
+`merge()` activates at most four inner streams, so at most four deferred factories acquire their sources at once. A `defer()` factory may return any supported source and may be asynchronous.
+
+Fork an inner stream first if it is already part of another reliable chain. A value that is not an Exstream becomes a record error. Existing outer record errors pass through. To expand synchronous iterables, use [`flatMap()`](/docs/reference/flat-map/) instead.
 
 ## Order and pressure
 
@@ -61,15 +65,15 @@ This eager ordered buffering is useful for response bodies, cursors, and similar
 
 `merge()` is lazy: no inner stream is activated until downstream consumption starts.
 
-The activation limit cannot retroactively pause work owned by direct inner streams that started before `merge()` attached. Use stream factories when activation must control resource creation; configure source buffers as well when the resource can produce data independently after activation.
+The activation limit cannot retroactively pause work owned by inner sources opened before `merge()` attached. Use `defer()` when activation must control resource creation; configure source buffers as well when the resource can produce data independently after activation.
 
 ## Errors
 
-Record errors from the outer or any inner stream are forwarded in the selected order with their contexts and do not complete an inner slot. Factory failures are outer record errors and release their slot after delivery. Fatal failure or abort of an active inner aborts the merged branch and stops the coordinator. Cancelling the merged output destroys all active inner work and prevents pending factories from being invoked.
+Record errors from the outer or any inner stream are forwarded in the selected order with their contexts and do not complete an inner slot. A deferred acquisition failure is a source record error; once delivered, the failed inner ends and releases its slot. Fatal failure or abort of an active inner aborts the merged branch and stops the coordinator. Cancelling the merged output destroys all active inner work and leaves deferred sources outside the activation window unopened.
 
 ## Forms
 
-`merge()` is available only as an instance method on the outer stream of Exstreams or stream factories. It is not a reusable-pipeline or standalone operator because it coordinates live inner stream instances.
+`merge()` is available only as an instance method on the outer stream of Exstreams. It is not a reusable-pipeline or standalone operator because it coordinates live inner stream instances.
 
 ## Signature
 

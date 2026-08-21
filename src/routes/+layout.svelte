@@ -33,6 +33,7 @@
 <a class="skip-link" href="#main-content">Skip to content</a>
 <CopyCode />
 <PageTransitions />
+<div class="site-header-backdrop" aria-hidden="true"></div>
 <div class:playground-shell={playground}>
   <header class="site-header">
     <div class="site-header-inner">
@@ -47,7 +48,7 @@
           >Docs</a
         >
         <a
-          href="/examples/"
+          href="/examples/playground/"
           aria-current={page.url.pathname.startsWith('/examples/') ? 'page' : undefined}>Examples</a
         >
         <a
@@ -85,7 +86,6 @@
         <p>Composable streaming ETL for JavaScript. MIT licensed.</p>
         <nav aria-label="Footer navigation">
           <a href="https://github.com/micheletriaca/exstream">Source</a>
-          <a href="https://github.com/micheletriaca/exstream/blob/master/ROADMAP.md">Roadmap</a>
           <a href="https://github.com/micheletriaca/exstream/blob/master/SUPPORT.md">Support</a>
         </nav>
       </div>

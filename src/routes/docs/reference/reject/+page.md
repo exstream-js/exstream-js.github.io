@@ -34,7 +34,7 @@ const active = exstream(accounts).reject((account) => account.disabled)
 
 ## Errors
 
-A thrown callback error becomes a contextual record error. A returned promise is truthy and therefore drops the value immediately; use [`asyncFilter()`](/docs/reference/async-filter/) with an inverted predicate for asynchronous decisions.
+A thrown callback error becomes a contextual record error. A returned promise is truthy and therefore drops the value immediately. When a decision requires asynchronous work, attach its result with [`mapAsync()`](/docs/reference/map-async/) before applying a synchronous filter.
 
 ## Forms
 
@@ -53,4 +53,4 @@ reject(fn: (value: T, context: C) => unknown): Exstream<T, C>
 
 ## Related
 
-[`filter()`](/docs/reference/filter/), [`compact()`](/docs/reference/compact/), [`asyncFilter()`](/docs/reference/async-filter/)
+[`filter()`](/docs/reference/filter/), [`compact()`](/docs/reference/compact/), [`mapAsync()`](/docs/reference/map-async/)

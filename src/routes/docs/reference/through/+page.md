@@ -55,7 +55,7 @@ For an Exstream target, `through()` connects the source to the target's root and
 
 With a Node duplex or transform and the default `writable: false`, Exstream writes into the target and wraps its readable side. With `writable: true`, the returned Exstream is marked non-readable, starts consuming immediately, and mirrors destination `error`, `finish`, and `close` lifecycle events. Use [`pipeTo()`](/docs/reference/pipe-to/) when a completion promise and strict terminal failure contract are preferable.
 
-The current TypeScript overloads model pipeline, Exstream, function, and null targets. Node streams are supported by the JavaScript runtime but are not yet represented by a dedicated `through()` overload; TypeScript projects may prefer `pipeTo()` or need an explicit compatibility cast.
+TypeScript models Node duplex and transform targets directly. The returned Exstream carries the value type of the target's readable side. Use `pipeTo()` instead when the target is a terminal writable and the completion promise is the desired boundary.
 
 ## Errors
 
@@ -80,6 +80,11 @@ through<U>(
   target: Pipeline<T, U> | Exstream<U> | ((stream: Exstream<T, C>) => Exstream<U>),
   options?: { writable?: boolean },
 ): Exstream<U>
+
+through<U>(
+  target: NodeTransformLike<T, U>,
+  options?: { writable?: boolean },
+): Exstream<U, C>
 
 through(target?: null, options?: ThroughOptions): Exstream<T, C>
 ```

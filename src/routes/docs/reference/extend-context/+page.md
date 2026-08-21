@@ -53,4 +53,4 @@ extendContext<A extends object | void | PromiseLike<object | void>>(
 
 ## Related
 
-[`withContext()`](/docs/reference/with-context/), [`mapAsync()`](/docs/reference/map-async/), [`asyncFilter()`](/docs/reference/async-filter/)
+[`withContext()`](/docs/reference/with-context/), [`mapAsync()`](/docs/reference/map-async/)

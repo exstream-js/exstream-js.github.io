@@ -1,6 +1,20 @@
 <script lang="ts">
-  import { getPlaygroundExample } from '$lib/content/playgroundExamples'
-  import { onDestroy, onMount } from 'svelte'
+  import { afterNavigate, beforeNavigate, pushState, replaceState } from '$app/navigation'
+  import { page } from '$app/state'
+  import {
+    getPlaygroundExample,
+    playgroundExampleEntries,
+    type PlaygroundExampleId,
+  } from '$lib/content/playgroundExamples'
+  import {
+    readPlaygroundCustom,
+    readPlaygroundSnippets,
+    writePlaygroundCustom,
+    writePlaygroundSnippets,
+    type PlaygroundSnippet,
+  } from '$lib/playgroundSnippets'
+  import Trash2 from '@lucide/svelte/icons/trash-2'
+  import { onDestroy, onMount, tick } from 'svelte'
   import CodeEditor from './CodeEditor.svelte'
   import PlaygroundGraph from './PlaygroundGraph.svelte'
 
@@ -8,6 +22,10 @@
   type DestinationState = 'idle' | 'open' | 'closed' | 'aborted' | 'stopped'
   type EditorTab = 'code' | 'description'
   type RuntimeTab = 'destinations' | 'console'
+  type PlaygroundSelection =
+    | { kind: 'custom' }
+    | { kind: 'example'; id: PlaygroundExampleId }
+    | { kind: 'snippet'; id: string }
   type ConsoleLevel = 'log' | 'info' | 'warn' | 'error'
   type ConsoleEntry = {
     id: number
@@ -105,11 +123,38 @@ await Promise.all([
   let nextConsoleEntryId = 1
   let lastDestinationScript = ''
   let codeUrlReady = $state(false)
+  let storageReady = $state(false)
   let forwardMouseMoves = false
-  let playgroundExample = $state<ReturnType<typeof getPlaygroundExample>>()
+  let activeExampleId = $state<PlaygroundExampleId | null>(null)
+  let activeSnippetId = $state<string | null>(null)
+  let savedSnippets = $state<PlaygroundSnippet[]>([])
+  let customCode = $state(starterCode)
+  let saveAsDialog = $state<HTMLDialogElement>()
+  let saveAsInput = $state<HTMLInputElement>()
+  let saveAsName = $state('')
+  let saveAsError = $state('')
+  let storageError = $state('')
   let worker: Worker | undefined
 
   const isRunning = $derived(runState === 'running')
+  const playgroundExample = $derived(getPlaygroundExample(activeExampleId))
+  const savedSnippet = $derived(
+    activeSnippetId ? savedSnippets.find((snippet) => snippet.id === activeSnippetId) : undefined,
+  )
+  const selectionValue = $derived(
+    activeExampleId
+      ? `example:${activeExampleId}`
+      : activeSnippetId
+        ? `snippet:${activeSnippetId}`
+        : 'custom',
+  )
+  const hasUnsavedChanges = $derived(
+    playgroundExample
+      ? code !== playgroundExample.code
+      : savedSnippet
+        ? code !== savedSnippet.code
+        : false,
+  )
 
   $effect(() => {
     const currentCode = code
@@ -117,6 +162,33 @@ await Promise.all([
 
     const timer = setTimeout(() => storeCodeInUrl(currentCode), 250)
     return () => clearTimeout(timer)
+  })
+
+  $effect(() => {
+    const currentCode = code
+    if (!storageReady || activeExampleId || activeSnippetId) return
+
+    const timer = setTimeout(() => {
+      try {
+        writePlaygroundCustom(localStorage, currentCode)
+        customCode = currentCode
+        storageError = ''
+      } catch {
+        storageError = 'Custom code could not be saved in this browser.'
+      }
+    }, 250)
+    return () => clearTimeout(timer)
+  })
+
+  beforeNavigate(({ cancel, willUnload }) => {
+    if (!storageReady || !hasUnsavedChanges) return
+    if (willUnload || !window.confirm('Discard the unsaved changes to this snippet?')) cancel()
+  })
+
+  afterNavigate(() => {
+    if (storageReady && window.location.pathname.startsWith('/examples/playground/')) {
+      restoreSelectionFromUrl()
+    }
   })
 
   $effect(() => {
@@ -240,23 +312,30 @@ await Promise.all([
     stopOpenDestinations('stopped')
   }
 
-  function reset() {
+  function resetRuntime(clearDestinations = false) {
     forwardMouseMoves = false
     worker?.terminate()
     worker = undefined
-    code = playgroundExample?.code ?? starterCode
     runState = 'idle'
     graphNodes = []
     graphEdges = []
     consoleEntries = []
     nextConsoleEntryId = 1
     errorMessage = ''
-    destinations = destinations.map((destination) => ({
-      ...destination,
-      values: [],
-      count: 0,
-      state: 'idle',
-    }))
+    lastDestinationScript = ''
+    destinations = clearDestinations
+      ? []
+      : destinations.map((destination) => ({
+          ...destination,
+          values: [],
+          count: 0,
+          state: 'idle',
+        }))
+  }
+
+  function reset() {
+    code = playgroundExample?.code ?? savedSnippet?.code ?? starterCode
+    resetRuntime()
   }
 
   function changeDestinationSpeed(destination: DestinationPanel, event: Event) {
@@ -460,21 +539,195 @@ await Promise.all([
     return encoded ? decodeCode(encoded) : undefined
   }
 
-  function restoreCodeFromUrl() {
-    code = codeFromUrl() ?? playgroundExample?.code ?? starterCode
+  function currentSelection(): PlaygroundSelection {
+    if (activeExampleId) return { kind: 'example', id: activeExampleId }
+    if (activeSnippetId) return { kind: 'snippet', id: activeSnippetId }
+    return { kind: 'custom' }
+  }
+
+  function selectionFromValue(value: string): PlaygroundSelection {
+    if (value.startsWith('example:')) {
+      const id = value.slice('example:'.length)
+      if (getPlaygroundExample(id)) return { kind: 'example', id: id as PlaygroundExampleId }
+    }
+    if (value.startsWith('snippet:')) {
+      const id = value.slice('snippet:'.length)
+      if (savedSnippets.some((snippet) => snippet.id === id)) return { kind: 'snippet', id }
+    }
+    return { kind: 'custom' }
+  }
+
+  function selectionFromUrl(url: URL): PlaygroundSelection {
+    const exampleId = url.searchParams.get('example')
+    if (getPlaygroundExample(exampleId)) {
+      return { kind: 'example', id: exampleId as PlaygroundExampleId }
+    }
+
+    const snippetId = url.searchParams.get('snippet')
+    if (snippetId && savedSnippets.some((snippet) => snippet.id === snippetId)) {
+      return { kind: 'snippet', id: snippetId }
+    }
+
+    return { kind: 'custom' }
+  }
+
+  function selectionCode(selection: PlaygroundSelection) {
+    if (selection.kind === 'example') return getPlaygroundExample(selection.id)?.code ?? starterCode
+    if (selection.kind === 'snippet') {
+      return savedSnippets.find((snippet) => snippet.id === selection.id)?.code ?? customCode
+    }
+    return customCode
+  }
+
+  function activateSelection(selection: PlaygroundSelection, override?: string) {
+    activeExampleId = selection.kind === 'example' ? selection.id : null
+    activeSnippetId = selection.kind === 'snippet' ? selection.id : null
+    code = override ?? selectionCode(selection)
+    editorTab = 'code'
+    resetRuntime(true)
+  }
+
+  function selectionMatches(left: PlaygroundSelection, right: PlaygroundSelection) {
+    if (left.kind !== right.kind) return false
+    if (left.kind === 'custom') return true
+    if (right.kind === 'custom') return false
+    return left.id === right.id
+  }
+
+  function restoreSelectionFromUrl() {
+    const selection = selectionFromUrl(new URL(window.location.href))
+    const override = codeFromUrl()
+    if (selectionMatches(selection, currentSelection())) {
+      code = override ?? selectionCode(selection)
+      return
+    }
+    activateSelection(selection, override)
+  }
+
+  function updateSelectionUrl(selection: PlaygroundSelection, replace = false) {
+    const url = new URL(window.location.href)
+    url.search = ''
+    url.hash = ''
+    if (selection.kind === 'example') url.searchParams.set('example', selection.id)
+    if (selection.kind === 'snippet') url.searchParams.set('snippet', selection.id)
+    if (replace) replaceState(url, page.state)
+    else pushState(url, page.state)
   }
 
   function storeCodeInUrl(script: string) {
     const url = new URL(window.location.href)
-    if (!playgroundExample && script === starterCode) {
+    if (
+      (!playgroundExample && !savedSnippet && script === starterCode) ||
+      (playgroundExample && script === playgroundExample.code)
+    ) {
       url.hash = ''
     } else {
       url.hash = new URLSearchParams({ code: encodeCode(script) }).toString()
     }
 
     if (url.href !== window.location.href) {
-      window.history.replaceState(window.history.state, '', url)
+      replaceState(url, page.state)
     }
+  }
+
+  function persistCustomCode(script: string) {
+    try {
+      writePlaygroundCustom(localStorage, script)
+      customCode = script
+      storageError = ''
+    } catch {
+      storageError = 'Custom code could not be saved in this browser.'
+    }
+  }
+
+  function persistSnippets(next: PlaygroundSnippet[]) {
+    try {
+      writePlaygroundSnippets(localStorage, next)
+      savedSnippets = next
+      storageError = ''
+      return true
+    } catch {
+      storageError = 'Snippets could not be saved in this browser.'
+      return false
+    }
+  }
+
+  function changePlaygroundSelection(event: Event) {
+    const select = event.currentTarget as HTMLSelectElement
+    if (hasUnsavedChanges && !window.confirm('Discard the unsaved changes to this snippet?')) {
+      select.value = selectionValue
+      return
+    }
+
+    if (!activeExampleId && !activeSnippetId) persistCustomCode(code)
+    storeCodeInUrl(code)
+    const selection = selectionFromValue(select.value)
+    updateSelectionUrl(selection)
+    activateSelection(selection)
+  }
+
+  async function openSaveAs() {
+    saveAsName = playgroundExample?.title
+      ? `${playgroundExample.title} copy`
+      : savedSnippet
+        ? `${savedSnippet.name} copy`
+        : ''
+    saveAsError = ''
+    saveAsDialog?.showModal()
+    await tick()
+    saveAsInput?.focus()
+    saveAsInput?.select()
+  }
+
+  function saveAsSnippet(event: SubmitEvent) {
+    event.preventDefault()
+    const name = saveAsName.trim().replace(/\s+/g, ' ')
+    if (!name) {
+      saveAsError = 'Give the snippet a name.'
+      return
+    }
+    if (savedSnippets.some((snippet) => snippet.name.toLowerCase() === name.toLowerCase())) {
+      saveAsError = 'A snippet with this name already exists.'
+      return
+    }
+
+    const snippet: PlaygroundSnippet = {
+      id: crypto.randomUUID(),
+      name,
+      code,
+      updatedAt: Date.now(),
+    }
+    if (!persistSnippets([snippet, ...savedSnippets])) {
+      saveAsError = 'This browser could not store the snippet.'
+      return
+    }
+
+    activeExampleId = null
+    activeSnippetId = snippet.id
+    editorTab = 'code'
+    updateSelectionUrl({ kind: 'snippet', id: snippet.id }, true)
+    storeCodeInUrl(code)
+    saveAsDialog?.close()
+  }
+
+  function saveSnippet() {
+    if (!savedSnippet) return
+    const updated: PlaygroundSnippet = { ...savedSnippet, code, updatedAt: Date.now() }
+    const next = [updated, ...savedSnippets.filter((snippet) => snippet.id !== savedSnippet.id)]
+    if (persistSnippets(next)) storeCodeInUrl(code)
+  }
+
+  function deleteSnippet() {
+    if (!savedSnippet) return
+    if (!window.confirm(`Delete “${savedSnippet.name}”? The code will remain in Custom.`)) return
+
+    const next = savedSnippets.filter((snippet) => snippet.id !== savedSnippet.id)
+    if (!persistSnippets(next)) return
+    persistCustomCode(code)
+    activeSnippetId = null
+    activeExampleId = null
+    updateSelectionUrl({ kind: 'custom' }, true)
+    storeCodeInUrl(code)
   }
 
   onMount(() => {
@@ -483,16 +736,20 @@ await Promise.all([
       setEditorWidth(Number(storedEditorWidth))
     }
 
-    playgroundExample = getPlaygroundExample(
-      new URL(window.location.href).searchParams.get('example'),
-    )
-    restoreCodeFromUrl()
+    try {
+      savedSnippets = readPlaygroundSnippets(localStorage)
+      customCode = readPlaygroundCustom(localStorage, starterCode)
+    } catch {
+      storageError = 'Local snippets are unavailable in this browser.'
+    }
+    activateSelection(selectionFromUrl(new URL(window.location.href)), codeFromUrl())
+    storageReady = true
     codeUrlReady = true
-    window.addEventListener('hashchange', restoreCodeFromUrl)
+    window.addEventListener('hashchange', restoreSelectionFromUrl)
     window.addEventListener('mousemove', sendMouseMove)
 
     return () => {
-      window.removeEventListener('hashchange', restoreCodeFromUrl)
+      window.removeEventListener('hashchange', restoreSelectionFromUrl)
       window.removeEventListener('mousemove', sendMouseMove)
     }
   })
@@ -502,17 +759,56 @@ await Promise.all([
 
 <section class="playground" aria-label="Exstream playground">
   <header class="topbar">
-    <a
-      class="back"
-      href={playgroundExample?.sourcePath ?? '/examples/'}
-      aria-label={playgroundExample ? 'Back to lesson' : 'Back to examples'}>←</a
-    >
     <strong>Exstream Playground</strong>
+    <label class="document-picker">
+      <span class="sr-only">Open a playground example or saved snippet</span>
+      <select value={selectionValue} onchange={changePlaygroundSelection}>
+        <option value="custom">Custom</option>
+        <optgroup label="Examples">
+          {#each playgroundExampleEntries as [id, example]}
+            <option value={`example:${id}`}>
+              {example.title}{activeExampleId === id && hasUnsavedChanges ? ' •' : ''}
+            </option>
+          {/each}
+        </optgroup>
+        {#if savedSnippets.length > 0}
+          <optgroup label="My snippets">
+            {#each savedSnippets as snippet (snippet.id)}
+              <option value={`snippet:${snippet.id}`}>
+                {snippet.name}{activeSnippetId === snippet.id && hasUnsavedChanges ? ' •' : ''}
+              </option>
+            {/each}
+          </optgroup>
+        {/if}
+      </select>
+    </label>
+    <div class="snippet-actions">
+      {#if savedSnippet}
+        <button
+          type="button"
+          class="secondary-button"
+          disabled={!hasUnsavedChanges}
+          onclick={saveSnippet}>Save</button
+        >
+      {/if}
+      <button type="button" class="secondary-button" onclick={openSaveAs}>Save as…</button>
+      {#if savedSnippet}
+        <button
+          type="button"
+          class="secondary-button delete-snippet"
+          onclick={deleteSnippet}
+          aria-label={`Delete ${savedSnippet.name}`}
+          title="Delete snippet"
+        >
+          <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+        </button>
+      {/if}
+    </div>
     <span class:active={isRunning} class:error={runState === 'error'} class="status">
       <i></i>{runState}
     </span>
-    {#if errorMessage}
-      <span class="error-message" role="alert">{errorMessage}</span>
+    {#if errorMessage || storageError}
+      <span class="error-message" role="alert">{errorMessage || storageError}</span>
     {/if}
     <div class="topbar-actions">
       {#if isRunning}
@@ -742,6 +1038,39 @@ await Promise.all([
       </section>
     </div>
   </div>
+
+  <dialog
+    class="save-as-dialog"
+    bind:this={saveAsDialog}
+    aria-labelledby="save-as-title"
+    onclose={() => (saveAsError = '')}
+  >
+    <form onsubmit={saveAsSnippet}>
+      <header>
+        <strong id="save-as-title">Save snippet as</strong>
+        <p>Saved in this browser only.</p>
+      </header>
+      <label>
+        <span>Name</span>
+        <input
+          bind:this={saveAsInput}
+          bind:value={saveAsName}
+          maxlength="80"
+          autocomplete="off"
+          placeholder="e.g. Import paid orders"
+        />
+      </label>
+      {#if saveAsError}
+        <p class="save-as-error" role="alert">{saveAsError}</p>
+      {/if}
+      <footer>
+        <button type="button" class="secondary-button" onclick={() => saveAsDialog?.close()}>
+          Cancel
+        </button>
+        <button type="submit" class="run-button">Save</button>
+      </footer>
+    </form>
+  </dialog>
 </section>
 
 <style>
@@ -795,21 +1124,37 @@ await Promise.all([
     padding: 0 0.7rem;
   }
 
-  .back {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border: 1px solid var(--pg-line-strong);
-    border-radius: 0.45rem;
-    color: var(--pg-muted);
-    text-decoration: none;
-  }
-
   .topbar > strong {
     white-space: nowrap;
     font-size: 0.82rem;
     letter-spacing: -0.01em;
+  }
+
+  .document-picker {
+    display: block;
+    min-width: 9rem;
+    max-width: 14rem;
+  }
+
+  .document-picker select {
+    width: 100%;
+    border: 1px solid var(--pg-line-strong);
+    border-radius: 0.45rem;
+    background: var(--pg-panel-muted);
+    color: var(--pg-ink-soft);
+    padding: 0.4rem 1.8rem 0.4rem 0.55rem;
+    font: 650 0.7rem var(--font-sans);
+  }
+
+  .document-picker select:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--pg-accent) 65%, transparent);
+    outline-offset: 2px;
+  }
+
+  .snippet-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0.35rem;
   }
 
   .status {
@@ -882,10 +1227,96 @@ await Promise.all([
     color: var(--pg-ink-soft);
   }
 
+  .delete-snippet {
+    display: grid;
+    width: 2rem;
+    place-items: center;
+    padding-inline: 0 !important;
+  }
+
   .run-button {
     border-color: var(--accent) !important;
     background: var(--accent);
     color: white;
+  }
+
+  .save-as-dialog {
+    width: min(26rem, calc(100vw - 2rem));
+    border: 1px solid var(--pg-line-strong);
+    border-radius: 0.75rem;
+    background: var(--pg-panel-raised);
+    color: var(--pg-ink);
+    padding: 0;
+    box-shadow: var(--pg-shadow);
+  }
+
+  .save-as-dialog::backdrop {
+    background: rgb(10 16 14 / 48%);
+    backdrop-filter: blur(2px);
+  }
+
+  .save-as-dialog form {
+    display: grid;
+    gap: 1rem;
+    padding: 1.2rem;
+  }
+
+  .save-as-dialog header {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .save-as-dialog header strong {
+    font-size: 1rem;
+  }
+
+  .save-as-dialog header p,
+  .save-as-error {
+    margin: 0;
+    color: var(--pg-muted);
+    font-size: 0.72rem;
+  }
+
+  .save-as-dialog label {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--pg-ink-soft);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .save-as-dialog input {
+    border: 1px solid var(--pg-line-strong);
+    border-radius: 0.45rem;
+    background: var(--pg-panel-muted);
+    color: var(--pg-ink);
+    padding: 0.62rem 0.7rem;
+    font: 0.78rem var(--font-sans);
+  }
+
+  .save-as-dialog input:focus-visible {
+    border-color: var(--pg-accent);
+    outline: 2px solid color-mix(in srgb, var(--pg-accent) 25%, transparent);
+    outline-offset: 1px;
+  }
+
+  .save-as-error {
+    color: var(--pg-danger-ink);
+  }
+
+  .save-as-dialog footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+  }
+
+  .save-as-dialog button {
+    border: 1px solid var(--pg-line-strong);
+    border-radius: 0.45rem;
+    padding: 0.42rem 0.72rem;
+    font-size: 0.72rem;
+    font-weight: 720;
+    cursor: pointer;
   }
 
   .workspace {
@@ -1413,8 +1844,32 @@ await Promise.all([
       display: none;
     }
 
+    .topbar {
+      gap: 0.35rem;
+      padding-inline: 0.4rem;
+    }
+
+    .document-picker {
+      min-width: 0;
+      max-width: none;
+      flex: 1 1 8rem;
+    }
+
+    .document-picker select {
+      padding-inline: 0.45rem 1.4rem;
+    }
+
+    .snippet-actions,
     .topbar-actions {
-      margin-left: auto;
+      gap: 0.25rem;
+    }
+
+    .topbar button {
+      padding-inline: 0.45rem;
+    }
+
+    .topbar-actions {
+      margin-left: 0;
     }
 
     .destination-grid {

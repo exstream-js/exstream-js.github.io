@@ -66,7 +66,7 @@ const orders = exstream([webOrders, retailOrders]).merge(2, false)
 
 The merged output is another Exstream, so downstream operators do not need to know which source produced a record.
 
-Read the [`merge()` reference](/docs/reference/merge/) for parallelism, ordering, lazy source factories, buffering, and errors.
+Continue with [Merge streams](/docs/learn/merge/) for parallelism, output order, and deferred source acquisition.
 
 ## Transforming records
 

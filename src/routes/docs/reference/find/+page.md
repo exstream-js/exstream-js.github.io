@@ -38,7 +38,7 @@ Record errors pass through and do not call `fn`. A handled error does not end th
 
 ## Errors
 
-If `fn` throws, the failure becomes a record error for that input. `find()` does not await promises; a returned promise is truthy, so use [`asyncFilter()`](/docs/reference/async-filter/) followed by [`head()`](/docs/reference/head/) for an asynchronous predicate.
+If `fn` throws, the failure becomes a record error for that input. `find()` does not await promises. When a decision requires asynchronous work, attach its result with [`mapAsync()`](/docs/reference/map-async/) before filtering and taking the first match.
 
 ## Forms
 

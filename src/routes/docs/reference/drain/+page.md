@@ -50,8 +50,13 @@ The destination consumes the pipeline's original input type. It keeps no source 
 ## Signature
 
 ```typescript
-Exstream<T>.drain(): Promise<void>
-Pipeline<Input, Output>.drain(): Destination<Input>
+interface Exstream<T> {
+  drain(): Promise<void>
+}
+
+interface Pipeline<Input, Output> {
+  drain(): Destination<Input>
+}
 ```
 
 ## Related

@@ -1,21 +1,61 @@
 # Exstream
 
-> Exstream is composable streaming ETL for JavaScript with end-to-end backpressure, bounded asynchronous work, reliable fan-out, and explicit cancellation.
+> Exstream is a JavaScript framework for composable, record-oriented streaming data pipelines in Node.js and modern browsers.
 
-Exstream is intended for backend JavaScript and TypeScript jobs that process large record flows and need bounded memory, controlled concurrency, incremental formats, or multiple destinations. For small in-memory collections or a simple linear flow, native arrays or `for await` are usually clearer.
+Exstream adapts iterables, async iterables, promises, Node streams, Web Streams, generators, and event sources to one pipeline API. It provides incremental transformations, end-to-end backpressure, bounded asynchronous work, reliable fan-out, streaming formats, record-level error handling, cancellation, and coordinated cleanup.
 
-## Documentation
+Use Exstream when a flow must remain bounded, coordinate slow or multiple destinations, or control asynchronous I/O. For small in-memory collections or a simple linear flow, native arrays or `for await` are usually clearer.
+
+## Start here
 
 - [What is Exstream?](https://exstream-js.github.io/docs/): framework scope, runtimes, and core pipeline problems
-- [Quick start](https://exstream-js.github.io/quick-start/): install and build a bounded pipeline
-- [Examples](https://exstream-js.github.io/examples/): browser-native interactive learning
-- [Backpressure](https://exstream-js.github.io/docs/learn/backpressure/): how demand moves through the graph
-- [Destinations](https://exstream-js.github.io/docs/reference/destination/): define reusable application writers without low-level stream APIs
-- [When not to use Exstream](https://exstream-js.github.io/docs/project/when-not-to-use/): alternatives and honest boundaries
+- [Quick start](https://exstream-js.github.io/quick-start/): install Exstream and run a complete streaming pipeline
+- [When to use Exstream](https://exstream-js.github.io/docs/project/when-not-to-use/): strong use cases, simpler alternatives, and project boundaries
+- [Interactive examples](https://exstream-js.github.io/examples/): guided browser-native examples
+- [Playground](https://exstream-js.github.io/examples/playground/): edit and run Exstream pipelines in the browser
+
+## Learn
+
+- [Pipeline model](https://exstream-js.github.io/docs/learn/pipeline-model/): sources, conversion, merging, transformations, branches, and destinations
+- [Create a source](https://exstream-js.github.io/docs/learn/sources/): eager and deferred sources, platform streams, generators, promises, and hot events
+- [Transform data](https://exstream-js.github.io/docs/learn/transform-data/): incremental record operators and reusable transformations
+- [Composition](https://exstream-js.github.io/docs/learn/composition/): operator functions, `pipeline()`, and `through()`
+- [Async processing](https://exstream-js.github.io/docs/learn/async-work/): bounded concurrency, ordering, retries, timeouts, throttle, and rate limits
+- [Consume a pipeline](https://exstream-js.github.io/docs/learn/consume/): laziness, terminal operations, destinations, and readable adapters
+- [Backpressure](https://exstream-js.github.io/docs/learn/backpressure/): bottlenecks, bounded memory, forks, hot sources, and throttling
+- [Fork and observe](https://exstream-js.github.io/docs/learn/branching/): reliable branches versus non-blocking observers
+- [Merge streams](https://exstream-js.github.io/docs/learn/merge/): combine live streams with bounded activation and optional output order
+- [Errors and lifecycle](https://exstream-js.github.io/docs/learn/errors/): fatal failures, record errors, recovery, retries, dead letters, cancellation, and cleanup
+- [Extensibility](https://exstream-js.github.io/docs/learn/extensibility/): custom operators, protocol records, context, backpressure, and cleanup
+
+## API reference
+
+- [Complete operator index](https://exstream-js.github.io/docs/reference/): every public API grouped by intent
+- [`exstream()`](https://exstream-js.github.io/docs/reference/exstream/): create a stream from supported source types or a manual writable source
+- [`defer()`](https://exstream-js.github.io/docs/reference/defer/): acquire a source only when the graph starts
+- [`fromEvent()`](https://exstream-js.github.io/docs/reference/from-event/): adapt hot EventTarget and EventEmitter sources with explicit overflow behavior
+- [`pipeline()`](https://exstream-js.github.io/docs/reference/pipeline/): define reusable typed operator chains
+- [`destination()`](https://exstream-js.github.io/docs/reference/destination/): define reusable writers with setup, per-record writes, and cleanup
+- [`mapAsync()`](https://exstream-js.github.io/docs/reference/map-async/): asynchronous transformation with concurrency, ordering, retry, recovery, timeout, and cancellation controls
+- [`fork()`](https://exstream-js.github.io/docs/reference/fork/): create a reliable branch that participates in backpressure
+- [`observe()`](https://exstream-js.github.io/docs/reference/observe/): create a non-blocking observer with explicit buffering
+- [`merge()`](https://exstream-js.github.io/docs/reference/merge/): consume a stream of streams with bounded parallelism
+- [`through()`](https://exstream-js.github.io/docs/reference/through/): attach a reusable pipeline, operator function, or platform transform
+- [Stream state](https://exstream-js.github.io/docs/reference/stream-state/): inspect lifecycle, buffering, drops, pressure, and cancellation
+- [Error API](https://exstream-js.github.io/docs/reference/error-api/): record error metadata, provenance, format errors, overflow, and timeouts
+- [`errors()`](https://exstream-js.github.io/docs/reference/errors/): recover, replace, retry, or drop record-level errors
+- [`routeErrors()`](https://exstream-js.github.io/docs/reference/route-errors/): route unhandled record errors to a reliable dead-letter branch
+- [`csv()`](https://exstream-js.github.io/docs/reference/csv/): incrementally parse CSV across arbitrary chunk boundaries
+- [`json()`](https://exstream-js.github.io/docs/reference/json/): incrementally parse one JSON document or top-level array
+- [`jsonl()`](https://exstream-js.github.io/docs/reference/jsonl/): parse line-delimited JSON incrementally
+- [`pipeTo()`](https://exstream-js.github.io/docs/reference/pipe-to/): run a pipeline into an Exstream, Node, or Web destination
+- [Async iteration](https://exstream-js.github.io/docs/reference/async-iteration/): consume one value for each `for await` demand
+- [Readable and transform interop](https://exstream-js.github.io/docs/reference/to-web-readable/): expose Exstream as Web or Node readable streams or as a Node transform
+- [`consume()` and `consumeSync()`](https://exstream-js.github.io/docs/reference/consume/): implement low-level custom operators
 
 ## Canonical project sources
 
+- [Project history](https://exstream-js.github.io/docs/project/origin/): origins, production use, and design influences
 - [Source repository](https://github.com/micheletriaca/exstream)
 - [Package](https://www.npmjs.com/package/exstream.js)
 - [Support policy](https://github.com/micheletriaca/exstream/blob/master/SUPPORT.md)
-- [Roadmap](https://github.com/micheletriaca/exstream/blob/master/ROADMAP.md)
