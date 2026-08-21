@@ -1652,7 +1652,7 @@ pre[data-copy-ready] {
 }
 
 .prose h1 {
-  max-width: 15ch;
+  max-width: 16ch;
   margin: 0 0 1.75rem;
   font-size: clamp(2.7rem, 6vw, 4rem);
   letter-spacing: -0.065em;

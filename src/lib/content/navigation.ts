@@ -4,6 +4,7 @@ export const docsNavigation = [
     items: [
       { href: '/docs/', label: 'What is Exstream' },
       { href: '/docs/project/when-not-to-use/', label: 'When to use it' },
+      { href: '/docs/project/agent-skill/', label: 'Agentic Development' },
       { href: '/docs/project/origin/', label: 'History' },
     ],
   },
