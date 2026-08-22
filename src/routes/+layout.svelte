@@ -28,6 +28,11 @@
   <meta property="og:image" content="https://exstream-js.github.io/og-v2.png" />
   <meta property="og:image:alt" content="Exstream: Array ergonomics. Stream semantics." />
   <meta name="twitter:card" content="summary_large_image" />
+  <script
+    type="module"
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={JSON.stringify({ token: 'bd6b902d380a4cf0b651a6c141e0cf7b' })}
+  ></script>
 </svelte:head>
 
 <a class="skip-link" href="#main-content">Skip to content</a>
