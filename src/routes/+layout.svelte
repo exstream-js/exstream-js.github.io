@@ -92,6 +92,7 @@
         <nav aria-label="Footer navigation">
           <a href="https://github.com/micheletriaca/exstream">Source</a>
           <a href="https://github.com/micheletriaca/exstream/blob/master/SUPPORT.md">Support</a>
+          <a href="/privacy/">Privacy</a>
         </nav>
       </div>
     </footer>

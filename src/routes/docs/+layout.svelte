@@ -80,6 +80,12 @@
           </ul>
         </section>
       {/each}
+      <section>
+        <h2>Site</h2>
+        <ul>
+          <li><a href="/privacy/" onclick={() => (navigationOpen = false)}>Privacy</a></li>
+        </ul>
+      </section>
     </nav>
   </aside>
   <article class="docs-content prose" data-pagefind-body>
